@@ -14,14 +14,16 @@
     VIA_DDRB = $8002
     VIA_DDRA = $8003
 
-    max3100ReadBuffer = $30
     spiWriteBuffer = $20
+
+    max3100ReadBuffer = $30
     spiReadBuffer = $10
 
-RESET:  JMP INIT_VIA
+RESET:  JMP INIT
 NMI:    RTI
 IRQ:    RTI
 
+INIT:
 INIT_VIA:
     LDX #$FF        ; setup stack
     TXS        
@@ -30,12 +32,7 @@ INIT_VIA:
     LDA #$FF
     STA VIA_DDRA    ; configure all pins as outputs, 8 slave selects available
     STA VIA_DATAA   ; set all to high
-
-INIT_MAX3100:
-    ; MAX3100 Config: 11000000 00001010
-    LDY #%11000000    
-    LDA #%00001010  ; 9600 baud
-    JSR WRITE_MAX
+    JSR WRITE_MAX3100_CONFIG
 
     LDX #0
 LOOP:
@@ -44,23 +41,55 @@ LOOP:
     JSR WRITE_CHAR
     INX
     JMP LOOP
-
 STOP:
-    NOP
-    NOP
+    JSR READ_CHAR
+    BCC STOP
+    JSR WRITE_CHAR
     JMP STOP    
 
-WRITE_CHAR:
-WAIT:
+WRITE_MAX3100_CONFIG:
+    PHY
     PHA
+    LDY #%11000000          ; MAX3100 Config: 11000000 00001010
+    LDA #%00001010          ; 9600 baud
+    JSR WRITE_MAX
+    PLY
+    PLA
+    RTS                     
+
+READ_MAX3100_CONFIG:
+    PHY
     LDY #%01000000
     LDA #%00000000
     JSR WRITE_MAX
+    PLY
     LDA max3100ReadBuffer
+    RTS                     ; A holds higher byte of DIN when returning
+
+READ_CHAR:
+    PHY
+    LDY #0
+    LDA #0
+    JSR WRITE_MAX
+    PLY
+    CLC
+    LDA max3100ReadBuffer
+    ROL
+    LDA max3100ReadBuffer + 1
+    RTS
+
+WRITE_CHAR:
+WAIT:
+    PHY
+    PHA
+    JSR READ_MAX3100_CONFIG
     AND #%01000000
     BEQ WAIT
     PLA
     LDY #%10000000
+    JSR WRITE_MAX
+    PLY
+    RTS
 ; writes a 16 bit sequence to the MAX3100
 ; assumes the command is stored in the Y register and the
 ; actual data in the A register
