@@ -36,7 +36,7 @@ INIT_VIA:
 
     LDX #0
 LOOP:
-    LDA text,x
+    LDA greeting_text,x
     BEQ STOP
     JSR WRITE_CHAR
     INX
@@ -119,12 +119,12 @@ WRITE:
     INC VIA_DATAB           ; set clock high
     LDA VIA_DATAB           ; read bit
     ROL                     ; just read bit is represented in PB7, rotate it into carry
-    ROL spiReadBuffer          ; rotate bit from carry into spiReadBuffer
+    ROL spiReadBuffer       ; rotate bit from carry into spiReadBuffer
     DEC VIA_DATAB           ; set clock low
     DEY
     BNE WRITE_BIT
     LDA spiReadBuffer
     RTS
 
-text:
-    .asciiz "welcome"
+greeting_text:
+    .byte "welcome to the 65021em", $0d, $0a, "> ", $00 
