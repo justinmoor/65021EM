@@ -14,9 +14,9 @@
 
 ### Memory Map
 
-**RAM**: \$0000 - \$7FFF (binary 0xxxxxxxxxxxxxxx)
-**ROM**: \$C000 - \$FFFF (binary 11xxxxxxxxxxxxxx)
-**SERIAL**: \$8000 - \$800F (binary 1000000000001111)
+- **RAM**: \$0000 - \$7FFF (binary 0xxxxxxxxxxxxxxx)
+- **ROM**: \$C000 - \$FFFF (binary 11xxxxxxxxxxxxxx)
+- **SERIAL**: \$8000 - \$800F (binary 1000000000001111)
 
 ### Parts list
 - 65C02
