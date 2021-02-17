@@ -17,8 +17,8 @@
     .code
 
 
-IN          = $0200          ;*Input buffer
-XAML        = $24            ;*Index pointers
+IN          = $0200     ;*Input buffer
+XAML        = $24       ;*Index pointers
 XAMH        = $25
 STL         = $26
 STH         = $27
@@ -32,12 +32,12 @@ COUNTER     = $2E
 CRC         = $2F
 CRCCHECK    = $30
 
-BS          = $88             ; Backspace key, arrow left key
-CR          = $0D             ; Carriage Return
+BS          = $88       ; Backspace key, arrow left key
+CR          = $0D       ; Carriage Return
 NEWL        = $0A
 ENT         = $8D
-ESC         = $9B             ; ESC key
-PROMPT      = $5C             ;'\' Prompt character
+ESC         = $9B       ; ESC key
+PROMPT      = $5C       ;'\' Prompt character
 
 VIA_DATAB = $8000
 VIA_DATAA = $8001
@@ -75,13 +75,7 @@ INIT:
     LDA #>MSG1
     STA MSGH
     JSR SHWMSG      ;* Show Welcome.
-    ; LDA #CR
-    ; JSR ECHO        ;* New line.
-    ; LDA #NEWL
-    ; JSR ECHO
-;---------------------------------------------------------------------------;
-; The GETLINE process                                                       ;
-;---------------------------------------------------------------------------;
+
 SOFTRESET:  
     LDA #$9B
 NOTCR:
@@ -271,8 +265,8 @@ DONE:
 WRITE_MAX3100_CONFIG:
     PHY
     PHA
-    LDY #%11000000          ; MAX3100 Config: 11000000 00001010
-    LDA #%00001001          ; 9600 baud
+    LDY #%11000000      ; MAX3100 Config: 11000000 00001010
+    LDA #%00001001      ; 9600 baud
     JSR WRITE_MAX
     PLY
     PLA
@@ -333,7 +327,7 @@ SPI_WRITE_BYTE:
     LDY #$8                 ; write 8 bits
 WRITE_BIT:
     LDA #%0                 ; zero bit the output line
-    ROL spiWriteBuffer         ; rotate the buffer so the bit to be written is represented by the carry flag
+    ROL spiWriteBuffer      ; rotate the buffer so the bit to be written is represented by the carry flag
     BCC WRITE               ; 0 in carry flag? continue to writing the zero bit
     ORA #%00000010          ; 1 in carry flag, set MOSI to high
 WRITE:
@@ -348,4 +342,4 @@ WRITE:
     LDA spiReadBuffer
     RTS
 
-MSG1:       .BYTE "welcome to the wozmon monitor, written by steve wozniak, 1976", 0
+MSG1:       .BYTE "welcome to the 65021em", 0
