@@ -138,8 +138,6 @@ NEXTITEM:
     BEQ SETSTOR     ;Yes, set STOR mode.
     CMP #$D2        ;"R"?
     BEQ RUN         ;Yes, run user program.
-    CMP #$CC        ;* "L"?
-    BEQ LOADINT     ;* Yes, Load Intel Code.
     STX L           ;$00->L.
     STX H           ; and H.
     STY YSAV        ;Save Y for comparison.
@@ -175,10 +173,6 @@ RUN:
     JMP SOFTRESET   ;* When returned for the program, reset EWOZ.
 ACTRUN:
     JMP (XAML)      ;Run at current XAM index.
-
-LOADINT:
-            ; JSR LOADINTEL   ;* Load the Intel code.
-            ; JMP SOFTRESET   ;* When returned from the program, reset EWOZ.
 
 NOESCAPE:
     BIT MODE        ;Test MODE byte.
