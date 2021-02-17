@@ -1,10 +1,11 @@
 ;-------------------------------------------------------------------------
-;
-;  The WOZ Monitor for the Apple 1
-;  Written by Steve Wozniak 1976
-;
+;   65021EM Kernel code
+;   Responsible for initializing hardware
+;   Contains basic IO routines (SPI bitbang, serial write)
+; 
+;   User starts in a basic monitor based on Steve Wozniak's Wozmon 
+;   for the Apple 1
 ;-------------------------------------------------------------------------
-
 
     .setcpu "65C02"
 
