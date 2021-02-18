@@ -12,7 +12,7 @@ The code is currently more focused on being readable than being optimized for pe
 
 ### Features
 
-- 8 expansion slots
+- 6 expansion slots
   * slot 1: serial interface
   * slot x: SPI interface(s)
   * slot x: OLED display
