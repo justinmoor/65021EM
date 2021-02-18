@@ -1,7 +1,7 @@
 # 65021EM
 65021ME stands for 65021 Expandable Microcomputer, a 6502-based computer, made in 2021. This repository holds all the necessary resources for the project, which includes source code and schematics.
 
-The code is currently more focused on being readable than being optimized for performance.
+The code is currently more focused on being readable than being optimized for performance (this could also be an excuse for writing bad assembly code ;) ).
 
 ### Specifications
 
@@ -12,7 +12,7 @@ The code is currently more focused on being readable than being optimized for pe
 
 ### Features
 
-- 8 expansion slots
+- 6 expansion slots
   * slot 1: serial interface
   * slot x: SPI interface(s)
   * slot x: OLED display
