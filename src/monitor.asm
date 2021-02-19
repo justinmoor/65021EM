@@ -1,7 +1,7 @@
 ;-------------------------------------------------------------------------
 ;   65021EM MACHINE LANGUAGE MONITOR
 ;
-;   Basic machine language monitor based to Steve Wozniak's Wozmon
+;   Basic machine language monitor based on Steve Wozniak's Wozmon
 ;   for the Apple 1. Most of this code is written by Wozniak in 1976
 ; 
 ;-------------------------------------------------------------------------
