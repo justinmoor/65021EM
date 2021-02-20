@@ -230,4 +230,8 @@ PRINT:
 DONE:       
     RTS 
 
-WELCOME_MSG:       .BYTE  "------------------------", CR, NEWL, "welcome to the 65021em", CR, NEWL , "------------------------", CR, NEWL, 0
+WELCOME_MSG:       
+    .BYTE "********************************", CR, NEWL
+    .BYTE "*    welcome to the 65021em    *", CR, NEWL 
+    .BYTE "********************************", CR, NEWL, 0
+                                         
