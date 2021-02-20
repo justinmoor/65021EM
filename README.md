@@ -30,4 +30,7 @@ cl65 -C memory_layout.cfg src/kernel.asm -o build/program
 
 // write to ROM
 minipro -s -p AT28C256 -w build/program
+
+// open terminal session
+picocom --b 19200 /dev/ttyUSB0
 ```
