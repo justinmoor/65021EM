@@ -26,7 +26,7 @@ The code is currently more focused on being readable than being optimized for pe
 ### Build
 ```sh
 // assemble code
-cl65 -C memory_layout.cfg src/kernel.asm -o build/program
+cl65 -C memory_layout.cfg src/main.asm -o build/program
 
 // write to ROM
 minipro -s -p AT28C256 -w build/program
