@@ -26,7 +26,9 @@ CR          = $0D       ; Carriage Return
 NEWL        = $0A
 ENT         = $8D
 ESC         = $9B       ; ESC key
-PROMPT      = $5C       ;'\' Prompt character
+; PROMPT      = $5C       ;'\' Prompt character
+PROMPT      = $3E       ;'\' Prompt character
+
 
 START_MONITOR:
     CLD             ;Clear decimal arithmetic mode.
@@ -41,6 +43,7 @@ START_MONITOR:
     STA MSGH
     JSR SHWMSG      ;* Show Welcome.
 
+
 SOFTRESET:  
     LDA #$9B
 NOTCR:
@@ -51,17 +54,15 @@ NOTCR:
     INY             ;Advance text index.
     BPL NEXTCHAR    ;Auto ESC if >127.
 ESCAPE:
+GETLINE:
     LDA #CR
     JSR ECHO        ;* New line.
     LDA #NEWL
     JSR ECHO
     LDA #PROMPT      ;"\"
     JSR ECHO        ;Output it.
-GETLINE:     
-    LDA #NEWL
-    JSR ECHO
-    LDA #CR         ;CR.
-    JSR ECHO        ;Output it.
+    LDA #$20
+    JSR ECHO     
     LDY #$01        ;Initiallize text index.
 BACKSPACE:   
     DEY             ;Backup text index.
@@ -163,6 +164,10 @@ NXTPRNT:
     JSR ECHO        ;* New line.
     LDA #NEWL
     JSR ECHO
+    LDA #$20
+    JSR ECHO    
+    LDA #$20
+    JSR ECHO    
     LDA XAMH        ;'Examine index' high-order byte.
     JSR PRBYTE      ;Output it in hex format.
     LDA XAML        ;Low-order "examine index" byte.
@@ -225,4 +230,4 @@ PRINT:
 DONE:       
     RTS 
 
-WELCOME_MSG:       .BYTE "welcome to the 65021em", 0
+WELCOME_MSG:       .BYTE  "------------------------", CR, NEWL, "welcome to the 65021em", CR, NEWL , "------------------------", CR, NEWL, 0
