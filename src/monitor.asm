@@ -131,7 +131,7 @@ NOTHEX:
     JMP ESCAPE      ; Yes, generate ESC sequence.
 
 XMODEM:
-    JSR XModem
+    JSR XMODEM_FILE_RECV
     JMP SOFTRESET
 
 RUN:
