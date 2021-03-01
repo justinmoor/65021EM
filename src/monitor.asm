@@ -18,8 +18,6 @@ MODE        = $2B
 MSGL        = $2C
 MSGH        = $2D
 COUNTER     = $2E
-CRC         = $2F
-CRCCHECK    = $30
 
 BS          = $88       ; Backspace key, arrow left key
 CR          = $0D       ; Carriage Return
@@ -100,6 +98,8 @@ NEXTITEM:
     BEQ SETSTOR     ; Yes, set STOR mode.
     CMP #$D2        ; "R"?
     BEQ RUN         ; Yes, run user program.
+    CMP #$D8        ; "X"?
+    BEQ XMODEM      ; Receive file using XMODEM
     STX L           ; $00->L.
     STX H           ; and H.
     STY YSAV        ; Save Y for comparison.
@@ -129,6 +129,10 @@ NOTHEX:
     CPY YSAV        ; Check if L, H empty (no hex digits).
     BNE NOESCAPE    ; * Branch out of range, had to improvise...
     JMP ESCAPE      ; Yes, generate ESC sequence.
+
+XMODEM:
+    JSR XModem
+    JMP SOFTRESET
 
 RUN:
     JSR ACTRUN      ; * JSR to the Address we want to run.

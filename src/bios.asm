@@ -21,6 +21,9 @@ SPI_WR_BUFF = $100
 
 MAX3100_RD_BUFF = $130
 
+; used to stack manipulation 
+STACK_PTR = $00
+
 INIT_BIOS:    
     LDA #%00000011  ; configure the MOSI and CLK pin as outputs, others as inputs
     STA VIA_DDRB

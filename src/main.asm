@@ -8,8 +8,6 @@
 
 .SETCPU "65C02"
 
-.INCLUDE "bios.asm"
-.INCLUDE "monitor.asm"
 
 .SEGMENT "VECTORS"
 
@@ -18,6 +16,9 @@
 .WORD   IRQ
 
 .CODE
+.INCLUDE "bios.asm"
+.INCLUDE "xmodem.asm"
+.INCLUDE "monitor.asm"
 
 RESET:  JMP START
 NMI:    RTI
