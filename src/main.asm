@@ -16,6 +16,7 @@
 .WORD   IRQ
 
 .CODE
+.INCLUDE "macros.asm"
 .INCLUDE "bios.asm"
 .INCLUDE "xmodem.asm"
 .INCLUDE "monitor.asm"

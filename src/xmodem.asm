@@ -49,10 +49,9 @@
 
 ; zero page variables (adjust these to suit your needs)
 CRC		= $38		; CRC lo byte  (two byte variable)
-CRCH 	= $39		; CRC hi byte  
+CRCH	= $39		; CRC hi byte  
 
 PTR		= $3a		; data pointer (two byte variable)
-; PTRH	= $3b		;   "    "
 
 BLCK_NUM = $3c	; block number 
 RETRY	 = $3d		; retry counter 
@@ -81,11 +80,12 @@ NAK		= $15		; bad block acknowledged
 CAN		= $18		; cancel (not standard, not supported)
 LF		= $0a		; line feed
 REC_CMD	= $43
-DELAY3S = $1E		; 3 secs
+DELAY3S = $1E		; ~ 3 secs
 
 XMODEM_FILE_RECV:
     JSR GENERATE_CRC_TABLE		
-	JSR	PRINT_MSG	; send prompt and info
+	JSR	PRINTLN		; send prompt and info
+	ASC "ready to receive over xmodem. please select a file to transfer or press <esc> to cancel."
 	LDA	#$01
 	STA BLCK_NUM	; set block # to 1
 	STA BLCK_FLAG	; set flag to get address from block 1
@@ -137,7 +137,8 @@ GET_BLCK2:
 	LDA	RECV_BUFF,X	; get block # from buffer
 	CMP	BLCK_NUM	; compare to expected block #	
 	BEQ	GOOD_BLCK1	; matched!
-	JSR	PRINT_ERR	; Unexpected block number - abort	
+	JSR	PRINTLN		; Unexpected block number - abort	
+	ASC "upload error!"
 	JSR	FLUSH		; mismatched - flush buffer and then do BRK
 ;	LDA	#$FD		; put error code in "A" if desired
 	RTS 			; unexpected block # - fatal error - BRK or RTS
@@ -146,7 +147,8 @@ GOOD_BLCK1:
 	INX			
 	CMP	RECV_BUFF,x		; compare with expected 1's comp of block #
 	BEQ	GOOD_BLCK2 	; matched!
-	JSR	PRINT_ERR	; Unexpected block number - abort	
+	JSR	PRINTLN		; Unexpected block number - abort	
+	ASC "upload error!"
 	JSR FLUSH		; mismatched - flush buffer and then do BRK
 ;	LDA	#$FC		; put error code in "A" if desired
 	RTS				; bad 1's comp of block#	
@@ -205,12 +207,10 @@ XM_DONE:			; xmodem done
 	LDA	#ACK		; last block, send ACK and exit.
 	JSR	PUT_CHR		
 	JSR	FLUSH		; get leftover characters, if any
-	JSR	PRINT_GOOD	
+	JSR	PRINTLN
+	ASC "upload succesfull!"
 	RTS				
 
-;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-; subroutines
-;
 GET_BYTE:
 	LDA	#$00		; wait for chr input and cycle timing loop
 	STA RETRY		; set low value of timing loop
@@ -233,48 +233,6 @@ FLUSH1:
 	BCS	FLUSH		; if chr recvd, wait for another
 	RTS				; else done
 
-PRINT_MSG:	
-	LDX	#$00		; PRINT starting message
-PRINT_MSG1:		
-	LDA Msg,x		
-	BEQ	PRINT_MSG2			
-	JSR	PUT_CHR
-	INX
-	BNE	PRINT_MSG1
-PRINT_MSG2:		
-	RTS
-Msg:		
-	.BYTE	"begin xmodem/crc transfer. press <esc> to abort..."
-	.BYTE  	CR, LF, 0
-
-PRINT_ERR:	
-	LDX	#$00		; PRINT Error message
-PRINT_ERR1:		
-	LDA ErrMsg,x
-	BEQ	PRINT_ERR2
-	JSR	PUT_CHR
-	INX
-	BNE	PRINT_ERR1
-PRINT_ERR2:		
-	RTS
-ErrMsg:	
-	.BYTE 	"upload error!"
-	.BYTE  	CR, LF, 0
-;
-PRINT_GOOD:	
-	LDX	#$00		; PRINT Good Transfer message
-PRINT_GOOD1:	
-	LDA GoodMsg,x
-	BEQ	PRINT_GOOD2
-	JSR	PUT_CHR
-	INX
-	BNE	PRINT_GOOD1
-PRINT_GOOD2:	
-	RTS
-GoodMsg:		
-	.BYTE 	"upload successful!"
-	.BYTE  	CR, LF, 0
-	
 ;======================================================================
 ;  I/O Device Specific Routines
 ;

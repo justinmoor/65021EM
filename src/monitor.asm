@@ -222,12 +222,12 @@ ECHO:
 
 SHWMSG:
     LDY #$0
-PRINT:      
+@PRINT:      
     LDA (MSGL),Y
     BEQ DONE
     JSR ECHO
     INY 
-    BNE PRINT
+    BNE @PRINT
 DONE:       
     RTS 
 
@@ -237,7 +237,7 @@ WELCOME_MSG:
     .BYTE "*       ram: 0000-7fff rom:c000-ffff       *", CR, NEWL 
     .BYTE "********************************************", CR, NEWL
     .BYTE CR, NEWL
-    .BYTE "keybinds:"
+    .BYTE "keybinds:", CR, NEWL
     .BYTE "x - receive file of xmodem", CR, NEWL
     .BYTE "r - run program at last selected address", CR, NEWL
     .BYTE 0

@@ -112,3 +112,53 @@ WRITE_CHAR:
     JSR WRITE_MAX
     PLY
     RTS
+
+PRINT:
+    PLA
+    STA STACK_PTR
+    PLA
+    STA STACK_PTR + 1
+    LDY #$1
+@P0: LDA (STACK_PTR), Y
+    BEQ @DONE
+    JSR WRITE_CHAR
+    INY
+    BNE @P0
+@DONE:
+    CLC
+    TYA
+    ADC STACK_PTR
+    STA STACK_PTR
+    LDA STACK_PTR + 1
+    ADC #$00
+    PHA
+    LDA STACK_PTR
+    PHA
+    RTS
+
+PRINTLN:
+    PLA
+    STA STACK_PTR
+    PLA
+    STA STACK_PTR + 1
+    LDY #$1
+@P0: LDA (STACK_PTR), Y
+    BEQ @DONE
+    JSR WRITE_CHAR
+    INY
+    BNE @P0
+@DONE:
+    LDA #CR
+    JSR WRITE_CHAR
+    LDA #NEWL
+    JSR WRITE_CHAR
+    CLC                 ; restore stack
+    TYA
+    ADC STACK_PTR
+    STA STACK_PTR
+    LDA STACK_PTR + 1
+    ADC #$00
+    PHA
+    LDA STACK_PTR
+    PHA
+    RTS
