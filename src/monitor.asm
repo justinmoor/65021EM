@@ -232,8 +232,13 @@ DONE:
     RTS 
 
 WELCOME_MSG:       
-    .BYTE "********************************", CR, NEWL
-    .BYTE "*    welcome to the 65021em    *", CR, NEWL 
-    .BYTE "* ram: 0000-7fff rom:c000-ffff *", CR, NEWL 
-    .BYTE "********************************", CR, NEWL, 0
+    .BYTE "********************************************", CR, NEWL
+    .BYTE "*          welcome to the 65021em          *", CR, NEWL 
+    .BYTE "*       ram: 0000-7fff rom:c000-ffff       *", CR, NEWL 
+    .BYTE "********************************************", CR, NEWL
+    .BYTE CR, NEWL
+    .BYTE "keybinds:"
+    .BYTE "x - receive file of xmodem", CR, NEWL
+    .BYTE "r - run program at last selected address", CR, NEWL
+    .BYTE 0
                                          

@@ -244,7 +244,7 @@ PRINT_MSG1:
 PRINT_MSG2:		
 	RTS
 Msg:		
-	.BYTE	"begin xmodem/CRC transfer. press <esc> to abort..."
+	.BYTE	"begin xmodem/crc transfer. press <esc> to abort..."
 	.BYTE  	CR, LF, 0
 
 PRINT_ERR:	
