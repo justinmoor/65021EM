@@ -1,6 +1,6 @@
 ; XMODEM/CRC Receiver for the 65C02
 ;
-; By Daryl Rictor & Ross Archer  Aug 2002
+; Implementation from: http://www.6502.org/source/io/xmodem/xmodem.htm
 ;
 ; 21st century code for 20th century CPUs (tm?)
 ; 
