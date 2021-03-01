@@ -48,30 +48,30 @@
 ; the data.
 
 ; zero page variables (adjust these to suit your needs)
-crc		= $38		; CRC lo byte  (two byte variable)
-crch 	= $39		; CRC hi byte  
+CRC		= $38		; CRC lo byte  (two byte variable)
+CRCH 	= $39		; CRC hi byte  
 
-ptr		= $3a		; data pointer (two byte variable)
-ptrh	= $3b		;   "    "
+PTR		= $3a		; data pointer (two byte variable)
+; PTRH	= $3b		;   "    "
 
-blkno	= $3c		; block number 
-retry	= $3d		; retry counter 
-retry2	= $3e		; 2nd counter
-bflag	= $3f		; block flag 
+BLCK_NUM = $3c	; block number 
+RETRY	 = $3d		; retry counter 
+RETRY2	 = $3e		; 2nd counter
+BLCK_FLAG	 = $3f		; block flag 
 
 ; non-zero page variables and buffers
-Rbuff	= $500	; temp 132 byte receive buffer (place anywhere, page aligned)
+RECV_BUFF	= $500	; temp 132 byte receive buffer (place anywhere, page aligned)
 ;
 ;  tables and constants
 ;
-; The crclo & crchi labels are used to point to a lookup table to calculate
+; The CRCLO & CRCHI labels are used to point to a lookup table to calculate
 ; the CRC for the 128 byte data blocks.  There are two implementations of these
 ; tables.  One is to use the tables included (defined towards the end of this
 ; file) and the other is to build them at run-time.  If building at run-time,
 ; then these two labels will need to be un-commented and declared in RAM.
 ;
-crclo	= $7D00      	; Two 256-byte tables for quick lookup
-crchi	= $7E00      	; (should be page-aligned for speed)
+CRCLO	= $7D00      	; Two 256-byte tables for quick lookup
+CRCHI	= $7E00      	; (should be page-aligned for speed)
 
 ; XMODEM Control Character Constants
 SOH		= $01		; start block
@@ -85,266 +85,258 @@ DELAY3S = $1E		; 3 secs
 
 XMODEM_FILE_RECV:
     JSR GENERATE_CRC_TABLE		
-	JSR	PrintMsg	; send prompt and info
+	JSR	PRINT_MSG	; send prompt and info
 	LDA	#$01
-	STA blkno		; set block # to 1
-	STA bflag		; set flag to get address from block 1
+	STA BLCK_NUM	; set block # to 1
+	STA BLCK_FLAG	; set flag to get address from block 1
 START_CRC:	
 	LDA	#REC_CMD	; "C" start with CRC mode
-	JSR	Put_Chr		; send it
+	JSR	PUT_CHR		; send it
 	LDA	#DELAY3S	
-	STA retry2		; set loop counter for ~3 sec delay
+	STA RETRY2		; set loop counter for ~3 sec delay
 	LDA	#$00
-	STA crc
-	STA crch		; init CRC value	
-	JSR	GetByte		; wait for input
-	BCS	GotByte		; byte received, process it
+	STA CRC
+	STA CRCH		; init CRC value	
+	JSR	GET_BYTE	; wait for input
+	BCS	GOT_BYTE	; byte received, process it
 	BCC	START_CRC	; resend "C"
 
-StartBlk:
+START_BLCK:
 	LDA	#DELAY3S		 
-	STA retry2		; set loop counter for ~3 sec delay
+	STA RETRY2		; set loop counter for ~3 sec delay
 	LDA	#$00		
-	STA crc		
-	STA crch		; init CRC value	
-	JSR	GetByte		; get first byte of block
-	BCC	StartBlk	; timed out, keep waiting...
-GotByte:
+	STA CRC		
+	STA CRCH		; init CRC value	
+	JSR	GET_BYTE	; get first byte of block
+	BCC	START_BLCK	; timed out, keep waiting...
+GOT_BYTE:
 	CMP	#ESC		; quitting?
-	BNE	GotByte1	; no
+	BNE	GOT_BYTE1	; no
 ;	LDA	#$FE		; Error code in "A" if desired
 	RTS ;brk		; YES - do BRK or change to RTS if desired
-GotByte1:
+GOT_BYTE1:
 	CMP	#SOH		; start of block?
-	BEQ	BegBlk		; yes
+	BEQ	BEGIN_BLCK	; yes
 	CMP	#EOT		
-	BNE	BadCrc		; Not SOH or EOT, so flush buffer & send NAK	
-	JMP	Done		; EOT - all done!
-BegBlk:	
+	BNE	INCRRCT_CRC	; Not SOH or EOT, so flush buffer & send NAK	
+	JMP	XM_DONE		; EOT - all done!
+BEGIN_BLCK:	
 	LDX	#$00
-GetBlk:
+GET_BLCK:
 	LDA	#DELAY3S	; 3 sec window to receive characters
-	STA retry2		
-GetBlk1:
-	JSR	GetByte		; get next character
-	BCC	BadCrc		; chr rcv error, flush and send NAK
-GetBlk2:
-	STA Rbuff,x		; good char, save it in the rcv buffer
+	STA RETRY2		
+GET_BLCK1:
+	JSR	GET_BYTE	; get next character
+	BCC	INCRRCT_CRC	; chr rcv error, flush and send NAK
+GET_BLCK2:
+	STA RECV_BUFF,X	; good char, save it in the rcv buffer
 	INX				; inc buffer pointer	
 	CPX	#$84		; <01> <FE> <128 bytes> <CRCH> <CRCL>
-	BNE	GetBlk		; get 132 characters
+	BNE	GET_BLCK	; get 132 characters
 	LDX	#$00		;
-	LDA	Rbuff,x		; get block # from buffer
-	CMP	blkno		; compare to expected block #	
-	BEQ	GoodBlk1	; matched!
-	JSR	Print_Err	; Unexpected block number - abort	
-	JSR	Flush		; mismatched - flush buffer and then do BRK
+	LDA	RECV_BUFF,X	; get block # from buffer
+	CMP	BLCK_NUM	; compare to expected block #	
+	BEQ	GOOD_BLCK1	; matched!
+	JSR	PRINT_ERR	; Unexpected block number - abort	
+	JSR	FLUSH		; mismatched - flush buffer and then do BRK
 ;	LDA	#$FD		; put error code in "A" if desired
-	RTS ;brk		; unexpected block # - fatal error - BRK or RTS
-GoodBlk1:	
+	RTS 			; unexpected block # - fatal error - BRK or RTS
+GOOD_BLCK1:	
 	EOR	#$ff		; 1's comp of block #
 	INX			
-	CMP	Rbuff,x		; compare with expected 1's comp of block #
-	BEQ	GoodBlk2 	; matched!
-	JSR	Print_Err	; Unexpected block number - abort	
-	JSR Flush		; mismatched - flush buffer and then do BRK
+	CMP	RECV_BUFF,x		; compare with expected 1's comp of block #
+	BEQ	GOOD_BLCK2 	; matched!
+	JSR	PRINT_ERR	; Unexpected block number - abort	
+	JSR FLUSH		; mismatched - flush buffer and then do BRK
 ;	LDA	#$FC		; put error code in "A" if desired
-	RTS	;brk		; bad 1's comp of block#	
-GoodBlk2:	
-	LDY	#$02		; 
-CalcCrc:		
-	LDA	Rbuff,y		; calculate the CRC for the 128 bytes of data	
-	JSR	UpdCrc		; could inline sub here for speed
+	RTS				; bad 1's comp of block#	
+GOOD_BLCK2:	
+	LDY	#$02		 
+CALC_CRC:		
+	LDA	RECV_BUFF,y	; calculate the CRC for the 128 bytes of data	
+	JSR	UPD_CRC		; could inline sub here for speed
 	INY			
 	CPY	#$82		; 128 bytes
-	BNE	CalcCrc		;
-	LDA	Rbuff,y		; get hi CRC from buffer
-	CMP	crch		; compare to calculated hi CRC
-	BNE	BadCrc		; bad crc, send NAK
+	BNE	CALC_CRC	;
+	LDA	RECV_BUFF,y	; get hi CRC from buffer
+	CMP	CRCH		; compare to calculated hi CRC
+	BNE	INCRRCT_CRC	; bad CRC, send NAK
 	INY			
-	LDA	Rbuff,y		; get lo CRC from buffer
-	CMP	crc			; compare to calculated lo CRC
-	BEQ	GoodCrc		; good CRC
-BadCrc:
-	JSR	Flush		; flush the input port
-	LDA	#NAK		;
-	JSR	Put_Chr		; send NAK to resend block
-	JMP	StartBlk	; start over, get the block again			
-GoodCrc:
+	LDA	RECV_BUFF,y	; get lo CRC from buffer
+	CMP	CRC			; compare to calculated lo CRC
+	BEQ	CORRECT_CRC	; good CRC
+INCRRCT_CRC:
+	JSR	FLUSH		; flush the input port
+	LDA	#NAK		
+	JSR	PUT_CHR		; send NAK to resend block
+	JMP	START_BLCK	; start over, get the block again			
+CORRECT_CRC:
 	LDX	#$02		
-	LDA	blkno		; get the block number
+	LDA	BLCK_NUM	; get the block number
 	CMP	#$01		; 1st block?
-	BNE	CopyBlk		; no, copy all 128 bytes
-	LDA	bflag		; is it really block 1, not block 257, 513 etc.
-	BEQ	CopyBlk		; no, copy all 128 bytes
-	LDA	Rbuff,x		; get target address from 1st 2 bytes of blk 1
-	STA ptr			; save lo address
+	BNE	COPY_BLCK	; no, copy all 128 bytes
+	LDA	BLCK_FLAG	; is it really block 1, not block 257, 513 etc.
+	BEQ	COPY_BLCK	; no, copy all 128 bytes
+	LDA	RECV_BUFF,X	; get target address from 1st 2 bytes of blk 1
+	STA PTR			; save lo address
 	INX			
-	LDA	Rbuff,x		; get hi address
-	STA ptr+1		; save it
+	LDA	RECV_BUFF,X	; get hi address
+	STA PTR+1		; save it
 	INX				; point to first byte of data
-	DEC bflag		; set the flag so we won't get another address		
-CopyBlk:		
+	DEC BLCK_FLAG	; set the flag so we won't get another address		
+COPY_BLCK:		
 	LDY	#$00		; set offset to zero
-CopyBlk3:
-	LDA	Rbuff,x		; get data byte from buffer
-	STA (ptr),y		; save to target
-	INC ptr			; point to next address
-	BNE	CopyBlk4	; did it step over page boundary?
-	INC ptr+1		; adjust high address for page crossing
-CopyBlk4:
+COPY_BLCK3:
+	LDA	RECV_BUFF,x	; get data byte from buffer
+	STA (PTR),y		; save to target
+	INC PTR			; point to next address
+	BNE	COPY_BLCK4	; did it step over page boundary?
+	INC PTR+1		; adjust high address for page crossing
+COPY_BLCK4:
 	INX				; point to next data byte
 	CPX	#$82		; is it the last byte
-	BNE	CopyBlk3	; no, get the next one
-IncBlk:
-	INC blkno		; done.  Inc the block #
+	BNE	COPY_BLCK3	; no, get the next one
+INC_BLCK:
+	INC BLCK_NUM	; done.  Inc the block #
 	LDA	#ACK		; send ACK
-	JSR	Put_Chr		
-	JMP	StartBlk	; get next block
-Done:		
+	JSR	PUT_CHR		
+	JMP	START_BLCK	; get next block
+XM_DONE:			; xmodem done
 	LDA	#ACK		; last block, send ACK and exit.
-	JSR	Put_Chr		
-	JSR	Flush		; get leftover characters, if any
-	JSR	Print_Good	
+	JSR	PUT_CHR		
+	JSR	FLUSH		; get leftover characters, if any
+	JSR	PRINT_GOOD	
 	RTS				
 
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ; subroutines
 ;
-GetByte:
+GET_BYTE:
 	LDA	#$00		; wait for chr input and cycle timing loop
-	STA retry		; set low value of timing loop
-StartCrcLp:	
-	JSR	Get_Chr		; get chr from serial port, don't wait 
-	BCS	GetByte1	; got one, so exit
-	DEC retry		; no character received, so dec counter
-	BNE	StartCrcLp	;
-	DEC retry2		; dec hi byte of counter
-	BNE	StartCrcLp	; look for character again
+	STA RETRY		; set low value of timing loop
+START_CRC_LP:	
+	JSR	GET_CHAR		; get chr from serial port, don't wait 
+	BCS	GET_BYTE1	; got one, so exit
+	DEC RETRY		; no character received, so dec counter
+	BNE	START_CRC_LP	;
+	DEC RETRY2		; dec hi byte of counter
+	BNE	START_CRC_LP	; look for character again
 	clc				; if loop times out, CLC, else SEC and return
-GetByte1:
+GET_BYTE1:
 	RTS				; with character in "A"
 
-Flush:
+FLUSH:
 	LDA	#$0F		; flush receive buffer
-	STA retry2		; flush until empty for ~1 sec.
-Flush1:		
-	JSR	GetByte		; read the port
-	BCS	Flush		; if chr recvd, wait for another
+	STA RETRY2		; flush until empty for ~1 sec.
+FLUSH1:		
+	JSR	GET_BYTE	; read the port
+	BCS	FLUSH		; if chr recvd, wait for another
 	RTS				; else done
-;
-PrintMsg:	
+
+PRINT_MSG:	
 	LDX	#$00		; PRINT starting message
-PrtMsg1:		
+PRINT_MSG1:		
 	LDA Msg,x		
-	BEQ	PrtMsg2			
-	JSR	Put_Chr
+	BEQ	PRINT_MSG2			
+	JSR	PUT_CHR
 	INX
-	BNE	PrtMsg1
-PrtMsg2:		
+	BNE	PRINT_MSG1
+PRINT_MSG2:		
 	RTS
 Msg:		
-	.BYTE	"begin xmodem/crc transfer. press <esc> to abort..."
+	.BYTE	"begin xmodem/CRC transfer. press <esc> to abort..."
 	.BYTE  	CR, LF, 0
 
-Print_Err:	
+PRINT_ERR:	
 	LDX	#$00		; PRINT Error message
-PrtErr1:		
+PRINT_ERR1:		
 	LDA ErrMsg,x
-	BEQ	PrtErr2
-	JSR	Put_Chr
+	BEQ	PRINT_ERR2
+	JSR	PUT_CHR
 	INX
-	BNE	PrtErr1
-PrtErr2:		
+	BNE	PRINT_ERR1
+PRINT_ERR2:		
 	RTS
 ErrMsg:	
 	.BYTE 	"upload error!"
 	.BYTE  	CR, LF, 0
 ;
-Print_Good:	
+PRINT_GOOD:	
 	LDX	#$00		; PRINT Good Transfer message
-Prtgood1:	
+PRINT_GOOD1:	
 	LDA GoodMsg,x
-	BEQ	Prtgood2
-	JSR	Put_Chr
+	BEQ	PRINT_GOOD2
+	JSR	PUT_CHR
 	INX
-	BNE	Prtgood1
-Prtgood2:	
+	BNE	PRINT_GOOD1
+PRINT_GOOD2:	
 	RTS
 GoodMsg:		
 	.BYTE 	"upload successful!"
 	.BYTE  	CR, LF, 0
-;
-;
+	
 ;======================================================================
 ;  I/O Device Specific Routines
 ;
 ;  Two routines are used to communicate with the I/O device.
 ;
-; "Get_Chr" routine will scan the input port for a character.  It will
+; "GET_CHAR" routine will scan the input port for a character.  It will
 ; return without waiting with the Carry flag CLEAR if no character is
 ; present or return with the Carry flag SET and the character in the "A"
 ; register if one was present.
 ;
-; "Put_Chr" routine will write one byte to the output port.  Its alright
+; "PUT_CHR" routine will write one byte to the output port.  Its alright
 ; if this routine waits for the port to be ready.  its assumed that the 
 ; character was send upon return from this routine.
-;
-
-Get_Chr:
+GET_CHAR:
 	JSR READ_CHAR
 	RTS
 
-Put_Chr:	   	
-	PHA                 ; save registers
+PUT_CHR:	   	
+	PHA             ; save registers
 	JSR WRITE_CHAR
 	PLA
-	RTS                 ; done
-;=========================================================================
-;  CRC subroutines 
-UpdCrc:
-	EOR crc+1 		; Quick CRC computation with lookup tables
-	TAX		 		; updates the two bytes at crc & crc+1
-	LDA crc			; with the byte send in the "A" register
-	EOR crchi,X
-	STA crc+1
-	LDA crclo,X
-	STA crc
+	RTS             ; done
+
+; CRC subroutines 
+UPD_CRC:
+	EOR CRC+1 		; Quick CRC computation with lookup tables
+	TAX		 		; updates the two bytes at CRC & CRC+1
+	LDA CRC			; with the byte send in the "A" register
+	EOR CRCHI,X
+	STA CRC+1
+	LDA CRCLO,X
+	STA CRC
 	RTS
-;
-; Alternate solution is to build the two lookup tables at run-time.  This might
-; be desirable if the program is running from ram to reduce binary upload time.
-; The following code generates the data for the lookup tables.  You would need to
-; un-comment the variable declarations for crclo & crchi in the Tables and Constants
-; section above and call this routine to build the tables before calling the
-; "xmodem" routine.
+
+; subroutine to generate CRC lookup tables, needs to be ran before XMODEM transfer
 GENERATE_CRC_TABLE:
 	LDX	#$00
 	LDA	#$00
-zeroloop:
-	STA crclo,x
-	STA crchi,x
+ZERO_LOOP:
+	STA CRCLO,x
+	STA CRCHI,x
 	INX
-	BNE	zeroloop
+	BNE	ZERO_LOOP
 	LDX	#$00
-fetch:	
+FETCH:	
 	TXA
-	EOR	crchi,x
-	STA crchi,x
+	EOR	CRCHI,x
+	STA CRCHI,x
 	LDY	#$08
-fetch1:	
-	ASL	crclo,x
-	ROL	crchi,x
-	BCC	fetch2
-	LDA	crchi,x
+FETCH1:	
+	ASL	CRCLO,x
+	ROL	CRCHI,x
+	BCC	FETCH2
+	LDA	CRCHI,x
 	EOR	#$10
-	STA crchi,x
-	LDA	crclo,x
+	STA CRCHI,x
+	LDA	CRCLO,x
 	EOR	#$21
-	STA crclo,x
-fetch2:
+	STA CRCLO,x
+FETCH2:
 	DEY
-	BNE	fetch1
+	BNE	FETCH1
 	INX
-	BNE	fetch
+	BNE	FETCH
 	RTS
