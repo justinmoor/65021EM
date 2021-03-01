@@ -80,6 +80,8 @@ ACK		= $06		; good block acknowledged
 NAK		= $15		; bad block acknowledged
 CAN		= $18		; cancel (not standard, not supported)
 LF		= $0a		; line feed
+REC_CMD	= $43
+DELAY3S = $1E		; 3 secs
 
 XModem:
     JSR GENERATE_CRC_TABLE		
@@ -88,9 +90,9 @@ XModem:
 	sta	blkno		; set block # to 1
 	sta	bflag		; set flag to get address from block 1
 StartCrc:	
-	lda	#'C'		; "C" start with CRC mode
+	lda	#REC_CMD	; "C" start with CRC mode
 	jsr	Put_Chr		; send it
-	lda	#$FF	
+	lda	#DELAY3S	
 	sta	retry2		; set loop counter for ~3 sec delay
 	lda	#$00
 	sta	crc
@@ -100,7 +102,7 @@ StartCrc:
 	bcc	StartCrc	; resend "C"
 
 StartBlk:
-	lda	#$FF		 
+	lda	#DELAY3S		 
 	sta	retry2		; set loop counter for ~3 sec delay
 	lda	#$00		
 	sta	crc		
@@ -121,7 +123,7 @@ GotByte1:
 BegBlk:	
 	ldx	#$00
 GetBlk:
-	lda	#$ff		; 3 sec window to receive characters
+	lda	#DELAY3S	; 3 sec window to receive characters
 	sta	retry2		
 GetBlk1:
 	jsr	GetByte		; get next character
@@ -141,13 +143,13 @@ GetBlk2:
 	rts ;brk		; unexpected block # - fatal error - BRK or RTS
 GoodBlk1:	
 	eor	#$ff		; 1's comp of block #
-	inx			;
+	inx			
 	cmp	Rbuff,x		; compare with expected 1's comp of block #
 	beq	GoodBlk2 	; matched!
 	jsr	Print_Err	; Unexpected block number - abort	
 	jsr Flush		; mismatched - flush buffer and then do BRK
 ;	lda	#$FC		; put error code in "A" if desired
-	brk				; bad 1's comp of block#	
+	rts	;brk		; bad 1's comp of block#	
 GoodBlk2:	
 	ldy	#$02		; 
 CalcCrc:		
@@ -224,7 +226,7 @@ GetByte1:
 	rts				; with character in "A"
 
 Flush:
-	lda	#$70		; flush receive buffer
+	lda	#$0F		; flush receive buffer
 	sta	retry2		; flush until empty for ~1 sec.
 Flush1:		
 	jsr	GetByte		; read the port
@@ -242,13 +244,13 @@ PrtMsg1:
 PrtMsg2:		
 	rts
 Msg:		
-	.BYTE	"Begin XMODEM/CRC transfer.  Press <Esc> to abort..."
+	.BYTE	"begin xmodem/crc transfer. press <esc> to abort..."
 	.BYTE  	CR, LF, 0
 
 Print_Err:	
 	ldx	#$00		; PRINT Error message
 PrtErr1:		
-	lda   	ErrMsg,x
+	lda ErrMsg,x
 	beq	PrtErr2
 	jsr	Put_Chr
 	inx
@@ -256,7 +258,7 @@ PrtErr1:
 PrtErr2:		
 	rts
 ErrMsg:	
-	.BYTE 	"Upload Error!"
+	.BYTE 	"upload error!"
 	.BYTE  	CR, LF, 0
 ;
 Print_Good:	
@@ -270,7 +272,7 @@ Prtgood1:
 Prtgood2:	
 	rts
 GoodMsg:		
-	.BYTE 	"Upload Successful!"
+	.BYTE 	"upload successful!"
 	.BYTE  	CR, LF, 0
 ;
 ;
@@ -320,7 +322,6 @@ UpdCrc:
 ; un-comment the variable declarations for crclo & crchi in the Tables and Constants
 ; section above and call this routine to build the tables before calling the
 ; "xmodem" routine.
-
 GENERATE_CRC_TABLE:
 	ldx	#$00
 	LDA	#$00
