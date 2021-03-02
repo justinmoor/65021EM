@@ -8,7 +8,7 @@ The code is currently more focused on being readable than being optimized for pe
 - **CPU:** 65C02
 - **RAM**: 32KB
 - **ROM**: 16KB
-- **CLOCK**: 1Mhz
+- **CLOCK**: 2Mhz
 
 ### Features
 
@@ -32,5 +32,5 @@ cl65 -C memory_layout.cfg src/main.asm -o build/program
 minipro -s -p AT28C256 -w build/program
 
 // open terminal session
-picocom --b 19200 /dev/ttyUSB0
+picocom --b 19200 --send-cmd "sx -vv" --receive-cmd "rx -vv" /dev/ttyUSB0
 ```

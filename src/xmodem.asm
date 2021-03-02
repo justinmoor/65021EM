@@ -1,51 +1,16 @@
 ; XMODEM/CRC Receiver for the 65C02
 ;
 ; Implementation from: http://www.6502.org/source/io/xmodem/xmodem.htm
-;
-; 21st century code for 20th century CPUs (tm?)
+; Changes:
+;	- Removed o64 file format requirements (file will be stored at last examined memory address)
+;	- CRC lookup tables are generated runtime
+;	- Delay fix
 ; 
 ; A simple file transfer program to allow upload from a console device
 ; to the SBC utilizing the x-modem/CRC transfer protocol.  Requires just
 ; under 1k of either RAM or ROM, 132 bytes of RAM for the receive buffer,
 ; and 8 bytes of zero page RAM for variable storage.
 ;
-;**************************************************************************
-; This implementation of XMODEM/CRC does NOT conform strictly to the 
-; XMODEM protocol standard in that it (1) does not accurately time character
-; reception or (2) fall back to the Checksum mode.
-
-; (1) For timing, it uses a crude timing loop to provide approximate
-; delays.  These have been calibrated against a 1MHz CPU clock.  I have
-; found that CPU clock speed of up to 5MHz also work but may not in
-; every case.  Windows HyperTerminal worked quite well at both speeds!
-;
-; (2) Most modern terminal programs support XMODEM/CRC which can detect a
-; wider range of transmission errors so the fallback to the simple checksum
-; calculation was not implemented to save space.
-;**************************************************************************
-;
-; Files uploaded via XMODEM-CRC must be
-; in .o64 format -- the first two bytes are the load address in
-; little-endian format:  
-;  FIRST BLOCK
-;     offset(0) = lo(load start address),
-;     offset(1) = hi(load start address)
-;     offset(2) = data byte (0)
-;     offset(n) = data byte (n-2)
-;
-; Subsequent blocks
-;     offset(n) = data byte (n)
-;
-; The TASS assembler and most Commodore 64-based tools generate this
-; data format automatically and you can transfer their .obj/.o64 output
-; file directly.  
-;   
-; The only time you need to do anything special is if you have 
-; a raw memory image file (say you want to load a data
-; table into memory). For XMODEM you'll have to 
-; "insert" the start address bytes to the front of the file.
-; Otherwise, XMODEM would have no idea where to start putting
-; the data.
 
 ; zero page variables (adjust these to suit your needs)
 CRC		= $38		; CRC lo byte  (two byte variable)
@@ -60,15 +25,11 @@ BLCK_FLAG	= $3f	; block flag
 
 ; non-zero page variables and buffers
 RECV_BUFF	= $500	; temp 132 byte receive buffer (place anywhere, page aligned)
-;
+
 ;  tables and constants
 ;
 ; The CRCLO & CRCHI labels are used to point to a lookup table to calculate
-; the CRC for the 128 byte data blocks.  There are two implementations of these
-; tables.  One is to use the tables included (defined towards the end of this
-; file) and the other is to build them at run-time.  If building at run-time,
-; then these two labels will need to be un-commented and declared in RAM.
-;
+; the CRC for the 128 byte data blocks.  Tables will be generated runtime
 CRCLO	= $7D00      	; Two 256-byte tables for quick lookup
 CRCHI	= $7E00      	; (should be page-aligned for speed)
 
@@ -113,7 +74,7 @@ GOT_BYTE:
 	CMP	#ESC		; quitting?
 	BNE	GOT_BYTE1	; no
 ;	LDA	#$FE		; Error code in "A" if desired
-	RTS ;brk		; YES - do BRK or change to RTS if desired
+	RTS 			; YES - do BRK or change to RTS if desired
 GOT_BYTE1:
 	CMP	#SOH		; start of block?
 	BEQ	BEGIN_BLCK	; yes
