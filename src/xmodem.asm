@@ -51,12 +51,12 @@
 CRC		= $38		; CRC lo byte  (two byte variable)
 CRCH	= $39		; CRC hi byte  
 
-PTR		= $3a		; data pointer (two byte variable)
+TARGET	= $24		; pointer to store the file, is equal to last examined address in the monitor (XAML)
 
-BLCK_NUM = $3c	; block number 
+BLCK_NUM = $3c		; block number 
 RETRY	 = $3d		; retry counter 
 RETRY2	 = $3e		; 2nd counter
-BLCK_FLAG	 = $3f		; block flag 
+BLCK_FLAG	= $3f	; block flag 
 
 ; non-zero page variables and buffers
 RECV_BUFF	= $500	; temp 132 byte receive buffer (place anywhere, page aligned)
@@ -145,7 +145,7 @@ GET_BLCK2:
 GOOD_BLCK1:	
 	EOR	#$ff		; 1's comp of block #
 	INX			
-	CMP	RECV_BUFF,x		; compare with expected 1's comp of block #
+	CMP	RECV_BUFF,x	; compare with expected 1's comp of block #
 	BEQ	GOOD_BLCK2 	; matched!
 	JSR	PRINTLN		; Unexpected block number - abort	
 	ASC "upload error!"
@@ -179,21 +179,15 @@ CORRECT_CRC:
 	BNE	COPY_BLCK	; no, copy all 128 bytes
 	LDA	BLCK_FLAG	; is it really block 1, not block 257, 513 etc.
 	BEQ	COPY_BLCK	; no, copy all 128 bytes
-	LDA	RECV_BUFF,X	; get target address from 1st 2 bytes of blk 1
-	STA PTR			; save lo address
-	INX			
-	LDA	RECV_BUFF,X	; get hi address
-	STA PTR+1		; save it
-	INX				; point to first byte of data
 	DEC BLCK_FLAG	; set the flag so we won't get another address		
 COPY_BLCK:		
 	LDY	#$00		; set offset to zero
 COPY_BLCK3:
 	LDA	RECV_BUFF,x	; get data byte from buffer
-	STA (PTR),y		; save to target
-	INC PTR			; point to next address
+	STA (TARGET),y		; save to target
+	INC TARGET			; point to next address
 	BNE	COPY_BLCK4	; did it step over page boundary?
-	INC PTR+1		; adjust high address for page crossing
+	INC TARGET+1		; adjust high address for page crossing
 COPY_BLCK4:
 	INX				; point to next data byte
 	CPX	#$82		; is it the last byte

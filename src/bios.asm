@@ -21,6 +21,10 @@ SPI_WR_BUFF = $100
 
 MAX3100_RD_BUFF = $130
 
+; low address of string to print
+STRING_LO = $02
+STRIG_HI = $03
+
 ; used to stack manipulation 
 STACK_PTR = $00
 
@@ -113,13 +117,15 @@ WRITE_CHAR:
     PLY
     RTS
 
-PRINT:
+; uses stack manipulation
+PRINT1:
     PLA
     STA STACK_PTR
     PLA
     STA STACK_PTR + 1
     LDY #$1
-@P0: LDA (STACK_PTR), Y
+@P0: 
+    LDA (STACK_PTR), Y
     BEQ @DONE
     JSR WRITE_CHAR
     INY
@@ -136,6 +142,20 @@ PRINT:
     PHA
     RTS
 
+PRINT2:
+    PHY
+    LDY #$00
+@LOOP:
+    LDA (STRING_LO), Y
+    BEQ @DONE
+    JSR WRITE_CHAR
+    INY
+    BNE @LOOP ; up to 255 chars
+@DONE:
+    PLY 
+    RTS
+
+; uses stack manipulation
 PRINTLN:
     PLA
     STA STACK_PTR

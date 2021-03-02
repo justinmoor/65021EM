@@ -29,15 +29,16 @@ PROMPT      = $3E       ;'>' Prompt character
 START_MONITOR:
     CLD             ; Clear decimal arithmetic mode.
     CLI
-    LDA #NEWL
-    JSR ECHO
-    LDA #CR
-    JSR ECHO        ;* New line.
-    LDA #<WELCOME_MSG
-    STA MSGL
-    LDA #>WELCOME_MSG
-    STA MSGH
-    JSR SHWMSG      ;* Show Welcome.
+    LDA #<WELCOME_PROMP1
+    STA STRING_LO
+    LDA #>WELCOME_PROMP1
+    STA STRIG_HI
+    JSR PRINT2
+    LDA #<KEYBINDS
+    STA STRING_LO
+    LDA #>KEYBINDS
+    STA STRIG_HI
+    JSR PRINT2
 
 SOFTRESET:  
     LDA #$9B
@@ -231,14 +232,16 @@ SHWMSG:
 DONE:       
     RTS 
 
-WELCOME_MSG:       
+WELCOME_PROMP1:      
+    .BYTE CR, NEWL
     .BYTE "********************************************", CR, NEWL
     .BYTE "*          welcome to the 65021em          *", CR, NEWL 
-    .BYTE "*       ram: 0000-7fff rom:c000-ffff       *", CR, NEWL 
+    .BYTE "*       ram: 0000-7fff rom: C000-ffff      *", CR, NEWL 
     .BYTE "********************************************", CR, NEWL
-    .BYTE CR, NEWL
+    .BYTE CR, NEWL, 0
+KEYBINDS:
     .BYTE "keybinds:", CR, NEWL
-    .BYTE "x - receive file of xmodem", CR, NEWL
+    .BYTE "x - receive file over xmodem", CR, NEWL
     .BYTE "r - run program at last selected address", CR, NEWL
     .BYTE 0
                                          
