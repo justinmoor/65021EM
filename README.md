@@ -1,5 +1,5 @@
 # 65021EM
-65021ME stands for 65021 Expandable Microcomputer, a 6502-based computer, made in 2021. This repository holds all the necessary resources for the project, which includes source code and schematics.
+65021EM stands for 65021 Expandable Microcomputer, a 6502-based computer, made in 2021. This repository holds all the necessary resources for the project, which includes source code and schematics.
 
 The code is currently more focused on being readable than being optimized for performance (this could also be an excuse for writing bad assembly code ;) ).
 
