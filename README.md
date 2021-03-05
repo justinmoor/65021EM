@@ -26,10 +26,10 @@ The code is currently more focused on being readable than being optimized for pe
 ### Build
 ```sh
 // assemble code
-cl65 -C memory_layout.cfg src/main.asm -o build/program
+cl65 -t none -C memory_layout.cfg src/main.asm -o build/os
 
 // write to ROM
-minipro -s -p AT28C256 -w build/program
+minipro -s -p AT28C256 -w build/os
 
 // open terminal session
 picocom --b 19200 --send-cmd "sx -vv" --receive-cmd "rx -vv" /dev/ttyUSB0

@@ -45,8 +45,8 @@ DELAY3S = $1E		; ~ 3 secs
 
 XMODEM_FILE_RECV:
     JSR GENERATE_CRC_TABLE		
-	JSR	PRINTLN		; send prompt and info
-	ASC "ready to receive over xmodem. please select a file to transfer or press <esc> to cancel."
+	JSR	PRINTIMM		; send prompt and info
+	ASCLN "READY TO RECEIVE OVER XMODEM. PLEASE SELECT A FILE TO TRANSFER OR PRESS <ESC> TO CANCEL."
 	LDA	#$01
 	STA BLCK_NUM	; set block # to 1
 	STA BLCK_FLAG	; set flag to get address from block 1
@@ -98,8 +98,8 @@ GET_BLCK2:
 	LDA	RECV_BUFF,X	; get block # from buffer
 	CMP	BLCK_NUM	; compare to expected block #	
 	BEQ	GOOD_BLCK1	; matched!
-	JSR	PRINTLN		; Unexpected block number - abort	
-	ASC "upload error!"
+	JSR	PRINTIMM		; Unexpected block number - abort	
+	ASCLN "UPLOAD ERROR!"
 	JSR	FLUSH		; mismatched - flush buffer and then do BRK
 ;	LDA	#$FD		; put error code in "A" if desired
 	RTS 			; unexpected block # - fatal error - BRK or RTS
@@ -108,8 +108,8 @@ GOOD_BLCK1:
 	INX			
 	CMP	RECV_BUFF,x	; compare with expected 1's comp of block #
 	BEQ	GOOD_BLCK2 	; matched!
-	JSR	PRINTLN		; Unexpected block number - abort	
-	ASC "upload error!"
+	JSR	PRINTIMM		; Unexpected block number - abort	
+	ASCLN "UPLOAD ERROR!"
 	JSR FLUSH		; mismatched - flush buffer and then do BRK
 ;	LDA	#$FC		; put error code in "A" if desired
 	RTS				; bad 1's comp of block#	
@@ -162,8 +162,8 @@ XM_DONE:			; xmodem done
 	LDA	#ACK		; last block, send ACK and exit.
 	JSR	PUT_CHR		
 	JSR	FLUSH		; get leftover characters, if any
-	JSR	PRINTLN
-	ASC "upload succesfull!"
+	JSR	PRINTIMM
+	ASCLN "UPLOAD SUCCESFULL!"
 	RTS				
 
 GET_BYTE:
@@ -181,7 +181,7 @@ GET_BYTE1:
 	RTS				; with character in "A"
 
 FLUSH:
-	LDA	#$0F		; flush receive buffer
+	LDA	#$09		; flush receive buffer
 	STA RETRY2		; flush until empty for ~1 sec.
 FLUSH1:		
 	JSR	GET_BYTE	; read the port

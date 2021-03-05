@@ -29,16 +29,16 @@ PROMPT      = $3E       ;'>' Prompt character
 START_MONITOR:
     CLD             ; Clear decimal arithmetic mode.
     CLI
-    LDA #<WELCOME_PROMP1
+    LDA #<BANNER
     STA STRING_LO
-    LDA #>WELCOME_PROMP1
+    LDA #>BANNER
     STA STRIG_HI
-    JSR PRINT2
-    LDA #<KEYBINDS
+    JSR PRINT
+    LDA #<COMMANDS
     STA STRING_LO
-    LDA #>KEYBINDS
+    LDA #>COMMANDS
     STA STRIG_HI
-    JSR PRINT2
+    JSR PRINT
 
 SOFTRESET:  
     LDA #$9B
@@ -221,27 +221,18 @@ ECHO:
     PLA
     RTS
 
-SHWMSG:
-    LDY #$0
-@PRINT:      
-    LDA (MSGL),Y
-    BEQ DONE
-    JSR ECHO
-    INY 
-    BNE @PRINT
-DONE:       
-    RTS 
-
-WELCOME_PROMP1:      
+BANNER:
+    .BYTE CR, NEWL, CR, NEWL
+    .BYTE "  /    __|    \ _  ) _ |    __|   \  |", CR, NEWL
+    .BYTE "  _ \ __ \  (  |  /    |    _|   |\/ |", CR, NEWL
+    .BYTE "\___/ ___/ \__/ ___|  _|   ___| _|  _|", CR, NEWL
     .BYTE CR, NEWL
-    .BYTE "********************************************", CR, NEWL
-    .BYTE "*          welcome to the 65021em          *", CR, NEWL 
-    .BYTE "*       ram: 0000-7fff rom: C000-ffff      *", CR, NEWL 
-    .BYTE "********************************************", CR, NEWL
-    .BYTE CR, NEWL, 0
-KEYBINDS:
-    .BYTE "keybinds:", CR, NEWL
-    .BYTE "x - receive file over xmodem", CR, NEWL
-    .BYTE "r - run program at last selected address", CR, NEWL
-    .BYTE 0
-                                         
+    .BYTE "CPU: 65C02", CR, NEWL
+    .BYTE "Clock: 2 Mhz", CR, NEWL
+    .BYTE "RAM: 32KB - LOC.: 0000-7FFF", CR, NEWL
+    .BYTE "ROM: 16KB - LOC.: C000-FFFF", CR, NEWL, 0
+COMMANDS:
+    .BYTE CR, NEWL
+    .BYTE "Welcome to the 65021EM! The following commands are available:", CR, NEWL
+    .BYTE "X - Receive file over XMODEM", CR, NEWL
+    .BYTE "R - Run program at last selected address", CR, NEWL, 0
