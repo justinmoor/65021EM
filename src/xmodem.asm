@@ -104,11 +104,11 @@ GET_BLCK2:
 ;	LDA #$FD		; put error code in "A" if desired
 	RTS 			; unexpected block # - fatal error - BRK or RTS
 GOOD_BLCK1:	
-	EOR	#$ff		; 1's comp of block #
-	INX			
-	CMP	RECV_BUFF,x	; compare with expected 1's comp of block #
-	BEQ	GOOD_BLCK2 	; matched!
-	JSR	PRINTIMM		; Unexpected block number - abort	
+	EOR #$ff		; 1's comp of block #
+	INX 		
+	CMP RECV_BUFF,x	; compare with expected 1's comp of block #
+	BEQ GOOD_BLCK2 	; matched!
+	JSR PRINTIMM		; Unexpected block number - abort	
 	ASCLN "UPLOAD ERROR!"
 	JSR FLUSH		; mismatched - flush buffer and then do BRK
 ;	LDA	#$FC		; put error code in "A" if desired
