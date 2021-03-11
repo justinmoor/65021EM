@@ -26,6 +26,7 @@ ENT         = $8D
 ESC         = $9B       ; ESC key
 PROMPT      = $3E       ;'>' Prompt character
 
+
 START_MONITOR:
     CLD             ; Clear decimal arithmetic mode.
     CLI
@@ -227,8 +228,7 @@ BANNER:
     .BYTE "  _ \ __ \  (  |  /    |    _|   |\/ |", CR, NEWL
     .BYTE "\___/ ___/ \__/ ___|  _|   ___| _|  _|", CR, NEWL
     .BYTE CR, NEWL
-    .BYTE "CPU: 65C02", CR, NEWL
-    .BYTE "Clock: 2 Mhz", CR, NEWL
+    .BYTE "CPU: 65C02 @ 2 Mhz", CR, NEWL
     .BYTE "RAM: 32KB - LOC.: 0000-7FFF", CR, NEWL
     .BYTE "ROM: 16KB - LOC.: C000-FFFF", CR, NEWL, 0
 COMMANDS:
@@ -236,3 +236,5 @@ COMMANDS:
     .BYTE "Welcome to the 65021EM! The following commands are available:", CR, NEWL
     .BYTE "X - Receive file over XMODEM", CR, NEWL
     .BYTE "R - Run program at last selected address", CR, NEWL, 0
+
+
