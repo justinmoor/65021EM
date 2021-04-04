@@ -1,10 +1,4 @@
-;-------------------------------------------------------------------------
-;   65021EM MACHINE LANGUAGE MONITOR
-;
-;   Basic machine language monitor based on Steve Wozniak's Wozmon
-;   for the Apple 1. Most of this code is written by Wozniak in 1976
-; 
-;-------------------------------------------------------------------------
+.SETCPU "65C02"
 
 IN          = $0200     ;*Input buffer
 XAML        = $24       ;*Index pointers
@@ -18,28 +12,30 @@ MODE        = $2B
 MSGL        = $2C
 MSGH        = $2D
 COUNTER     = $2E
+ASCII_BUFF  = $50
 
 BS          = $88       ; Backspace key, arrow left key
 CR          = $0D       ; Carriage Return
 NEWL        = $0A
 ENT         = $8D
 ESC         = $9B       ; ESC key
-PROMPT      = $3E       ;'>' Prompt character
+PROMPT      = '-'       ;'>' Prompt character
 
+WRITE_CHAR  = $C079
+READ_CHAR   = $C067
+PRINTIMM    = $C08A
+
+.MACRO ASCLN text
+    .BYTE text, $0D, $0A, 0
+.ENDMACRO
+
+.ORG $1000
 
 START_MONITOR:
     CLD             ; Clear decimal arithmetic mode.
     CLI
-    LDA #<BANNER
-    STA STRING_LO
-    LDA #>BANNER
-    STA STRIG_HI
-    JSR PRINT
-    LDA #<COMMANDS
-    STA STRING_LO
-    LDA #>COMMANDS
-    STA STRIG_HI
-    JSR PRINT
+    JSR PRINTIMM
+    ASCLN "TEST MONITOR"
 
 SOFTRESET:  
     LDA #$9B
@@ -100,8 +96,6 @@ NEXTITEM:
     BEQ SETSTOR     ; Yes, set STOR mode.
     CMP #$D2        ; "R"?
     BEQ RUN         ; Yes, run user program.
-    CMP #$D8        ; "X"?
-    BEQ XMODEM      ; Receive file using XMODEM
     STX L           ; $00->L.
     STX H           ; and H.
     STY YSAV        ; Save Y for comparison.
@@ -132,12 +126,6 @@ NOTHEX:
     BNE NOESCAPE    ; * Branch out of range, had to improvise...
     JMP ESCAPE      ; Yes, generate ESC sequence.
 
-XMODEM:
-    PHY
-    JSR XMODEM_FILE_RECV
-    PLY
-    JMP SOFTRESET
-
 RUN:
     JSR ACTRUN      ; * JSR to the Address we want to run.
     JMP SOFTRESET   ; * When returned for the program, reset EWOZ.
@@ -165,6 +153,7 @@ SETADR:
     BNE SETADR      ; Loop unless X = 0.
 NXTPRNT:
     BNE PRDATA      ; NE means no address to print.
+    JSR PRINT_ASC
     LDA #CR
     JSR ECHO        ; * New line.
     LDA #NEWL
@@ -183,6 +172,7 @@ PRDATA:
     LDA #$A0        ; Blank.
     JSR ECHO        ; Output it.
     LDA (XAML,X)    ; Get data byte at 'examine index".
+    STA ASCII_BUFF, X
     JSR PRBYTE      ; Output it in hex format.
 XAMNEXT:
     STX MODE        ; 0-> MODE (XAM mode).
@@ -195,7 +185,7 @@ XAMNEXT:
     BNE MOD8CHK     ; Increment 'examine index".
     INC XAMH
 MOD8CHK:
-    LDA XAML        ; Check low-order 'exainine index' byte
+    LDA XAML        ; Check low-order 'examine index' byte
     AND #$0F        ; 16 values per row
     BPL NXTPRNT     ; Always taken.
 PRBYTE:
@@ -213,30 +203,44 @@ PRHEX:
     BCC ECHO        ; Yes, output it.
     ADC #$06        ; Add offset for letter.
 
-ECHO:          
+ECHO: 
     PHA
     PHY
     PHX
     AND #$7F
     JSR WRITE_CHAR
     PLX
-    PLY    
+    PLY
     PLA
     RTS
 
-BANNER:
-    .BYTE CR, NEWL, CR, NEWL
-    .BYTE "  /    __|    \ _  ) _ |    __|   \  |", CR, NEWL
-    .BYTE "  _ \ __ \  (  |  /    |    _|   |\/ |", CR, NEWL
-    .BYTE "\___/ ___/ \__/ ___|  _|   ___| _|  _|", CR, NEWL
-    .BYTE CR, NEWL
-    .BYTE "CPU: 65C02 @ 2 Mhz", CR, NEWL
-    .BYTE "RAM: 32KB - LOC.: 0000-7FFF", CR, NEWL
-    .BYTE "ROM: 16KB - LOC.: C000-FFFF", CR, NEWL, 0
-COMMANDS:
-    .BYTE CR, NEWL
-    .BYTE "Welcome to the 65021EM! The following commands are available:", CR, NEWL
-    .BYTE "X - Receive file over XMODEM", CR, NEWL
-    .BYTE "R - Run program at last selected address", CR, NEWL, 0
-
+PRINT_ASC:
+    PHA
+    PHY
+    PHX
+    LDA #$20
+    JSR WRITE_CHAR
+    LDA #$20
+    JSR WRITE_CHAR
+    LDA #'|'
+    JSR WRITE_CHAR
+    LDX #$0
+@LOOP:
+    LDA ASCII_BUFF, X
+    INX
+    CMP #$10
+    BEQ @DONE
+    PHA
+    LDA #$20
+    JSR WRITE_CHAR
+    PLA
+    JSR WRITE_CHAR
+    JMP @LOOP
+@DONE:
+    LDA #'|'
+    JSR WRITE_CHAR
+    PLX
+    PLY
+    PLA
+    RTS
 

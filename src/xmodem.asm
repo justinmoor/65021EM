@@ -45,7 +45,7 @@ DELAY3S = $1E		; ~ 3 secs
 
 XMODEM_FILE_RECV:
     JSR GENERATE_CRC_TABLE		
-	JSR PRINTIMM		; send prompt and info
+	JSR PRINTIMM		
 	ASCLN "READY TO RECEIVE OVER XMODEM. PLEASE SELECT A FILE TO TRANSFER OR PRESS <ESC> TO CANCEL."
 	LDA #$01
 	STA BLCK_NUM	; set block # to 1
@@ -145,10 +145,10 @@ COPY_BLCK:
 	LDY #$00		; set offset to zero
 COPY_BLCK3:
 	LDA RECV_BUFF,x	; get data byte from buffer
-	STA (TARGET),y		; save to target
-	INC TARGET			; point to next address
+	STA (TARGET),y	; save to target
+	INC TARGET		; point to next address
 	BNE COPY_BLCK4	; did it step over page boundary?
-	INC TARGET+1		; adjust high address for page crossing
+	INC TARGET+1	; adjust high address for page crossing
 COPY_BLCK4:
 	INX 			; point to next data byte
 	CPX #$82		; is it the last byte
@@ -170,10 +170,10 @@ GET_BYTE:
 	LDA #$00		; wait for chr input and cycle timing loop
 	STA RETRY		; set low value of timing loop
 START_CRC_LP:	
-	JSR GET_CHAR		; get chr from serial port, don't wait 
+	JSR GET_CHAR	; get chr from serial port, don't wait 
 	BCS GET_BYTE1	; got one, so exit
 	DEC RETRY		; no character received, so dec counter
-	BNE START_CRC_LP	;
+	BNE START_CRC_LP	
 	DEC RETRY2		; dec hi byte of counter
 	BNE START_CRC_LP	; look for character again
 	CLC				; if loop times out, CLC, else SEC and return

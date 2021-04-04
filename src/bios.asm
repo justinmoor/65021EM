@@ -92,6 +92,7 @@ WRITE:
     LDA SPI_RD_BUFF
     RTS
 
+; reads a char from serial. If new char is read, carry flag is set and char is in A
 READ_CHAR:
     PHY
     LDY #0
