@@ -34,3 +34,6 @@ minipro -s -p AT28C256 -w build/os
 // open terminal session
 picocom --b 19200 --send-cmd "sx -vv" --receive-cmd "rx -vv" /dev/ttyUSB0
 ```
+
+### BASIC
+To start BASIC, select address \$5000 and transfer `/programs/basic` over XMODEM. If the transfer is complete, start execution from address \$5000

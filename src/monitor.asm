@@ -101,6 +101,8 @@ NEXTITEM:
     BEQ RUN         ; Yes, run user program.
     CMP #$D8        ; "X"?
     BEQ XMODEM      ; Receive file using XMODEM
+    CMP #$C2        ; "B"?
+    BEQ BASIC       ; start BASIC
     STX L           ; $00->L.
     STX H           ; and H.
     STY YSAV        ; Save Y for comparison.
@@ -130,6 +132,10 @@ NOTHEX:
     CPY YSAV        ; Check if L, H empty (no hex digits).
     BNE NOESCAPE    ; * Branch out of range, had to improvise...
     JMP ESCAPE      ; Yes, generate ESC sequence.
+
+BASIC:
+    JSR LAB_COLD
+    RTS
 
 XMODEM:
     PHY
@@ -235,6 +241,7 @@ BANNER:
 COMMANDS:
     .BYTE CR, NEWL
     .BYTE "Welcome to the 65021EM! The following commands are available:", CR, NEWL
+    .BYTE "B - Start BASIC", CR, NEWL
     .BYTE "X - Receive file over XMODEM", CR, NEWL
     .BYTE "R - Run program at last selected address", CR, NEWL, 0
 
