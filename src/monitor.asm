@@ -27,8 +27,8 @@ PROMPT      = $3E       ;'>' Prompt character
 
 
 START_MONITOR:
-    CLD             ; Clear decimal arithmetic mode.
     CLI
+    CLD
     LDA #<BANNER
     STA STRING_LO
     LDA #>BANNER

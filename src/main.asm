@@ -28,5 +28,6 @@ IRQ:    RTI
 START:
     LDX #$FF        ; setup stack
     TXS    
+    CLD             ; Clear decimal arithmetic mode.
     JSR INIT_BIOS
     JSR START_MONITOR
