@@ -12,14 +12,20 @@ MODE        = $2B
 MSGL        = $2C
 MSGH        = $2D
 COUNTER     = $2E
-ASCII_BUFF  = $50
 
+; BS          = $88       ; Backspace key, arrow left key
+; CR          = $0D       ; Carriage Return
+; NEWL        = $0A
+; ENT         = $8D
+; ESC         = $9B       ; ESC key
+; PROMPT      = '-'       ;'>' Prompt character
 BS          = $88       ; Backspace key, arrow left key
 CR          = $0D       ; Carriage Return
 NEWL        = $0A
-ENT         = $8D
+ENT         = $0D
 ESC         = $9B       ; ESC key
 PROMPT      = '-'       ;'>' Prompt character
+
 
 WRITE_CHAR  = $C079
 READ_CHAR   = $C067
@@ -52,7 +58,7 @@ GETLINE:
     JSR ECHO        ; * New line.
     LDA #NEWL
     JSR ECHO
-    LDA #PROMPT     ; ">"
+    LDA #PROMPT     ; "-"
     JSR ECHO        ; Output it.
     LDA #$20
     JSR ECHO     
@@ -71,7 +77,7 @@ NEXTCHAR:
     BMI CONVERT     ; *Nope, just convert it
     AND #$5F        ; *If lower case, convert to Upper case
 CONVERT:     
-    ORA #$80        ; *Convert it to "ASCII Keyboard" Input
+    ; ORA #$80        ; *Convert it to "ASCII Keyboard" Input
     STA IN,Y        ; Add to text buffer.
     JSR ECHO        ; Display character.
     CMP #ENT        ; CR?
@@ -153,7 +159,6 @@ SETADR:
     BNE SETADR      ; Loop unless X = 0.
 NXTPRNT:
     BNE PRDATA      ; NE means no address to print.
-    JSR PRINT_ASC
     LDA #CR
     JSR ECHO        ; * New line.
     LDA #NEWL
@@ -172,7 +177,6 @@ PRDATA:
     LDA #$A0        ; Blank.
     JSR ECHO        ; Output it.
     LDA (XAML,X)    ; Get data byte at 'examine index".
-    STA ASCII_BUFF, X
     JSR PRBYTE      ; Output it in hex format.
 XAMNEXT:
     STX MODE        ; 0-> MODE (XAM mode).
@@ -207,40 +211,9 @@ ECHO:
     PHA
     PHY
     PHX
-    AND #$7F
+    ; AND #$7F
     JSR WRITE_CHAR
     PLX
     PLY
     PLA
     RTS
-
-PRINT_ASC:
-    PHA
-    PHY
-    PHX
-    LDA #$20
-    JSR WRITE_CHAR
-    LDA #$20
-    JSR WRITE_CHAR
-    LDA #'|'
-    JSR WRITE_CHAR
-    LDX #$0
-@LOOP:
-    LDA ASCII_BUFF, X
-    INX
-    CMP #$10
-    BEQ @DONE
-    PHA
-    LDA #$20
-    JSR WRITE_CHAR
-    PLA
-    JSR WRITE_CHAR
-    JMP @LOOP
-@DONE:
-    LDA #'|'
-    JSR WRITE_CHAR
-    PLX
-    PLY
-    PLA
-    RTS
-

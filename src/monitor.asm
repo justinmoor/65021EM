@@ -48,7 +48,7 @@ NOTCR:
     CMP #ESC        ; ESC?
     BEQ ESCAPE      ; Yes.
     INY             ; Advance text index.
-    BPL NEXTCHAR    ; SAuto ESC if >127.
+    BPL NEXTCHAR    ; Auto ESC if >127.
 ESCAPE:
 GETLINE:
     LDA #CR
@@ -74,7 +74,7 @@ NEXTCHAR:
     BMI CONVERT     ; *Nope, just convert it
     AND #$5F        ; *If lower case, convert to Upper case
 CONVERT:     
-    ORA #$80        ; *Convert it to "ASCII Keyboard" Input
+    ORA #$80        ; The Apple 1 assumes high ascii, several coding tricks by Woz use this fact for memory optimalization
     STA IN,Y        ; Add to text buffer.
     JSR ECHO        ; Display character.
     CMP #ENT        ; CR?
@@ -92,16 +92,16 @@ NEXTITEM:
     LDA IN,Y        ; Get character.
     CMP #ENT        ; CR?
     BEQ GETLINE     ; Yes, done this line.
-    CMP #$AE        ; "."?
+    CMP #'.' + $80  ; "."? (high ascii $AE)
     BCC BLSKIP      ; Skip delimiter.
     BEQ SETMODE     ; Set BLOCK XAM mode.
-    CMP #$BA        ; ":"?
+    CMP #':' + $80  ; ":"? (high ascii $BA)
     BEQ SETSTOR     ; Yes, set STOR mode.
-    CMP #$D2        ; "R"?
+    CMP #'R' + $80  ; "R"? (high ascii $D2)
     BEQ RUN         ; Yes, run user program.
-    CMP #$D8        ; "X"?
+    CMP #'X' + $80  ; "X"? (high ascii $D8)
     BEQ XMODEM      ; Receive file using XMODEM
-    CMP #$C2        ; "B"?
+    CMP #'B' + $80  ; "B"? (high ascii)
     BEQ BASIC       ; start BASIC
     STX L           ; $00->L.
     STX H           ; and H.
