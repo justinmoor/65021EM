@@ -101,7 +101,7 @@ NEXTITEM:
     BEQ RUN         ; Yes, run user program.
     CMP #'X' + $80  ; "X"? (high ascii $D8)
     BEQ XMODEM      ; Receive file using XMODEM
-    CMP #'B' + $80  ; "B"? (high ascii)
+    CMP #'S' + $80  ; "B"? (high ascii)
     BEQ BASIC       ; start BASIC
     STX L           ; $00->L.
     STX H           ; and H.
@@ -241,7 +241,7 @@ BANNER:
 COMMANDS:
     .BYTE CR, NEWL
     .BYTE "Welcome to the 65021EM! The following commands are available:", CR, NEWL
-    .BYTE "B - Start BASIC", CR, NEWL
+    .BYTE "S - Start BASIC", CR, NEWL
     .BYTE "X - Receive file over XMODEM", CR, NEWL
     .BYTE "R - Run program at last selected address", CR, NEWL, 0
 
