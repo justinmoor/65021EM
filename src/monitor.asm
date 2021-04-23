@@ -25,21 +25,7 @@ ENT         = $8D
 ESC         = $9B       ; ESC key
 PROMPT      = $3E       ;'>' Prompt character
 
-
 START_MONITOR:
-    CLI
-    CLD
-    LDA #<BANNER
-    STA STRING_LO
-    LDA #>BANNER
-    STA STRIG_HI
-    JSR PRINT
-    LDA #<COMMANDS
-    STA STRING_LO
-    LDA #>COMMANDS
-    STA STRIG_HI
-    JSR PRINT
-
 SOFTRESET:  
     LDA #$9B
 NOTCR:
@@ -229,20 +215,6 @@ ECHO:
     PLA
     RTS
 
-BANNER:
-    .BYTE CR, NEWL, CR, NEWL
-    .BYTE "  /    __|    \ _  ) _ |    __|   \  |", CR, NEWL
-    .BYTE "  _ \ __ \  (  |  /    |    _|   |\/ |", CR, NEWL
-    .BYTE "\___/ ___/ \__/ ___|  _|   ___| _|  _|", CR, NEWL
-    .BYTE CR, NEWL
-    .BYTE "CPU: 65C02 @ 2 Mhz", CR, NEWL
-    .BYTE "RAM: 32KB - LOC.: 0000-7FFF", CR, NEWL
-    .BYTE "ROM: 16KB - LOC.: C000-FFFF", CR, NEWL, 0
-COMMANDS:
-    .BYTE CR, NEWL
-    .BYTE "Welcome to the 65021EM! The following commands are available:", CR, NEWL
-    .BYTE "S - Start BASIC", CR, NEWL
-    .BYTE "X - Receive file over XMODEM", CR, NEWL
-    .BYTE "R - Run program at last selected address", CR, NEWL, 0
+
 
 
