@@ -33,6 +33,9 @@ minipro -s -p AT28C256 -w build/os
 
 // open terminal session
 picocom --b 19200 --send-cmd "sx -vv" --receive-cmd "rx -vv" /dev/ttyUSB0
+
+// edit program bytes
+hexeditor -b programs/helloworld 
 ```
 
 ### BASIC

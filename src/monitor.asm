@@ -5,31 +5,15 @@
 ;   for the Apple 1.
 ;-------------------------------------------------------------------------
 
-IN          = $0200     ;*Input buffer
-XAML        = $24       ;*Index pointers
-XAMH        = $25
-STL         = $26
-STH         = $27
-L           = $28
-H           = $29
-YSAV        = $2A
-MODE        = $2B
-MSGL        = $2C
-MSGH        = $2D
-COUNTER     = $2E
-
-BS          = $88       ; Backspace key, arrow left key
-CR          = $0D       ; Carriage Return
-NEWL        = $0A
-ENT         = $8D
-ESC         = $9B       ; ESC key
-PROMPT      = $3E       ;'>' Prompt character
-
-START_MONITOR:
-SOFTRESET:  
+START_MON:
+    JSR CRNEWL
+    JSR CRNEWL
+    JSR PRINTIMM
+    ASCLN "MONITOR ACTIVATED"
+SOFTRESET:
     LDA #$9B
 NOTCR:
-    CMP #BS         ; "<-"? * Note this was chaged to $88 which is the back space key.
+    CMP #BSH        
     BEQ BACKSPACE   ; Yes.
     CMP #ESC        ; ESC?
     BEQ ESCAPE      ; Yes.
@@ -38,20 +22,17 @@ NOTCR:
 ESCAPE:
 GETLINE:
     LDA #CR
-    JSR ECHO        ; * New line.
+    JSR ECHO        ; New line.
     LDA #NEWL
     JSR ECHO
-    LDA #PROMPT     ; ">"
-    JSR ECHO        ; Output it.
-    LDA #$20
-    JSR ECHO     
+    JSR PR_MON_PROMPT
     LDY #$01        ; Initiallize text index.
 BACKSPACE:   
     DEY             ; Backup text index.
     BMI GETLINE     ; Beyond start of line, reinitialize.
     LDA #$A0        ; *Space, overwrite the backspaced char.
     JSR ECHO
-    LDA #BS         ; *Backspace again to get to correct pos.
+    LDA #BSH        ; *Backspace again to get to correct pos.
     JSR ECHO
 NEXTCHAR:    
     JSR READ_CHAR
@@ -61,7 +42,9 @@ NEXTCHAR:
     AND #$5F        ; *If lower case, convert to Upper case
 CONVERT:     
     ORA #$80        ; The Apple 1 assumes high ascii, several coding tricks by Woz use this fact for memory optimalization
-    STA IN,Y        ; Add to text buffer.
+    CMP #'M' + $80  ; exit monitor
+    BEQ EXIT_MONITOR
+    STA INPUT_BUF,Y ; Add to text buffer.
     JSR ECHO        ; Display character.
     CMP #ENT        ; CR?
     BNE NOTCR       ; No.
@@ -75,7 +58,7 @@ SETMODE:
 BLSKIP: 
     INY             ; Advance text index.
 NEXTITEM:    
-    LDA IN,Y        ; Get character.
+    LDA INPUT_BUF,Y ; Get character.
     CMP #ENT        ; CR?
     BEQ GETLINE     ; Yes, done this line.
     CMP #'.' + $80  ; "."? (high ascii $AE)
@@ -85,15 +68,11 @@ NEXTITEM:
     BEQ SETSTOR     ; Yes, set STOR mode.
     CMP #'R' + $80  ; "R"? (high ascii $D2)
     BEQ RUN         ; Yes, run user program.
-    CMP #'X' + $80  ; "X"? (high ascii $D8)
-    BEQ XMODEM      ; Receive file using XMODEM
-    CMP #'S' + $80  ; "B"? (high ascii)
-    BEQ BASIC       ; start BASIC
     STX L           ; $00->L.
     STX H           ; and H.
     STY YSAV        ; Save Y for comparison.
 NEXTHEX:
-    LDA IN,Y        ; Get character for hex test.
+    LDA INPUT_BUF,Y ; Get character for hex test.
     EOR #$B0        ; Map digits to $0-9.
     CMP #$0A        ; Digit?
     BCC DIG         ; Yes.
@@ -119,15 +98,13 @@ NOTHEX:
     BNE NOESCAPE    ; * Branch out of range, had to improvise...
     JMP ESCAPE      ; Yes, generate ESC sequence.
 
-BASIC:
-    JSR LAB_COLD
-    RTS
-
-XMODEM:
-    PHY
-    JSR XMODEM_FILE_RECV
-    PLY
-    JMP SOFTRESET
+EXIT_MONITOR:
+    JSR CRNEWL
+    JSR CRNEWL
+    JSR PRINTIMM
+    ASCLN "EXIT MONITOR"
+    JSR CRNEWL
+    JSR SOFT_RESET_OS
 
 RUN:
     JSR ACTRUN      ; * JSR to the Address we want to run.
@@ -215,6 +192,9 @@ ECHO:
     PLA
     RTS
 
-
-
-
+PR_MON_PROMPT:
+    LDA #'*'        ; ">"
+    JSR ECHO        ; Output it.
+    LDA #$20
+    JSR ECHO    
+    RTS

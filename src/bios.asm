@@ -10,29 +10,6 @@
 ;
 ;-------------------------------------------------------------------------
 
-VIA_DATAB = $8000
-VIA_DATAA = $8001
-
-VIA_DDRB = $8002
-VIA_DDRA = $8003
-
-; SPI_RD_BUFF = $110
-; SPI_WR_BUFF = $100
-
-; MAX3100_RD_BUFF = $130
-
-SPI_RD_BUFF = $310
-SPI_WR_BUFF = $300
-
-MAX3100_RD_BUFF = $330
-
-; low address of string to print
-STRING_LO = $02
-STRIG_HI = $03
-
-; used to stack manipulation 
-STACK_PTR = $00
-
 INIT_BIOS:    
     LDA #%00000011  ; configure the MOSI and CLK pin as outputs, others as inputs
     STA VIA_DDRB
@@ -58,7 +35,7 @@ READ_MAX3100_CONFIG:
     LDA #%00000000
     JSR WRITE_MAX
     PLY
-    LDA MAX3100_RD_BUFF
+    LDA M3100_RD_BUF
     RTS    
 
 ; writes a 16 bit sequence to the MAX3100
@@ -69,20 +46,20 @@ WRITE_MAX:
     TYA
     STZ VIA_DATAA           ; select MAX3100
     JSR SPI_WRITE_BYTE
-    STA MAX3100_RD_BUFF
+    STA M3100_RD_BUF
     PLA
     JSR SPI_WRITE_BYTE
-    STA MAX3100_RD_BUFF + 1
+    STA M3100_RD_BUF + 1
     LDA #$FF
     STA VIA_DATAA           ; deselect MAX3100
     RTS            
 
 SPI_WRITE_BYTE:
-    STA SPI_WR_BUFF
+    STA SPI_WR_BUF
     LDY #$8                 ; write 8 bits
 WRITE_BIT:
     LDA #%0                 ; zero bit the output line
-    ROL SPI_WR_BUFF         ; rotate the buffer so the bit to be written is represented by the carry flag
+    ROL SPI_WR_BUF         ; rotate the buffer so the bit to be written is represented by the carry flag
     BCC WRITE               ; 0 in carry flag? continue to writing the zero bit
     ORA #%00000010          ; 1 in carry flag, set MOSI to high
 WRITE:
@@ -90,11 +67,11 @@ WRITE:
     INC VIA_DATAB           ; set clock high
     LDA VIA_DATAB           ; read bit
     ROL                     ; just read bit is represented in PB7, rotate it into carry
-    ROL SPI_RD_BUFF         ; rotate bit from carry into SPI_RD_BUFF
+    ROL SPI_RD_BUF         ; rotate bit from carry into SPI_RD_BUF
     DEC VIA_DATAB           ; set clock low
     DEY
     BNE WRITE_BIT
-    LDA SPI_RD_BUFF
+    LDA SPI_RD_BUF
     RTS
 
 ; reads a char from serial. If new char is read, carry flag is set and char is in A
@@ -105,9 +82,9 @@ READ_CHAR:
     JSR WRITE_MAX
     PLY
     CLC
-    LDA MAX3100_RD_BUFF
+    LDA M3100_RD_BUF
     ROL
-    LDA MAX3100_RD_BUFF + 1
+    LDA M3100_RD_BUF + 1
     RTS
 
 WRITE_CHAR:
@@ -126,12 +103,12 @@ WRITE_CHAR:
 ; uses stack manipulation to print immediate string
 PRINTIMM:
     PLA
-    STA STACK_PTR
+    STA T3
     PLA
-    STA STACK_PTR + 1
+    STA T3 + 1
     LDY #$1
 @P0: 
-    LDA (STACK_PTR), Y
+    LDA (T3), Y
     BEQ @DONE
     JSR WRITE_CHAR
     INY
@@ -139,12 +116,12 @@ PRINTIMM:
 @DONE:
     CLC
     TYA
-    ADC STACK_PTR
-    STA STACK_PTR
-    LDA STACK_PTR + 1
+    ADC T3
+    STA T3
+    LDA T3 + 1
     ADC #$00
     PHA
-    LDA STACK_PTR
+    LDA T3
     PHA
     RTS
 

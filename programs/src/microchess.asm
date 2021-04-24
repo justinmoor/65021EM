@@ -15,8 +15,8 @@
 ;
 .SETCPU "65C02"
 
-WRITE_CHAR  = $C079
-READ_CHAR   = $C067
+WRITE_CHAR  = $C070
+READ_CHAR   = $C090
 
 ; page zero variables
 ;
@@ -64,7 +64,7 @@ DIS2    =	$FA
 DIS3    =	$F9
 temp    =   $FC
 
-INPUT	=	$200
+; INPUT	=	$200
 ;
 ;
 		.ORG $1000

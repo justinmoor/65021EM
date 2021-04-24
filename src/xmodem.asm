@@ -12,40 +12,14 @@
 ; and 8 bytes of zero page RAM for variable storage.
 ;
 
-; zero page variables (adjust these to suit your needs)
-CRC		= $38		; CRC lo byte  (two byte variable)
-CRCH	= $39		; CRC hi byte  
-
-TARGET	= $24		; pointer to store the file, is equal to last examined address in the monitor (XAML)
-
-BLCK_NUM = $3c		; block number 
-RETRY	 = $3d		; retry counter 
-RETRY2	 = $3e		; 2nd counter
-BLCK_FLAG	= $3f	; block flag 
-
-; non-zero page variables and buffers
-RECV_BUFF	= $500	; temp 132 byte receive buffer (place anywhere, page aligned)
-
-;  tables and constants
-;
-; The CRCLO & CRCHI labels are used to point to a lookup table to calculate
-; the CRC for the 128 byte data blocks.  Tables will be generated runtime
-CRCLO	= $7D00      	; Two 256-byte tables for quick lookup
-CRCHI	= $7E00      	; (should be page-aligned for speed)
-
-; XMODEM Control Character Constants
-SOH		= $01		; start block
-EOT		= $04		; end of text marker
-ACK		= $06		; good block acknowledged
-NAK		= $15		; bad block acknowledged
-CAN		= $18		; cancel (not standard, not supported)
-LF		= $0a		; line feed
-REC_CMD	= $43
-DELAY3S = $1E		; ~ 3 secs
-
 XMODEM_FILE_RECV:
-    JSR GENERATE_CRC_TABLE		
-	JSR PRINTIMM		
+    JSR GENERATE_CRC_TABLE
+    JSR CRNEWL
+	JSR PRINTIMM
+	ASC "WHERE TO STORE? "
+	JSR GET_INPUT_XM
+    JSR CRNEWL
+	JSR PRINTIMM
 	ASCLN "READY TO RECEIVE OVER XMODEM. PLEASE SELECT A FILE TO TRANSFER OR PRESS <ESC> TO CANCEL."
 	LDA #$01
 	STA BLCK_NUM	; set block # to 1
@@ -90,12 +64,12 @@ GET_BLCK1:
 	JSR GET_BYTE	; get next character
 	BCC INCRRCT_CRC	; chr rcv error, flush and send NAK
 GET_BLCK2:
-	STA RECV_BUFF,X	; good char, save it in the rcv buffer
+	STA RECV_BUF,X	; good char, save it in the rcv buffer
 	INX				; inc buffer pointer	
 	CPX #$84		; <01> <FE> <128 bytes> <CRCH> <CRCL>
 	BNE GET_BLCK	; get 132 characters
 	LDX #$00		;
-	LDA RECV_BUFF,X	; get block # from buffer
+	LDA RECV_BUF,X	; get block # from buffer
 	CMP BLCK_NUM	; compare to expected block #	
 	BEQ GOOD_BLCK1	; matched!
 	JSR PRINTIMM		; Unexpected block number - abort	
@@ -104,9 +78,9 @@ GET_BLCK2:
 ;	LDA #$FD		; put error code in "A" if desired
 	RTS 			; unexpected block # - fatal error - BRK or RTS
 GOOD_BLCK1:	
-	EOR #$ff		; 1's comp of block #
+	EOR #$FF		; 1's comp of block #
 	INX 		
-	CMP RECV_BUFF,x	; compare with expected 1's comp of block #
+	CMP RECV_BUF,X	; compare with expected 1's comp of block #
 	BEQ GOOD_BLCK2 	; matched!
 	JSR PRINTIMM		; Unexpected block number - abort	
 	ASCLN "UPLOAD ERROR!"
@@ -116,16 +90,16 @@ GOOD_BLCK1:
 GOOD_BLCK2:	
 	LDY	#$02		 
 CALC_CRC:		
-	LDA RECV_BUFF,y	; calculate the CRC for the 128 bytes of data	
+	LDA RECV_BUF,y	; calculate the CRC for the 128 bytes of data	
 	JSR UPD_CRC		; could inline sub here for speed
 	INY 		
 	CPY #$82		; 128 bytes
 	BNE CALC_CRC	;
-	LDA RECV_BUFF,y	; get hi CRC from buffer
+	LDA RECV_BUF,y	; get hi CRC from buffer
 	CMP CRCH		; compare to calculated hi CRC
 	BNE INCRRCT_CRC	; bad CRC, send NAK
 	INY 		
-	LDA RECV_BUFF,y	; get lo CRC from buffer
+	LDA RECV_BUF,y	; get lo CRC from buffer
 	CMP CRC			; compare to calculated lo CRC
 	BEQ CORRECT_CRC	; good CRC
 INCRRCT_CRC:
@@ -144,7 +118,7 @@ CORRECT_CRC:
 COPY_BLCK:		
 	LDY #$00		; set offset to zero
 COPY_BLCK3:
-	LDA RECV_BUFF,x	; get data byte from buffer
+	LDA RECV_BUF,x	; get data byte from buffer
 	STA (TARGET),y	; save to target
 	INC TARGET		; point to next address
 	BNE COPY_BLCK4	; did it step over page boundary?
@@ -252,4 +226,47 @@ FETCH2:
 	BNE FETCH1
 	INX
 	BNE FETCH
+	RTS
+
+GET_INPUT_XM:   
+    LDX #0                  ; reset input buffer index
+@POLL_INPUT:
+    JSR READ_CHAR
+    BCC @POLL_INPUT
+    CMP #$60                ; is it lowercase?
+    BMI @CONTINUE           ; yes, just continue processing
+    AND #$DF
+@CONTINUE:
+    PHA
+    JSR WRITE_CHAR          ; display character.
+    PLA
+    CMP #BS                 ; is it a backspace?
+    BNE @NO_BACKSP           ; if not, branch
+    DEX                     ; we got a backspace, decrement input buffer
+    BMI GET_INPUT_XM
+    LDA #$20                ; space, overwrite the backspaced char.
+    JSR ECHO
+    LDA #BS                 ; *Backspace again to get to correct pos.
+    JSR ECHO
+    JMP @POLL_INPUT
+@NO_BACKSP:
+    CMP #CR                 ; is it an enter?
+    BEQ PROCESS_INPUT_XM    ; yes, we start processing
+    STA INPUT_BUF, X        ; no we append to input buffer
+    INX                     ; increment buffer index
+    JMP @POLL_INPUT         ; poll more characters
+
+PROCESS_INPUT_XM:
+	LDX #0
+	LDA INPUT_BUF, X
+	INX
+	LDY INPUT_BUF, X
+	JSR HEX2BIN
+	STA TARGET + 1
+	INX
+	LDA INPUT_BUF, X
+	INX
+	LDY INPUT_BUF, X
+	JSR HEX2BIN
+	STA TARGET
 	RTS
