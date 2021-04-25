@@ -59,9 +59,9 @@ GET_INPUT:
     DEX                     ; we got a backspace, decrement input buffer
     BMI START_PROMPT
     LDA #$20                ; space, overwrite the backspaced char.
-    JSR ECHO
+    JSR WRITE_CHAR
     LDA #BS                 ; *Backspace again to get to correct pos.
-    JSR ECHO
+    JSR WRITE_CHAR
     JMP @POLL_INPUT
 @NO_BACKSP:
     CMP #CR                 ; is it an enter?
@@ -116,22 +116,22 @@ PRINT_COMMANDS:
 
 PRINT_PROMPT_NEWL:
     LDA #CR
-    JSR ECHO        ; New line
+    JSR WRITE_CHAR        ; New line
     LDA #NEWL
-    JSR ECHO
+    JSR WRITE_CHAR
 PRINT_PROMPT:
     LDA #PROMPT     ; ">"
-    JSR ECHO        ; Output it.
+    JSR WRITE_CHAR        ; Output it.
     LDA #$20        ; "<space>"
-    JSR ECHO     
+    JSR WRITE_CHAR     
     RTS
 
 CRNEWL:
     PHA
     LDA #CR
-    JSR ECHO
+    JSR WRITE_CHAR
     LDA #NEWL
-    JSR ECHO
+    JSR WRITE_CHAR
     PLA
     RTS
 
@@ -156,6 +156,51 @@ A2HEX:
 	SBC #7
 @A2HEX1:
 	RTS
+
+; converts oe byte of binary data to two ascii characters
+; entry: 
+; A = binary data
+; 
+; exit: 
+; A = first ascii digit, high order value
+; Y = second ascii digit, low order value
+BIN2HEX:
+    TAX         ; save original value
+    AND #$F0    ; get high nibble
+    LSR
+    LSR
+    LSR
+    LSR         ; move to lower nibble
+    JSR HD2ASCII; convert to ascii
+    PHA
+    TXA         ; convert lower nibble
+    AND #$0F
+    JSR HD2ASCII; convert to ascii
+    TAY         ; low nibble to register y
+    PLA         ; high nibble to register a
+    RTS
+
+; converts a hexadecimal digit to ascii
+; entry:
+; A = binary data in ower nibble
+; exit:
+; A = ASCII char
+HD2ASCII:
+    CMP #10
+    BCC @isDigit
+    CLC
+    ADC #7
+@isDigit:
+    ADC #'0'
+    RTS
+
+; prints a byte as 2 ascii hex characters
+PRINT_BYTE:
+    JSR BIN2HEX
+    JSR WRITE_CHAR
+    TYA 
+    JSR WRITE_CHAR
+    RTS
 
 PRINT_START_MSG:
     LDA #<BANNER
@@ -198,4 +243,5 @@ COMMANDS:
 
 .INCLUDE "xmodem.asm"
 .INCLUDE "monitor.asm"
+.INCLUDE "disassembler.asm"
 .INCLUDE "basic.asm"

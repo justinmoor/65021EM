@@ -74,7 +74,8 @@ WRITE:
     LDA SPI_RD_BUF
     RTS
 
-; reads a char from serial. If new char is read, carry flag is set and char is in A
+; reads a character from serial. If new char is read, carry flag is set and char is in A
+; registers affected: A, Y
 READ_CHAR:
     PHY
     LDY #0
@@ -87,6 +88,8 @@ READ_CHAR:
     LDA M3100_RD_BUF + 1
     RTS
 
+; writes the byte that is in A to serial. First checks if the buffer is not full
+; registers affected: none
 WRITE_CHAR:
 @WAIT:
     PHY
@@ -95,8 +98,10 @@ WRITE_CHAR:
     AND #%01000000
     BEQ @WAIT
     PLA
+    PHA
     LDY #%10000000
     JSR WRITE_MAX
+    PLA
     PLY
     RTS
 

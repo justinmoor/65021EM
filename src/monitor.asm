@@ -11,7 +11,7 @@ START_MON:
     JSR PRINTIMM
     ASCLN "MONITOR ACTIVATED"
 SOFTRESET:
-    LDA #$9B
+    LDA #ESC
 NOTCR:
     CMP #BSH        
     BEQ BACKSPACE   ; Yes.
@@ -66,6 +66,8 @@ NEXTITEM:
     BEQ SETMODE     ; Set BLOCK XAM mode.
     CMP #':' + $80  ; ":"? (high ascii $BA)
     BEQ SETSTOR     ; Yes, set STOR mode.
+    CMP #'/' + $80  ; "R"? (high ascii $D2)
+    BEQ ST_DISASM   ; Yes, run user program.
     CMP #'R' + $80  ; "R"? (high ascii $D2)
     BEQ RUN         ; Yes, run user program.
     STX L           ; $00->L.
@@ -111,6 +113,10 @@ RUN:
     JMP SOFTRESET   ; * When returned for the program, reset EWOZ.
 ACTRUN:
     JMP (XAML)      ; Run at current XAM index.
+
+ST_DISASM:
+    JSR START_DISASM
+    JMP SOFTRESET
 
 NOESCAPE:
     BIT MODE        ; Test MODE byte.

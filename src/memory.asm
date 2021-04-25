@@ -25,14 +25,23 @@ YSAV        = $2A
 MODE        = $2B
 COUNTER     = $2C
 
+; DISASSEMBLER
+ ADDR       = $37     ; instruction address, 2 bytes (low/high)
+ OPCODE     = $39     ; instruction opcode
+ OP         = $3A     ; instruction type OP_*
+ AM         = $41     ; addressing mode AM_*
+ LEN        = $42     ; instruction length
+ REL        = $43     ; relative addressing branch offset (2 bytes)
+ DEST       = $45     ; relative address destination address (2 bytes)
+
 ; XMODEM
 CRC		    = $38		; CRC lo byte  (two byte variable)
 CRCH	    = $39		; CRC hi byte  
-TARGET	    = $40		; pointer to store the file
-BLCK_NUM    = $3c		; block number 
-RETRY	    = $3d		; retry counter 
-RETRY2	    = $3e		; 2nd counter
-BLCK_FLAG	= $3f	    ; block flag 
+TARGET	    = $3A		; pointer to store the file
+BLCK_NUM    = $3C		; block number 
+RETRY	    = $3D		; retry counter 
+RETRY2	    = $3E		; 2nd counter
+BLCK_FLAG	= $3F	    ; block flag 
 
 ; ---------------------------------------- BIOS ----------------------------------------
 VIA_DATAB   = $8000
@@ -63,7 +72,8 @@ BSH         = $88       ; back space high ascii
 CR          = $0D       ; Carriage Return
 NEWL        = $0A
 ENT         = $8D
-ESC         = $9B       ; ESC key
+ESC         = $1B       ; ESC key
+SP          = $20
 
 ; XMODEM control character constants
 SOH		    = $01		; start block
