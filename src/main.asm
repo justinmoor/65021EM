@@ -17,6 +17,7 @@
 
 .CODE
 
+.INCLUDE "jump_table.asm"
 .INCLUDE "memory.asm"
 .INCLUDE "macros.asm"
 .INCLUDE "bios.asm"
