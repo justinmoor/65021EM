@@ -13,7 +13,7 @@ START_MON:
 SOFTRESET:
     LDA #ESC
 NOTCR:
-    CMP #BSH        
+    CMP #BSH         
     BEQ BACKSPACE   ; Yes.
     CMP #ESC        ; ESC?
     BEQ ESCAPE      ; Yes.
@@ -42,8 +42,10 @@ NEXTCHAR:
     AND #$5F        ; *If lower case, convert to Upper case
 CONVERT:     
     ORA #$80        ; The Apple 1 assumes high ascii, several coding tricks by Woz use this fact for memory optimalization
-    CMP #'M' + $80  ; exit monitor
-    BEQ EXIT_MONITOR
+    CMP #'K' + $80     ; <Shift key> ? (high ascii $D2)
+    BEQ ST_ASM      ; Yes, run user program.
+    CMP #'L' + $80  ; "R"? (high ascii $D2)
+    BEQ ST_DISASM   ; Yes, run user program.
     STA INPUT_BUF,Y ; Add to text buffer.
     JSR ECHO        ; Display character.
     CMP #ENT        ; CR?
@@ -66,15 +68,15 @@ NEXTITEM:
     BEQ SETMODE     ; Set BLOCK XAM mode.
     CMP #':' + $80  ; ":"? (high ascii $BA)
     BEQ SETSTOR     ; Yes, set STOR mode.
-    CMP #'/' + $80  ; "R"? (high ascii $D2)
-    BEQ ST_DISASM   ; Yes, run user program.
     CMP #'R' + $80  ; "R"? (high ascii $D2)
     BEQ RUN         ; Yes, run user program.
+    CMP #'M' + $80  ; exit monitor
+    BEQ EXIT_MONITOR
     STX L           ; $00->L.
     STX H           ; and H.
     STY YSAV        ; Save Y for comparison.
 NEXTHEX:
-    LDA INPUT_BUF,Y ; Get character for hex test.
+    LDA INPUT_BUF,Y        ; Get character for hex test.
     EOR #$B0        ; Map digits to $0-9.
     CMP #$0A        ; Digit?
     BCC DIG         ; Yes.
@@ -100,6 +102,23 @@ NOTHEX:
     BNE NOESCAPE    ; * Branch out of range, had to improvise...
     JMP ESCAPE      ; Yes, generate ESC sequence.
 
+NEXTITEM1:
+    JMP NEXTITEM
+
+ST_ASM:
+    JSR start_assembler
+    JMP SOFTRESET
+
+ST_DISASM:
+    JSR START_DISASM
+    JMP SOFTRESET
+
+RUN:
+    JSR ACTRUN      ; * JSR to the Address we want to run.
+    JMP SOFTRESET   ; * When returned for the program, reset EWOZ.
+ACTRUN:
+    JMP (XAML)      ; Run at current XAM index.
+
 EXIT_MONITOR:
     JSR CRNEWL
     JSR CRNEWL
@@ -108,26 +127,16 @@ EXIT_MONITOR:
     JSR CRNEWL
     JSR SOFT_RESET_OS
 
-RUN:
-    JSR ACTRUN      ; * JSR to the Address we want to run.
-    JMP SOFTRESET   ; * When returned for the program, reset EWOZ.
-ACTRUN:
-    JMP (XAML)      ; Run at current XAM index.
-
-ST_DISASM:
-    JSR START_DISASM
-    JMP SOFTRESET
-
 NOESCAPE:
     BIT MODE        ; Test MODE byte.
     BVC NOTSTOR     ; B6=0 for STOR, 1 for XAM and BLOCK XAM
     LDA L           ; LSD's of hex data.
     STA (STL, X)    ; Store at current "store index".
     INC STL         ; Increment store index.
-    BNE NEXTITEM    ; Get next item. (no carry).
+    BNE NEXTITEM1   ; Get next item. (no carry).
     INC STH         ; Add carry to 'store index' high order.
 TONEXTITEM:
-    JMP NEXTITEM    ; Get next command item.
+    JMP NEXTITEM1    ; Get next command item.
 NOTSTOR:
     BMI XAMNEXT     ; B7=0 for XAM, 1 for BLOCK XAM.
     LDX #$02        ; Byte count.

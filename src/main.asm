@@ -244,5 +244,6 @@ COMMANDS:
 
 .INCLUDE "xmodem.asm"
 .INCLUDE "monitor.asm"
+.INCLUDE "assembler.asm"
 .INCLUDE "disassembler.asm"
 .INCLUDE "basic.asm"

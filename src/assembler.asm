@@ -1,20 +1,17 @@
-.SETCPU "65C02"
-
 ; 6502/65C02 Mini Assembler
 ;
 ; Credits to Jeff Tranter
-; Code modified so it works with the 65021EM
+; Code modified to work on the 65021EM
 ;
 ; Mini assembler syntax format:
 ;
-; A <address>
 ; XXXX: instruction
 ; XXXX: instruction
 ; XXXX: <Esc>
 ;
-; example:
+; Example:
 ;
-; A 6000
+; Press "K" in monitor, assembler will start at last selected address
 ; 6000: NOP
 ; 6001: LDX #0A
 ; 6003: JSR FFEF
@@ -27,82 +24,41 @@
 ; - all values in hex, 2 or 4 digits
 ; - no backspace or other editing features
 ;
-
-; Variables used (defined in jmon.s)
-; ADDR - instruction address
+; Variables used
+; ADDR1 - instruction address
 ; OPCODE - instruction op code
 ; OP - instruction type (OP_*)
 ; LEN -length of instruction
 ; IN - input buffer holding operands
 ; AM - addressing mode (AM_*)
-; MNEM - hold three letter mnemonic string used by assembler
+; MNEM1 - hold three letter mnemonic string used by assembler
 ; OPERAND - Holds any operands for assembled instruction (2 bytes)
 
-
 ; added:
-; OPCODES:
-; OPERAND:
 ; PrintCr:
-; ESC
-; NEWL
-; IN
-; ImPrint
-; PRINT_BYTE
-; BS
 
 ; Assemble code entered a line at a time.
-; On entry ADDR contains start address of code.
+; On entry ADDR1 contains start address of code.
 ; Registers changed: A, X, Y.
 
-T1     = $00       ; one byte temp register 1
-
-ADDR   = $37     ; instruction address, 2 bytes (low/high)
-OPCODE = $39     ; instruction opcode
-OP     = $3A     ; instruction type OP_*
-AM     = $41     ; addressing mode AM_*
-LEN    = $42     ; instruction length
-REL    = $43     ; relative addressing branch offset (2 bytes)
-DEST   = $45     ; relative address destination address (2 bytes)
-
-ESC    = $1B       ; ESC key   
-CR     = $0D       ; Carriage Return
-NEWL   = $0A
-BS     = $08       ; Backspace key, arrow left key
-SP     = $20
-INPUT_BUF = $200
-IN     = $300
-MNEM   = $800
+IN		= $300
+MNEM1   = $800
 OPERAND = $02
 
-READ_CHAR   = $C000
-WRITE_CHAR  = $C003
-Imprint     = $C006
-PRINT_BYTE  = $C009
-
-.macro DEBUG_PRINT addr
-	PHA
-	PHX
-	PHY
-	JSR PrintCR
-	JSR PrintCR
-	LDA addr
-	JSR PRINT_BYTE
-	JSR PrintCR
-	JSR PrintCR
-	PLY
-	PLX
-	PLA
-.ENDMACRO
+ADDR1 = $24
 
 start_assembler:
 	JSR PrintCR
 	JSR PrintCR
-	STZ ADDR
-	LDA #$20
-	STA ADDR+1
+	JSR PRINTIMM              ; Print error message
+	.byte "STARTING ASSEMBLING ON ADDRESS $", 0
+	LDX ADDR1
+	LDY ADDR1+1
+	JSR PrintAddress
+	JSR PrintCR
 AssembleLine:
-	LDX ADDR                ; output address
-	LDY ADDR+1
+	LDX ADDR1                ; output address
+	LDY ADDR1+1
 	JSR PrintAddress
 	LDA #':'                ; Output colon
 	JSR PrintChar
@@ -143,13 +99,13 @@ PROCESS_INPUT_ASM:
 	STX INPUT_BUF			; holds total length now
 	LDX #0
 	LDA INPUT_BUF+1, X
-	STA MNEM, X
+	STA MNEM1, X
 	INX
 	LDA INPUT_BUF+1, X
-	STA MNEM, X
+	STA MNEM1, X
 	INX
 	LDA INPUT_BUF+1, X
-	STA MNEM, X
+	STA MNEM1, X
 
 	; start storing operands in IN if we have any
 	LDA INPUT_BUF
@@ -184,7 +140,7 @@ PARS:
 	CMP #OP_INV             ; Not valid?
 	BNE OpOk                ; Branch if okay
 	JSR PrintCR
-	JSR Imprint            	; Not a valid mnemonic
+	JSR PRINTIMM            	; Not a valid mnemonic
 	.byte "Invalid instruction", 0
 	JSR PrintCR
 	JMP AssembleLine		
@@ -304,7 +260,6 @@ TryRelative:
 
 ; AM_ZEROPAGE_X e.g. LDA nn,X
 ; Operand is 2 hex digits followed by ,X
-
 TryZeroPageX:
 	LDA IN                        ; Get length
 	CMP #4                        ; Is it 4?
@@ -601,11 +556,10 @@ TryAbsIndInd:
 	STA OPERAND                   ; Save it as the operand
 	JMP GenerateCode
 
-; If not any of the above, report "Invalid operand" and return.
-
+; If not any of the above, report "Invalid operand" and do line again
 InvalidOp:
 	JSR PrintCR
-	JSR Imprint
+	JSR PRINTIMM
 	.byte "Invalid operand", 0
 	JSR PrintCR
 	JMP AssembleLine	
@@ -616,13 +570,12 @@ GenerateCode:
 	JSR CheckAddressingModeValid   ; See if addressing mode is valid
 	BNE OperandOkay
 
-	JSR Imprint             ; Not a valid addressing mode
+	JSR PRINTIMM             ; Not a valid addressing mode
 	.byte "Invalid addressing mode", 0
 	JSR PrintCR
 	JMP AssembleLine	
 
 OperandOkay:
-
 ; Look up instruction length based on addressing mode and save it
 	LDX AM                   ; Addressing mode
 	LDA LENGTHS,X            ; Get instruction length for this addressing mode
@@ -631,17 +584,17 @@ OperandOkay:
 ; Write the opcode to memory
 	LDA OPCODE               ; get opcode
 	LDY #0
-	STA (ADDR),Y             ; store it
+	STA (ADDR1),Y             ; store it
 
 ; Check that we can write it back (in case destination memory is not writable).
-	CMP (ADDR),Y             ; Do we read back what we wrote?
+	CMP (ADDR1),Y            ; Do we read back what we wrote?
 	BEQ WriteOperands        ; Yes, okay
 
 ; Memory is not writable for some reason, Report error and quit.
-	JSR Imprint              ; Print error message
+	JSR PRINTIMM              ; Print error message
 	.byte "Unable to write to $", 0
-	LDX ADDR
-	LDY ADDR+1
+	LDX ADDR1
+	LDY ADDR1+1
 	JSR PrintAddress
 	JMP PrintCR             ; Return via caller
 
@@ -694,15 +647,15 @@ TryZpY:
 
 ; BEQ nnnn        Relative
 ; Write 1 byte calculated as destination - current address - instruction length
-; i.e. (OPERAND,OPERAND+1) - ADDR,ADDR+1 - 2
+; i.e. (OPERAND,OPERAND+1) - ADDR1,ADDR1+1 - 2
 ; Report error if branch is out of 8-bit offset range.
 Relative:
 	LDA OPERAND                 ; destination low byte
 	SEC
-	SBC ADDR                    ; subtract address low byte
+	SBC ADDR1                    ; subtract address low byte
 	STA OPERAND                 ; Save it
 	LDA OPERAND+1               ; destination high byte
-	SBC ADDR+1                  ; subtract address high byte (with any borrow)
+	SBC ADDR1+1                  ; subtract address high byte (with any borrow)
 	STA OPERAND+1               ; store it
 
 	LDA OPERAND
@@ -721,7 +674,7 @@ Relative:
 	CMP #$FF
 	BEQ OkayFF                 ; Or $FF
 OutOfRange:
-	JSR Imprint
+	JSR PRINTIMM
 	.byte "Relative branch out of range", 0
 	JSR PrintCR
 	JMP AssembleLine
@@ -740,29 +693,29 @@ OkayFF:
 OneOperand:
 	LDA OPERAND                  ; Get operand
 	LDY #1                       ; Offset from instruction
-	STA (ADDR),Y                 ; write it
+	STA (ADDR1),Y                 ; write it
 	JMP ZeroOperands             ; done
 
 TwoOperands:
 	LDA OPERAND                  ; Get operand low byte
 	LDY #1                       ; Offset from instruction
-	STA (ADDR),Y                 ; write it
+	STA (ADDR1),Y                 ; write it
 	INY
 	LDA OPERAND+1                ; Get operand high byte
-	STA (ADDR),Y                 ; write it
+	STA (ADDR1),Y                 ; write it
 
 ZeroOperands:                        ; Nothing to do
 ; Update current address with instruction length
 	CLC
-	LDA ADDR                      ; Low byte
+	LDA ADDR1                      ; Low byte
 	ADC LEN                       ; Add length
-	STA ADDR                      ; Store it
-	LDA ADDR+1                    ; High byte
+	STA ADDR1                      ; Store it
+	LDA ADDR1+1                    ; High byte
 	ADC #0                        ; Add any carry
-	STA ADDR+1                    ; Store it
+	STA ADDR1+1                    ; Store it
 	JMP AssembleLine              ; loop back to start of AssembleLine
 
-; Look up three letter mnemonic, e.g. "NOP". On entry mnemonic is stored in MNEM.
+; Look up three letter mnemonic, e.g. "NOP". On entry mnemonic is stored in MNEM1.
 ; Write index value, e.g. OP_NOP, to OP. Set sit to OP_INV if not found.
 ; Registers changed: A, X, Y.
 LookupMnemonic:
@@ -773,15 +726,15 @@ LookupMnemonic:
 	STA T1+1
 Loop:
 	LDY #0                  ; Holds offset of string in table entry
-	LDA MNEM,Y              ; Compare first char of mnemonic to table entry
+	LDA MNEM1,Y              ; Compare first char of mnemonic to table entry
 	CMP (T1),Y
 	BNE NextOp              ; If different, try next opcode
 	INY
-	LDA MNEM,Y              ; Compare second char of mnemonic to table entry
+	LDA MNEM1,Y              ; Compare second char of mnemonic to table entry
 	CMP (T1),Y
 	BNE NextOp              ; If different, try next opcode
 	INY
-	LDA MNEM,Y              ; Compare third char of mnemonic to table entry
+	LDA MNEM1,Y              ; Compare third char of mnemonic to table entry
 	CMP (T1),Y
 	BNE NextOp              ; If different, try next opcode
 							; We found a match
