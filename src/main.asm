@@ -39,37 +39,14 @@ SOFT_RESET_OS:
     TXS
     CLD             ; Clear decimal arithmetic mode.
     CLI
-    JSR PRINT_PROMPT
-    JMP GET_INPUT
+    ; JSR PRINT_PROMPT
+    ; JMP GET_INPUT
 START_PROMPT:
     JSR PRINT_PROMPT_NEWL
-GET_INPUT:   
-    LDX #0                  ; reset input buffer index
-@POLL_INPUT:
-    JSR READ_CHAR
-    BCC @POLL_INPUT
-    CMP #$60                ; is it lowercase?
-    BMI @CONTINUE           ; yes, just continue processing
-    AND #$DF
-@CONTINUE:
-    PHA
-    JSR WRITE_CHAR          ; display character.
-    PLA
-    CMP #BS                 ; is it a backspace?
-    BNE @NO_BACKSP           ; if not, branch
-    DEX                     ; we got a backspace, decrement input buffer
-    BMI START_PROMPT
-    LDA #$20                ; space, overwrite the backspaced char.
-    JSR WRITE_CHAR
-    LDA #BS                 ; *Backspace again to get to correct pos.
-    JSR WRITE_CHAR
-    JMP @POLL_INPUT
-@NO_BACKSP:
-    CMP #CR                 ; is it an enter?
-    BEQ PROCESS_INPUT       ; yes, we start processing
-    STA INPUT_BUF, X        ; no we append to input buffer
-    INX                     ; increment buffer index
-    JMP @POLL_INPUT          ; poll more characters
+	JSR GetLine
+	CMP #CR
+	BEQ PROCESS_INPUT
+	JMP START_PROMPT
 
 ; X contains the length of the input we've received
 ; Input buffer starts at $200 
@@ -223,6 +200,41 @@ PRINT_COMMS:
     STA STRIG_HI
     JSR PRINT
     RTS
+
+
+; This routines will read a whole line from user input. It also handles backspace. When user presses
+; enter or escape, the routine will return. The key that has been pressed (enter or escape) 
+; will be in the A register. The input length will be in the X register
+GetLine:		ldx	#0                  ; reset input buffer index
+@PollInput:		jsr	READ_CHAR
+				bcc	@PollInput
+				cmp	#$60                ; is it lowercase?
+				bmi	@Continue           ; yes, just continue processing
+				and	#$df				; convert to uppercase
+@Continue:
+				cmp #BS                 ; is it a backspace?
+				bne @NoBackspace        ; if not, branch
+				dex                     ; we got a backspace, decrement input buffer
+				bmi GetLine				; just reset when there are no characters to backspace
+				jsr WRITE_CHAR          ; display the backspace.
+				lda #$20                ; space, overwrite the backspaced char.
+				jsr WRITE_CHAR			; display space
+				lda #BS                 ; backspace again to get to correct pos.
+				jsr WRITE_CHAR		
+				jmp @PollInput
+@NoBackspace:
+				cmp #ESC				; is escape key pressed?
+				beq @EscOrEnter			; quit
+                pha
+                jsr WRITE_CHAR          ; display character.
+                pla
+                cmp #CR                 ; is it an enter?
+                beq @EscOrEnter   		; yes, caller can now start processing from $0200
+                sta INPUT_BUF, x      	; no we append to input buffer
+                inx                     ; increment buffer index
+                jmp @PollInput          ; poll more characters
+@EscOrEnter:	rts
+
 
 BANNER:
     .BYTE CR, NEWL, CR, NEWL

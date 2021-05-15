@@ -17,7 +17,12 @@ XMODEM_FILE_RECV:
     JSR CRNEWL
 	JSR PRINTIMM
 	ASC "WHERE TO STORE? "
-	JSR GET_INPUT_XM
+	JSR GetLine
+	CMP #CR
+	BEQ @Start
+	JMP SOFT_RESET_OS
+@Start
+	JSR PROCESS_INPUT_XM
     JSR CRNEWL
 	JSR PRINTIMM
 	ASCLN "READY TO RECEIVE OVER XMODEM. PLEASE SELECT A FILE TO TRANSFER OR PRESS <ESC> TO CANCEL."
@@ -227,34 +232,6 @@ FETCH2:
 	INX
 	BNE FETCH
 	RTS
-
-GET_INPUT_XM:   
-    LDX #0                  ; reset input buffer index
-@POLL_INPUT:
-    JSR READ_CHAR
-    BCC @POLL_INPUT
-    CMP #$60                ; is it lowercase?
-    BMI @CONTINUE           ; yes, just continue processing
-    AND #$DF
-@CONTINUE:
-    PHA
-    JSR WRITE_CHAR          ; display character.
-    PLA
-    CMP #BS                 ; is it a backspace?
-    BNE @NO_BACKSP           ; if not, branch
-    DEX                     ; we got a backspace, decrement input buffer
-    BMI GET_INPUT_XM
-    LDA #$20                ; space, overwrite the backspaced char.
-    JSR ECHO
-    LDA #BS                 ; *Backspace again to get to correct pos.
-    JSR ECHO
-    JMP @POLL_INPUT
-@NO_BACKSP:
-    CMP #CR                 ; is it an enter?
-    BEQ PROCESS_INPUT_XM    ; yes, we start processing
-    STA INPUT_BUF, X        ; no we append to input buffer
-    INX                     ; increment buffer index
-    JMP @POLL_INPUT         ; poll more characters
 
 PROCESS_INPUT_XM:
 	LDX #0

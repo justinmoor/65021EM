@@ -1,5 +1,6 @@
 ; 6502/65C02 Mini Assembler
-;
+; Assemble code entered a line at a time.
+; 
 ; Credits to Jeff Tranter
 ; Code modified to work on the 65021EM
 ;
@@ -8,120 +9,69 @@
 ; XXXX: instruction
 ; XXXX: instruction
 ; XXXX: <Esc>
-;
+; - no backspace or other editing features
+
 ; Example:
 ;
 ; Press "K" in monitor, assembler will start at last selected address
 ; 6000: NOP
-; 6001: LDX #0A
-; 6003: JSR FFEF
+; 6001: LDA #68
+; 6003: JSR C003
 ; 6006: DEX
-; 6007: BNE 6003
+; 6007: RTS
 ; 6009: <Esc>
 ;
 ; Restrictions:
 ; - no symbols or labels
 ; - all values in hex, 2 or 4 digits
-; - no backspace or other editing features
-;
-; Variables used
-; ADDR1 - instruction address
-; OPCODE - instruction op code
-; OP - instruction type (OP_*)
-; LEN -length of instruction
-; IN - input buffer holding operands
-; AM - addressing mode (AM_*)
-; MNEM1 - hold three letter mnemonic string used by assembler
-; OPERAND - Holds any operands for assembled instruction (2 bytes)
-
-; added:
-; PrintCr:
-
-; Assemble code entered a line at a time.
-; On entry ADDR1 contains start address of code.
-; Registers changed: A, X, Y.
-
-IN		= $300
-MNEM1   = $800
-OPERAND = $02
-
-ADDR1 = $24
 
 start_assembler:
 	JSR PrintCR
 	JSR PrintCR
 	JSR PRINTIMM              ; Print error message
-	.byte "STARTING ASSEMBLING ON ADDRESS $", 0
-	LDX ADDR1
-	LDY ADDR1+1
+	ASC "STARTING ASSEMBLING ON ADDRESS $"
+	LDX ADDR_A
+	LDY ADDR_A+1
 	JSR PrintAddress
 	JSR PrintCR
 AssembleLine:
-	LDX ADDR1                ; output address
-	LDY ADDR1+1
+	LDX ADDR_A                ; output address
+	LDY ADDR_A+1
 	JSR PrintAddress
 	LDA #':'                ; Output colon
 	JSR PrintChar
 	JSR PrintSpace          ; And space
 
-@GET_INPUT:
-    LDX #0                  ; reset input buffer index
-@POLL_INPUT:
-    JSR READ_CHAR
-    BCC @POLL_INPUT
-    CMP #$60                ; is it lowercase?
-    BMI @CONTINUE           ; yes, just continue processing
-    AND #$DF				; convert to uppercase
-@CONTINUE:
-	CMP #ESC
-	BEQ EscPressed
-    CMP #BS                 ; is it a backspace?
-    BNE @NO_BACKSP          ; if not, branch
-    DEX                     ; we got a backspace, decrement input buffer
-    BMI @GET_INPUT
-    JSR WRITE_CHAR          ; display the backspace.
-    LDA #$20                ; space, overwrite the backspaced char.
-    JSR WRITE_CHAR			; display space
-    LDA #BS                 ; backspace again to get to correct pos.
-    JSR WRITE_CHAR		
-    JMP @POLL_INPUT
-@NO_BACKSP:
-    PHA
-    JSR WRITE_CHAR          ; display character.
-    PLA
-    CMP #CR                 ; is it an enter?
-    BEQ PROCESS_INPUT_ASM   ; yes, we start processing
-    STA INPUT_BUF+1, X      ; no we append to input buffer, reverse first byte for length
-    INX                     ; increment buffer index
-    JMP @POLL_INPUT         ; poll more characters
-
-PROCESS_INPUT_ASM:
-	STX INPUT_BUF			; holds total length now
+	JSR GetLine
+	CMP #ESC				; Escape?
+	BEQ EscPressed			; Yes, return
+PROCESS_INPUT_ASM:			; No escape, that implies an enter, sp start processing
+	STX T1					; save total length of input in T1		
 	LDX #0
-	LDA INPUT_BUF+1, X
+	LDA INPUT_BUF, X
 	STA MNEM1, X
 	INX
-	LDA INPUT_BUF+1, X
+	LDA INPUT_BUF, X
 	STA MNEM1, X
 	INX
-	LDA INPUT_BUF+1, X
+	LDA INPUT_BUF, X
 	STA MNEM1, X
 
 	; start storing operands in IN if we have any
-	LDA INPUT_BUF
+	LDA T1						; get total length of input
 	CMP #3
-	BNE @OPPER					; we only have 3 character
+	BNE @OPPER					; we have more than 3 characters, so also an operand
 	STZ IN
 	JMP PARS
 
 @OPPER:
-	LDY #0					; length of operand
+	LDY #0					; keep track of length of operand
 	INX						; skip space
 	INX
 @loop:	
-	CPX INPUT_BUF
+	CPX T1
 	BEQ @DONE
-	LDA INPUT_BUF+1, X
+	LDA INPUT_BUF, X
 	STA IN + 1, Y
 	INX
 	INY
@@ -584,17 +534,17 @@ OperandOkay:
 ; Write the opcode to memory
 	LDA OPCODE               ; get opcode
 	LDY #0
-	STA (ADDR1),Y             ; store it
+	STA (ADDR_A),Y             ; store it
 
 ; Check that we can write it back (in case destination memory is not writable).
-	CMP (ADDR1),Y            ; Do we read back what we wrote?
+	CMP (ADDR_A),Y            ; Do we read back what we wrote?
 	BEQ WriteOperands        ; Yes, okay
 
 ; Memory is not writable for some reason, Report error and quit.
 	JSR PRINTIMM              ; Print error message
 	.byte "Unable to write to $", 0
-	LDX ADDR1
-	LDY ADDR1+1
+	LDX ADDR_A
+	LDY ADDR_A+1
 	JSR PrintAddress
 	JMP PrintCR             ; Return via caller
 
@@ -647,15 +597,15 @@ TryZpY:
 
 ; BEQ nnnn        Relative
 ; Write 1 byte calculated as destination - current address - instruction length
-; i.e. (OPERAND,OPERAND+1) - ADDR1,ADDR1+1 - 2
+; i.e. (OPERAND,OPERAND+1) - ADDR_A,ADDR_A+1 - 2
 ; Report error if branch is out of 8-bit offset range.
 Relative:
 	LDA OPERAND                 ; destination low byte
 	SEC
-	SBC ADDR1                    ; subtract address low byte
+	SBC ADDR_A                    ; subtract address low byte
 	STA OPERAND                 ; Save it
 	LDA OPERAND+1               ; destination high byte
-	SBC ADDR1+1                  ; subtract address high byte (with any borrow)
+	SBC ADDR_A+1                  ; subtract address high byte (with any borrow)
 	STA OPERAND+1               ; store it
 
 	LDA OPERAND
@@ -693,26 +643,26 @@ OkayFF:
 OneOperand:
 	LDA OPERAND                  ; Get operand
 	LDY #1                       ; Offset from instruction
-	STA (ADDR1),Y                 ; write it
+	STA (ADDR_A),Y                ; write it
 	JMP ZeroOperands             ; done
 
 TwoOperands:
 	LDA OPERAND                  ; Get operand low byte
 	LDY #1                       ; Offset from instruction
-	STA (ADDR1),Y                 ; write it
+	STA (ADDR_A),Y                ; write it
 	INY
 	LDA OPERAND+1                ; Get operand high byte
-	STA (ADDR1),Y                 ; write it
+	STA (ADDR_A),Y                 ; write it
 
 ZeroOperands:                        ; Nothing to do
 ; Update current address with instruction length
 	CLC
-	LDA ADDR1                      ; Low byte
+	LDA ADDR_A                      ; Low byte
 	ADC LEN                       ; Add length
-	STA ADDR1                      ; Store it
-	LDA ADDR1+1                    ; High byte
+	STA ADDR_A                      ; Store it
+	LDA ADDR_A+1                    ; High byte
 	ADC #0                        ; Add any carry
-	STA ADDR1+1                    ; Store it
+	STA ADDR_A+1                    ; Store it
 	JMP AssembleLine              ; loop back to start of AssembleLine
 
 ; Look up three letter mnemonic, e.g. "NOP". On entry mnemonic is stored in MNEM1.

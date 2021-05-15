@@ -25,14 +25,17 @@ YSAV        = $2A
 MODE        = $2B
 COUNTER     = $2C
 
-; DISASSEMBLER
- ADDR       = $37     ; instruction address, 2 bytes (low/high)
- OPCODE     = $39     ; instruction opcode
- OP         = $3A     ; instruction type OP_*
- AM         = $41     ; addressing mode AM_*
- LEN        = $42     ; instruction length
- REL        = $43     ; relative addressing branch offset (2 bytes)
- DEST       = $45     ; relative address destination address (2 bytes)
+; ASSEMBLER / DISASSEMBLER
+OPERAND = $10
+ADDR_A  = $24   ; ADDRES TO ASSEMBLE
+
+ADDR       = $37     ; instruction address, 2 bytes (low/high)
+OPCODE     = $39     ; instruction opcode
+OP         = $3A     ; instruction type OP_*
+AM         = $41     ; addressing mode AM_*
+LEN        = $42     ; instruction length
+REL        = $43     ; relative addressing branch offset (2 bytes)
+DEST       = $45     ; relative address destination address (2 bytes)
 
 ; XMODEM
 CRC		    = $38		; CRC lo byte  (two byte variable)
@@ -42,6 +45,14 @@ BLCK_NUM    = $3C		; block number
 RETRY	    = $3D		; retry counter 
 RETRY2	    = $3E		; 2nd counter
 BLCK_FLAG	= $3F	    ; block flag 
+
+
+
+; ---------------------------------OHTHER VARIABLES -----------------------------------
+
+; -------------------------------- ASSEMBLER / DISASSEMBLER ---------------------------
+IN      = $300  ; buffer to hold operand
+MNEM1   = $800  ; hold three letter mnemonic string used by assembler
 
 ; ---------------------------------------- BIOS ----------------------------------------
 VIA_DATAB   = $8000

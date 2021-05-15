@@ -10,4 +10,4 @@ J_WRITE_CHAR:       ; $C003 in ROM
 J_PRINTIMM:         ; $C006 in ROM
     JMP PRINTIMM
 J_PRINT_BYTE:       ; $C009 in ROM
-    JMP PRINT_BYTE  
+    JMP PRINT_BYTE 
