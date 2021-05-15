@@ -136,6 +136,7 @@ CRNEWL:
     PLA
     RTS
 
+; converts 2 ascii hexadecimal digits to a byte
 HEX2BIN:
 	PHA
 	TYA
@@ -158,7 +159,7 @@ A2HEX:
 @A2HEX1:
 	RTS
 
-; converts oe byte of binary data to two ascii characters
+; converts one byte of binary data to two ascii characters
 ; entry: 
 ; A = binary data
 ; 

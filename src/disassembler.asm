@@ -4,7 +4,7 @@
 ; Credits to Jeff Tranter <tranter@pobox.com>
 
 START_DISASM:
-  LDA XAML
+  LDA XAML    
   STA ADDR
   LDA XAMH
   STA ADDR+1
@@ -431,22 +431,4 @@ PrintSpaces:
   DEX
   BNE @LOOP
   PLA
-  RTS
-
-; Print a string
-; Pass address of string in X (low) and Y (high).
-; String must be terminated in a null.
-; Cannot be longer than 256 characters.
-; Registers changed: A, Y
-PrintString:
-  STX T1
-  STY T1+1
-  LDY #0
-@loop:
-  LDA (T1),Y
-  BEQ @done
-  JSR PrintChar
-  INY
-  BNE @loop       ; if doesn't branch, string is too long
-@done:
   RTS
