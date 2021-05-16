@@ -68,7 +68,7 @@ StartMonitor:	JSR START_MON
 StartBasic:     JSR LAB_COLD
                 JMP StartPrompt
 
-StartXModem		JSR XMODEM_FILE_RECV
+StartXModem:    JSR XMODEM_FILE_RECV
                 JMP StartPrompt
 
 InvalidCommand:	JSR PrintNewline
@@ -112,12 +112,12 @@ Hex2Bin:
                 ASL
                 ORA T1
                 RTS
-A2Hex:			SEC
+A2Hex:          SEC
                 SBC #'0'
                 CMP #10
                 BCC @Return
                 SBC #7
-@Return:		RTS
+@Return:        RTS
 
 ; Converts one byte of binary data to two ascii characters.
 ; Entry: 
