@@ -152,7 +152,7 @@ HexDigit2Ascii:
                 BCC @isDigit
                 CLC
                 ADC #7
-@isDigit:		ADC #'0'
+@isDigit:       ADC #'0'
                 RTS
 
 ; prints a byte as 2 ascii hex characters
@@ -192,8 +192,8 @@ PrintCommands:
 ; This routines will read a whole line from user input. It also handles backspace. When user presses
 ; enter or escape, the routine will return. The key that has been pressed (enter or escape) 
 ; will be in the A register. The input length will be in the X register. Line is stored at $0200 (InputBuffer)
-GetLine:		LDX	#0                  ; reset input buffer index
-@PollInput:		JSR	ReadChar
+GetLine:        LDX	#0                  ; reset input buffer index
+@PollInput:     JSR	ReadChar
                 BCC	@PollInput
                 CMP	#$60                ; is it lowercase?
                 BMI	@Continue           ; yes, just continue processing
@@ -220,7 +220,7 @@ GetLine:		LDX	#0                  ; reset input buffer index
                 STA	InputBuffer, x		; no we append to input buffer
                 INX						; increment buffer index
                 JMP	@PollInput          ; poll more characters
-@Return:		RTS	
+@Return:        RTS	
 
 
 Banner:
