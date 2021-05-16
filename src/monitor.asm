@@ -8,7 +8,7 @@
 START_MON:
     JSR CRNEWL
     JSR CRNEWL
-    JSR PRINTIMM
+    JSR PrintImmediate
     ASCLN "MONITOR ACTIVATED"
 SOFTRESET:
     LDA #ESC
@@ -35,7 +35,7 @@ BACKSPACE:
     LDA #BSH        ; *Backspace again to get to correct pos.
     JSR ECHO
 NEXTCHAR:    
-    JSR READ_CHAR
+    JSR ReadChar
     BCC NEXTCHAR
     CMP #$60        ; *Is it Lower case
     BMI CONVERT     ; *Nope, just convert it
@@ -122,10 +122,10 @@ ACTRUN:
 EXIT_MONITOR:
     JSR CRNEWL
     JSR CRNEWL
-    JSR PRINTIMM
+    JSR PrintImmediate
     ASCLN "EXIT MONITOR"
     JSR CRNEWL
-    JMP SOFT_RESET_OS
+    JMP SoftResetOS
 
 NOESCAPE:
     BIT MODE        ; Test MODE byte.
@@ -201,7 +201,7 @@ ECHO:
     PHY
     PHX
     AND #$7F
-    JSR WRITE_CHAR
+    JSR WriteChar
     PLX
     PLY    
     PLA

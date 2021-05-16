@@ -15,11 +15,11 @@
 ;
 .SETCPU "65C02"
 
-; WRITE_CHAR  = $C070
-; READ_CHAR   = $C060
+; WriteChar  = $C070
+; ReadChar   = $C060
 
-READ_CHAR   = $C000
-WRITE_CHAR  = $C003
+ReadChar   = $C000
+WriteChar  = $C003
 
 ; page zero variables
 ;
@@ -768,7 +768,7 @@ POUT:
 		JSR	POUT5		; print board horz edge
 POUT1:
 		lDA   	#'|'		; print vert edge
-		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
+		JSR   	syschout	; Print ONE ASCII CHR - SPACE
 		LDX   	#$1F
 POUT2:
 		TYA			; scan the pieces for a location
@@ -796,15 +796,15 @@ type:
 		.byte	$2c		; used to skip over LDA #$20
 POUT25:
 		LDA   	#$20		; ASCII space
-		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
-		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
+		JSR   	syschout	; Print ONE ASCII CHR - SPACE
+		JSR   	syschout	; Print ONE ASCII CHR - SPACE
 POUT3:
 		INY			;
         TYA			; get row number
         AND   	#$08		; have we completed the row?
         BEQ   	POUT1		; no, do next column
 		LDA   	#'|'		; yes, put the right edge on
-		JSR   	syschout	; PRINT ONE ASCII CHR - |
+		JSR   	syschout	; Print ONE ASCII CHR - |
 		jsr	POUT12		; print row number
 		JSR   	POUT9		; print CRLF
         JSR   	POUT5		; print bottom edge of board
@@ -835,7 +835,7 @@ POUT5:
 		LDX	#$19
 		LDA	#'-'
 POUT6:
-		JSR   	syschout	; PRINT ONE ASCII CHR - "-"
+		JSR   	syschout	; Print ONE ASCII CHR - "-"
 		DEX
 		BNE	POUT6
 		PLA
@@ -846,21 +846,21 @@ POUT6:
 POUT8:
 		jsr	POUT10		;
 		LDA   	$FB
-		JSR   	syshexout	; PRINT 1 BYTE AS 2 HEX CHRS
+		JSR   	syshexout	; Print 1 BYTE AS 2 HEX CHRS
         LDA   	#$20
-		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
+		JSR   	syschout	; Print ONE ASCII CHR - SPACE
         LDA   	$FA
-		JSR   	syshexout	; PRINT 1 BYTE AS 2 HEX CHRS
+		JSR   	syshexout	; Print 1 BYTE AS 2 HEX CHRS
         LDA   	#$20
-		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
+		JSR   	syschout	; Print ONE ASCII CHR - SPACE
         LDA   	$F9
-		JSR   	syshexout	; PRINT 1 BYTE AS 2 HEX CHRS
+		JSR   	syshexout	; Print 1 BYTE AS 2 HEX CHRS
 
 POUT9:
       	LDA   	#$0D
-		JSR   	syschout	; PRINT ONE ASCII CHR - CR
+		JSR   	syschout	; Print ONE ASCII CHR - CR
         LDA   	#$0A
-		JSR   	syschout	; PRINT ONE ASCII CHR - LF
+		JSR   	syschout	; Print ONE ASCII CHR - LF
         RTS
 
 POUT10:
@@ -893,7 +893,7 @@ POUT15:
 
 KIN:
         LDA   	#'?'
-		JSR   	syschout	; PRINT ONE ASCII CHR - ?
+		JSR   	syschout	; Print ONE ASCII CHR - ?
 		JSR   	syskin		; GET A KEYSTROKE FROM SYSTEM
         AND   	#$4F            ; MASK 0-7, AND ALPHA'S
         RTS
@@ -912,7 +912,7 @@ KIN:
 ; input chr from ACIA1 (waiting)
 ;
 syskin:
-		JSR READ_CHAR
+		JSR ReadChar
 		BCC syskin	
 		RTS
 
@@ -928,7 +928,7 @@ syschout:
 		PHA                      ; save registers
 		PHY
 		PHX
-		JSR WRITE_CHAR
+		JSR WriteChar
 		PLX
 		PLY
 		PLA

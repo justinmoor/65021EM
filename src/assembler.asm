@@ -28,7 +28,7 @@
 start_assembler:
 	JSR PrintCR
 	JSR PrintCR
-	JSR PRINTIMM              ; Print error message
+	JSR PrintImmediate              ; Print error message
 	ASC "STARTING ASSEMBLING ON ADDRESS $"
 	LDX ADDR_A
 	LDY ADDR_A+1
@@ -90,7 +90,7 @@ PARS:
 	CMP #OP_INV             ; Not valid?
 	BNE OpOk                ; Branch if okay
 	JSR PrintCR
-	JSR PRINTIMM            	; Not a valid mnemonic
+	JSR PrintImmediate            	; Not a valid mnemonic
 	.byte "Invalid instruction", 0
 	JSR PrintCR
 	JMP AssembleLine		
@@ -509,7 +509,7 @@ TryAbsIndInd:
 ; If not any of the above, report "Invalid operand" and do line again
 InvalidOp:
 	JSR PrintCR
-	JSR PRINTIMM
+	JSR PrintImmediate
 	.byte "Invalid operand", 0
 	JSR PrintCR
 	JMP AssembleLine	
@@ -520,7 +520,7 @@ GenerateCode:
 	JSR CheckAddressingModeValid   ; See if addressing mode is valid
 	BNE OperandOkay
 
-	JSR PRINTIMM             ; Not a valid addressing mode
+	JSR PrintImmediate             ; Not a valid addressing mode
 	.byte "Invalid addressing mode", 0
 	JSR PrintCR
 	JMP AssembleLine	
@@ -541,7 +541,7 @@ OperandOkay:
 	BEQ WriteOperands        ; Yes, okay
 
 ; Memory is not writable for some reason, Report error and quit.
-	JSR PRINTIMM              ; Print error message
+	JSR PrintImmediate              ; Print error message
 	.byte "Unable to write to $", 0
 	LDX ADDR_A
 	LDY ADDR_A+1
@@ -624,7 +624,7 @@ Relative:
 	CMP #$FF
 	BEQ OkayFF                 ; Or $FF
 OutOfRange:
-	JSR PRINTIMM
+	JSR PrintImmediate
 	.byte "Relative branch out of range", 0
 	JSR PrintCR
 	JMP AssembleLine
@@ -815,7 +815,7 @@ CharToBin:
 	RTS
 
 GetKey:
-	JSR READ_CHAR
+	JSR ReadChar
 	BCC GetKey
 	RTS
 
@@ -832,7 +832,7 @@ PrintChar:
 	PHA
 	PHX
 	PHY
-	JSR WRITE_CHAR
+	JSR WriteChar
 	PLY
 	PLX
 	PLA
@@ -872,7 +872,7 @@ PrintAddress:
 PrintByte:
     PHA
     PHY
-    JSR PRINT_BYTE
+    JSR Print_BYTE
     PLY
     PLA
     RTS

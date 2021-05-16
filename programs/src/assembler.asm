@@ -47,7 +47,7 @@
 ; NEWL
 ; IN
 ; ImPrint
-; PRINT_BYTE
+; Print_BYTE
 ; BS
 
 ; Assemble code entered a line at a time.
@@ -74,19 +74,19 @@ IN     = $300
 MNEM   = $800
 OPERAND = $02
 
-READ_CHAR   = $C000
-WRITE_CHAR  = $C003
+ReadChar   = $C000
+WriteChar  = $C003
 Imprint     = $C006
-PRINT_BYTE  = $C009
+Print_BYTE  = $C009
 
-.macro DEBUG_PRINT addr
+.macro DEBUG_Print addr
 	PHA
 	PHX
 	PHY
 	JSR PrintCR
 	JSR PrintCR
 	LDA addr
-	JSR PRINT_BYTE
+	JSR Print_BYTE
 	JSR PrintCR
 	JSR PrintCR
 	PLY
@@ -111,7 +111,7 @@ AssembleLine:
 @GET_INPUT:
     LDX #0                  ; reset input buffer index
 @POLL_INPUT:
-    JSR READ_CHAR
+    JSR ReadChar
     BCC @POLL_INPUT
     CMP #$60                ; is it lowercase?
     BMI @CONTINUE           ; yes, just continue processing
@@ -123,15 +123,15 @@ AssembleLine:
     BNE @NO_BACKSP          ; if not, branch
     DEX                     ; we got a backspace, decrement input buffer
     BMI @GET_INPUT
-    JSR WRITE_CHAR          ; display the backspace.
+    JSR WriteChar          ; display the backspace.
     LDA #$20                ; space, overwrite the backspaced char.
-    JSR WRITE_CHAR			; display space
+    JSR WriteChar			; display space
     LDA #BS                 ; backspace again to get to correct pos.
-    JSR WRITE_CHAR		
+    JSR WriteChar		
     JMP @POLL_INPUT
 @NO_BACKSP:
     PHA
-    JSR WRITE_CHAR          ; display character.
+    JSR WriteChar          ; display character.
     PLA
     CMP #CR                 ; is it an enter?
     BEQ PROCESS_INPUT_ASM   ; yes, we start processing
@@ -912,7 +912,7 @@ CharToBin:
 	RTS
 
 GetKey:
-	JSR READ_CHAR
+	JSR ReadChar
 	BCC GetKey
 	RTS
 
@@ -929,7 +929,7 @@ PrintChar:
 	PHA
 	PHX
 	PHY
-	JSR WRITE_CHAR
+	JSR WriteChar
 	PLY
 	PLX
 	PLA
@@ -969,7 +969,7 @@ PrintAddress:
 PrintByte:
     PHA
     PHY
-    JSR PRINT_BYTE
+    JSR Print_BYTE
     PLY
     PLA
     RTS

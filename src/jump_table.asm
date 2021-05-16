@@ -3,11 +3,11 @@
 ; in the beginning of ROM, the addresses will stay fixed. This file should be assembled first so it's in 
 ; the beginning of ROM.
 
-J_READ_CHAR:        ; $C000 in ROM
-    JMP READ_CHAR
-J_WRITE_CHAR:       ; $C003 in ROM
-    JMP WRITE_CHAR
-J_PRINTIMM:         ; $C006 in ROM
-    JMP PRINTIMM
-J_PRINT_BYTE:       ; $C009 in ROM
-    JMP PRINT_BYTE 
+J_ReadChar:        ; $C000 in ROM
+    JMP ReadChar
+J_WriteChar:       ; $C003 in ROM
+    JMP WriteChar
+J_PrintImmediate:         ; $C006 in ROM
+    JMP PrintImmediate
+J_Print_BYTE:       ; $C009 in ROM
+    JMP Print_BYTE 

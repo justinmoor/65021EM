@@ -10,7 +10,7 @@ START_DISASM:
   STA ADDR+1
   JSR CRNEWL
   JSR CRNEWL
-	JSR PRINTIMM              ; Print error message
+	JSR PrintImmediate              ; Print error message
 	.byte "STARTING DISASSEMBLY AT ADDRESS $", 0
 	LDX ADDR
 	LDY ADDR+1
@@ -27,7 +27,7 @@ LOOP:
   SBC #1
   BNE LOOP
 @SpaceOrEscape:
-  JSR READ_CHAR
+  JSR ReadChar
   BCC @SpaceOrEscape
   CMP #'l'
   BEQ OUTER

@@ -43,8 +43,8 @@ NOACCUMULATOR = 1
   ESC = $1B ; Escape
 
 ; External Routines
-WRITE_CHAR = $C070
-READ_CHAR = $C060
+WriteChar = $C070
+ReadChar = $C060
 ECHO     = $C070 ; Woz monitor ECHO routine
 
 ; Instructions. Matches entries in table of MNEMONICS
@@ -632,7 +632,7 @@ PrintChar:
 ;   AND #%01111111
 ;   RTS
 GetKey:
-    JSR READ_CHAR
+    JSR ReadChar
     BCC GetKey
     RTS
 
@@ -695,7 +695,7 @@ u_hex4out:
 	and #$0f		; mask high nibble out
 	tax			; set digit index
 	lda u_hexdigit,x	; load digit
-	jsr WRITE_CHAR		; print character
+	jsr WriteChar		; print character
 	plx			; restore X
 	rts			; return
 u_hexdigit:	.byte "0123456789ABCDEF"

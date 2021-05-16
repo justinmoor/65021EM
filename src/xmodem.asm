@@ -15,16 +15,16 @@
 XMODEM_FILE_RECV:
     JSR GENERATE_CRC_TABLE
     JSR CRNEWL
-	JSR PRINTIMM
+	JSR PrintImmediate
 	ASC "WHERE TO STORE? "
 	JSR GetLine
 	CMP #CR
 	BEQ @Start
-	JMP SOFT_RESET_OS
+	JMP SoftResetOS
 @Start
 	JSR PROCESS_INPUT_XM
     JSR CRNEWL
-	JSR PRINTIMM
+	JSR PrintImmediate
 	ASCLN "READY TO RECEIVE OVER XMODEM. PLEASE SELECT A FILE TO TRANSFER OR PRESS <ESC> TO CANCEL."
 	LDA #$01
 	STA BLCK_NUM	; set block # to 1
@@ -77,7 +77,7 @@ GET_BLCK2:
 	LDA RECV_BUF,X	; get block # from buffer
 	CMP BLCK_NUM	; compare to expected block #	
 	BEQ GOOD_BLCK1	; matched!
-	JSR PRINTIMM		; Unexpected block number - abort	
+	JSR PrintImmediate		; Unexpected block number - abort	
 	ASCLN "UPLOAD ERROR!"
 	JSR FLUSH		; mismatched - flush buffer and then do BRK
 ;	LDA #$FD		; put error code in "A" if desired
@@ -87,7 +87,7 @@ GOOD_BLCK1:
 	INX 		
 	CMP RECV_BUF,X	; compare with expected 1's comp of block #
 	BEQ GOOD_BLCK2 	; matched!
-	JSR PRINTIMM		; Unexpected block number - abort	
+	JSR PrintImmediate		; Unexpected block number - abort	
 	ASCLN "UPLOAD ERROR!"
 	JSR FLUSH		; mismatched - flush buffer and then do BRK
 ;	LDA	#$FC		; put error code in "A" if desired
@@ -141,7 +141,7 @@ XM_DONE:			; xmodem done
 	LDA #ACK		; last block, send ACK and exit.
 	JSR PUT_CHR		
 	JSR FLUSH		; get leftover characters, if any
-	JSR PRINTIMM
+	JSR PrintImmediate
 	ASCLN "UPLOAD SUCCESFULL!"
 	RTS			
 
@@ -181,12 +181,12 @@ FLUSH1:
 ; if this routine waits for the port to be ready.  its assumed that the 
 ; character was send upon return from this routine.
 GET_CHAR:
-	JSR READ_CHAR
+	JSR ReadChar
 	RTS
 
 PUT_CHR:	   	
 	PHA             ; save registers
-	JSR WRITE_CHAR
+	JSR WriteChar
 	PLA
 	RTS             ; done
 

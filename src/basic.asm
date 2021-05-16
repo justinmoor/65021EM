@@ -326,8 +326,8 @@ TK_DOKE		= TK_POKE+1		; DOKE token
 TK_CALL		= TK_DOKE+1		; CALL token
 TK_DO			= TK_CALL+1		; DO token
 TK_LOOP		= TK_DO+1		; LOOP token
-TK_PRINT		= TK_LOOP+1		; PRINT token
-TK_CONT		= TK_PRINT+1	; CONT token
+TK_Print		= TK_LOOP+1		; Print token
+TK_CONT		= TK_Print+1	; CONT token
 TK_LIST		= TK_CONT+1		; LIST token
 TK_CLEAR		= TK_LIST+1		; CLEAR token
 TK_NEW		= TK_CLEAR+1	; NEW token
@@ -421,8 +421,8 @@ LAB_SKFE		= LAB_STAK+$FE
 LAB_SKFF		= LAB_STAK+$FF
 					; flushed stack address
 
-; WRITE_CHAR  = $C079
-; READ_CHAR   = $C067
+; WriteChar  = $C079
+; ReadChar   = $C067
 
 ccflag		= $0200	; BASIC CTRL-C flag, 00 = enabled, 01 = dis
 ccbyte		= ccflag+1	; BASIC CTRL-C byte
@@ -2330,16 +2330,16 @@ LAB_NoSt
 
 	JMP	LAB_17D5		; do string LET and return
 
-; perform PRINT
+; perform Print
 
 LAB_1829
 	JSR	LAB_18C6		; print string from Sutill/Sutilh
 LAB_182C
 	JSR	LAB_GBYT		; scan memory
 
-; PRINT
+; Print
 
-LAB_PRINT
+LAB_Print
 	BEQ	LAB_CRLF		; if nothing following just print CR/LF
 
 LAB_1831
@@ -2353,7 +2353,7 @@ LAB_1831
 	BEQ	LAB_188B		; go do move to next TAB mark
 
 	CMP	#';'			; compare with ";"
-	BEQ	LAB_18BD		; if ";" continue with PRINT processing
+	BEQ	LAB_18BD		; if ";" continue with Print processing
 
 	JSR	LAB_EVEX		; evaluate expression
 	BIT	Dtypef		; test data type flag, $FF=string, $00=numeric
@@ -2400,7 +2400,7 @@ LAB_188B
 	BCC	LAB_1897		; branch if less
 
 	JSR	LAB_CRLF		; else print CR/LF (next line)
-	BNE	LAB_18BD		; continue with PRINT processing (branch always)
+	BNE	LAB_18BD		; continue with Print processing (branch always)
 
 LAB_1897
 	SEC				; set carry for subtract
@@ -2441,7 +2441,7 @@ LAB_18BA
 	DEX				; decrement count
 	BNE	LAB_18BA		; loop if not all done
 
-					; continue with PRINT processing
+					; continue with Print processing
 LAB_18BD
 	JSR	LAB_IGBY		; increment and scan memory
 	BNE	LAB_1831		; if more to print go do it
@@ -7723,11 +7723,11 @@ LAB_TWOPI
 ; these are in RAM and are set by the monitor at start-up
 
 V_INPT
-	JSR READ_CHAR
+	JSR ReadChar
 	RTS
 V_OUTP
 	PHA
-	JSR WRITE_CHAR
+	JSR WriteChar
 	PLA
 	RTS
 V_LOAD
@@ -7840,7 +7840,7 @@ LAB_25B5
 LAB_25B9
 	.byte	$80,$31,$72,$18	; 0.69315	LOG(2)
 
-					; numeric PRINT constants
+					; numeric Print constants
 LAB_2947
 	.byte	$91,$43,$4F,$F8	; 99999.9375 (max value with at least one decimal)
 LAB_294B
@@ -7968,7 +7968,7 @@ LAB_CTBL
 	.word	LAB_CALL-1		; CALL		new command
 	.word	LAB_DO-1		; DO			new command
 	.word	LAB_LOOP-1		; LOOP		new command
-	.word	LAB_PRINT-1		; PRINT
+	.word	LAB_Print-1		; Print
 	.word	LAB_CONT-1		; CONT
 	.word	LAB_LIST-1		; LIST
 	.word	LAB_CLEAR-1		; CLEAR
@@ -8188,7 +8188,7 @@ LBB_RSHIFT
 	.byte TK_GT			; >
 	.byte	$00
 TAB_QEST
-	.byte TK_PRINT,$00	; ?
+	.byte TK_Print,$00	; ?
 TAB_ASCA
 LBB_ABS
 	.byte	"BS(",TK_ABS	; ABS(
@@ -8336,8 +8336,8 @@ LBB_POKE
 	.byte	"OKE",TK_POKE	; POKE
 LBB_POS
 	.byte	"OS(",TK_POS	; POS(
-LBB_PRINT
-	.byte	"RINT",TK_PRINT	; PRINT
+LBB_Print
+	.byte	"RINT",TK_Print	; Print
 	.byte	$00
 TAB_ASCR
 LBB_READ
@@ -8492,7 +8492,7 @@ LAB_KEYT
 	.byte	4,'L'
 	.word	LBB_LOOP		; LOOP
 	.byte	5,'P'
-	.word	LBB_PRINT		; PRINT
+	.word	LBB_Print		; Print
 	.byte	4,'C'
 	.word	LBB_CONT		; CONT
 	.byte	4,'L'

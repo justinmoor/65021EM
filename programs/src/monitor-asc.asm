@@ -27,9 +27,9 @@ ESC         = $9B       ; ESC key
 PROMPT      = '-'       ;'>' Prompt character
 
 
-WRITE_CHAR  = $C079
-READ_CHAR   = $C067
-PRINTIMM    = $C08A
+WriteChar  = $C079
+ReadChar   = $C067
+PrintImmediate    = $C08A
 
 .MACRO ASCLN text
     .BYTE text, $0D, $0A, 0
@@ -40,7 +40,7 @@ PRINTIMM    = $C08A
 START_MONITOR:
     CLD             ; Clear decimal arithmetic mode.
     CLI
-    JSR PRINTIMM
+    JSR PrintImmediate
     ASCLN "TEST MONITOR"
 
 SOFTRESET:  
@@ -71,7 +71,7 @@ BACKSPACE:
     LDA #BS         ; *Backspace again to get to correct pos.
     JSR ECHO
 NEXTCHAR:    
-    JSR READ_CHAR
+    JSR ReadChar
     BCC NEXTCHAR
     CMP #$60        ; *Is it Lower case
     BMI CONVERT     ; *Nope, just convert it
@@ -212,7 +212,7 @@ ECHO:
     PHY
     PHX
     ; AND #$7F
-    JSR WRITE_CHAR
+    JSR WriteChar
     PLX
     PLY
     PLA

@@ -10,9 +10,9 @@ STRING_LO   = $06       ; low address of string to print
 STRIG_HI    = $07
 
 ; BIOS
-SPI_RD_BUF  = $08       ; 1 byte (possibly 2 bytes in future)
-SPI_WR_BUF  = $0A       ; 1 byte (possibly 2 bytes in future)
-M3100_RD_BUF = $0C      ; 2 bytes
+SPIReadBuf  = $08       ; 1 byte (possibly 2 bytes in future)
+SPIWriteBuf  = $0A       ; 1 byte (possibly 2 bytes in future)
+M3100ReadBuf = $0C      ; 2 bytes
 
 ; WOZMON
 XAML        = $24       ; index pointers
@@ -55,11 +55,11 @@ IN      = $300  ; buffer to hold operand
 MNEM1   = $800  ; hold three letter mnemonic string used by assembler
 
 ; ---------------------------------------- BIOS ----------------------------------------
-VIA_DATAB   = $8000
-VIA_DATAA   = $8001
+VIADataB   = $8000
+VIADataA   = $8001
 
-VIA_DDRB    = $8002
-VIA_DDRA    = $8003
+VIADataDirB    = $8002
+VIADataDirA    = $8003
 
 ; ---------------------------------- OPERATING SYSTEM-------------------------------------
 
