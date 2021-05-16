@@ -102,27 +102,27 @@ WriteChar:
 				PLY
 				RTS
 
-; uses stack manipulation to print immediate string
+; Uses stack manipulation to print immediate string embedded in the code.
+; Usage:
+;	JSR PrintImmediate
+;	.byte "Hello world", 0
+;
 PrintImmediate:
-				PLA
+				PLA				; save original return address in T3
 				STA T3
 				PLA
 				STA T3 + 1
-				LDY #$1
-@P0: 			LDA (T3), Y
-				BEQ @Done
-				JSR WriteChar
-				INY
+				BRA @P1
+@P0:			JSR WriteChar
+@P1:			INC T3
+				BNE @P3
+				INC T3 + 1
+@P3				LDA (T3)
 				BNE @P0
-@Done:			CLC
-				TYA
-				ADC T3
-				STA T3
-				LDA T3 + 1
-				ADC #$00
-				PHA
+				LDA T3 + 1		; restore stack with the new return adress
+				PHA				
 				LDA T3
-				PHA
+				PHA				
 				RTS
 
 Print:			

@@ -46,7 +46,7 @@ CONVERT:
     BEQ ST_ASM      ; Yes, run user program.
     CMP #'L' + $80  ; "R"? (high ascii $D2)
     BEQ ST_DISASM   ; Yes, run user program.
-    STA INPUT_BUF,Y ; Add to text buffer.
+    STA InputBuffer,Y ; Add to text buffer.
     JSR ECHO        ; Display character.
     CMP #ENT        ; CR?
     BNE NOTCR       ; No.
@@ -60,7 +60,7 @@ SETMODE:
 BLSKIP: 
     INY             ; Advance text index.
 NEXTITEM:    
-    LDA INPUT_BUF,Y ; Get character.
+    LDA InputBuffer,Y ; Get character.
     CMP #ENT        ; CR?
     BEQ GETLINE     ; Yes, done this line.
     CMP #'.' + $80  ; "."? (high ascii $AE)
@@ -76,7 +76,7 @@ NEXTITEM:
     STX H           ; and H.
     STY YSAV        ; Save Y for comparison.
 NEXTHEX:
-    LDA INPUT_BUF,Y        ; Get character for hex test.
+    LDA InputBuffer,Y        ; Get character for hex test.
     EOR #$B0        ; Map digits to $0-9.
     CMP #$0A        ; Digit?
     BCC DIG         ; Yes.

@@ -8,7 +8,6 @@
 
 .SETCPU "65C02"
 
-
 .SEGMENT "VECTORS"
 
 .WORD   NMI
@@ -18,7 +17,7 @@
 .CODE
 
 .INCLUDE "jump_table.asm"
-.INCLUDE "memory.asm"
+.INCLUDE "variables.asm"
 .INCLUDE "macros.asm"
 .INCLUDE "bios.asm"
 
@@ -47,7 +46,7 @@ StartPrompt:	JSR PrintPrompt
 ; X contains the length of the input we've received
 ; Input buffer starts at $200 
 ProcessInput:	
-				LDA INPUT_BUF
+				LDA InputBuffer
 				CMP #'M'
 				BEQ StartMonitor
 				CMP #'B'
@@ -119,26 +118,27 @@ A2Hex:			SEC
 				SBC #7
 @Return:		RTS
 
-; converts one byte of binary data to two ascii characters
-; entry: 
+; Converts one byte of binary data to two ascii characters.
+; Entry: 
 ; A = binary data
 ; 
-; exit: 
+; Exit: 
 ; A = first ascii digit, high order value
 ; Y = second ascii digit, low order value
-Bin2Hex:		TAX         ; save original value
-				AND #$F0    ; get high nibble
+Bin2Hex:		
+				TAX         		; save original value
+				AND #$F0    		; get high nibble
 				LSR
 				LSR
 				LSR
-				LSR         ; move to lower nibble
-				JSR HexDigit2Ascii; convert to ascii
+				LSR         		; move to lower nibble
+				JSR HexDigit2Ascii	; convert to ascii
 				PHA
-				TXA         ; convert lower nibble
+				TXA					; convert lower nibble
 				AND #$0F
-				JSR HexDigit2Ascii; convert to ascii
-				TAY         ; low nibble to register y
-				PLA         ; high nibble to register a
+				JSR HexDigit2Ascii	; convert to ascii
+				TAY         		; low nibble to register y
+				PLA					; high nibble to register a
 				RTS
 
 ; converts a hexadecimal digit to ascii
@@ -155,6 +155,7 @@ HexDigit2Ascii:
 				RTS
 
 ; prints a byte as 2 ascii hex characters
+; all registers are restored
 PrintByte:		
 				PHA
 				PHX
@@ -187,22 +188,21 @@ PrintCommands:
 				JSR Print
 				RTS
 
-
 ; This routines will read a whole line from user input. It also handles backspace. When user presses
 ; enter or escape, the routine will return. The key that has been pressed (enter or escape) 
-; will be in the A register. The input length will be in the X register
+; will be in the A register. The input length will be in the X register. Line is stored at $0200 (InputBuffer)
 GetLine:		LDX	#0                  ; reset input buffer index
 @PollInput:		JSR	ReadChar
 				BCC	@PollInput
 				CMP	#$60                ; is it lowercase?
 				BMI	@Continue           ; yes, just continue processing
 				AND	#$DF				; convert to uppercase
-@Continue:
+@Continue:		
 				CMP	#BS                 ; is it a backspace?
 				BNE	@NoBackspace        ; if not, branch
-				DEX	                    ; we got a backspace, decrement input buffer
+@OnBackspace	DEX	                    ; we got a backspace, decrement input buffer
 				BMI	GetLine				; just reset when there are no characters to backspace
-				JSR	WriteChar          ; display the backspace.
+				JSR	WriteChar			; display the backspace.
 				LDA	#$20                ; space, overwrite the backspaced char.
 				JSR	WriteChar			; display space
 				LDA	#BS                 ; backspace again to get to correct pos.
@@ -210,16 +210,16 @@ GetLine:		LDX	#0                  ; reset input buffer index
 				JMP	@PollInput
 @NoBackspace:
 				CMP	#ESC				; is escape key pressed?
-				BEQ	@EscOrEnter			; quit
+				BEQ	@Return				; quit
 				PHA	
-				JSR	WriteChar          ; display character.
+				JSR	WriteChar			; display character.
 				PLA	
 				CMP	#CR                 ; is it an enter?
-				BEQ	@EscOrEnter   		; yes, caller can now start processing from $0200
-				STA	INPUT_BUF, x      	; no we append to input buffer
-				INX	                     ; increment buffer index
+				BEQ	@Return				; yes, caller can now start processing from $0200
+				STA	InputBuffer, x		; no we append to input buffer
+				INX						; increment buffer index
 				JMP	@PollInput          ; poll more characters
-@EscOrEnter:	RTS	
+@Return:		RTS	
 
 
 Banner:

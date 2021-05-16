@@ -69,7 +69,7 @@ CR     = $0D       ; Carriage Return
 NEWL   = $0A
 BS     = $08       ; Backspace key, arrow left key
 SP     = $20
-INPUT_BUF = $200
+InputBuffer = $200
 IN     = $300
 MNEM   = $800
 OPERAND = $02
@@ -105,7 +105,7 @@ AssembleLine:
 	LDY ADDR+1
 	JSR PrintAddress
 	LDA #':'                ; Output colon
-	JSR PrintChar
+	JSR WriteChar
 	JSR PrintSpace          ; And space
 
 @GET_INPUT:
@@ -135,24 +135,24 @@ AssembleLine:
     PLA
     CMP #CR                 ; is it an enter?
     BEQ ProcessInput_ASM   ; yes, we start processing
-    STA INPUT_BUF+1, X      ; no we append to input buffer, reverse first byte for length
+    STA InputBuffer+1, X      ; no we append to input buffer, reverse first byte for length
     INX                     ; increment buffer index
     JMP @POLL_INPUT         ; poll more characters
 
 ProcessInput_ASM:
-	STX INPUT_BUF			; holds total length now
+	STX InputBuffer			; holds total length now
 	LDX #0
-	LDA INPUT_BUF+1, X
+	LDA InputBuffer+1, X
 	STA MNEM, X
 	INX
-	LDA INPUT_BUF+1, X
+	LDA InputBuffer+1, X
 	STA MNEM, X
 	INX
-	LDA INPUT_BUF+1, X
+	LDA InputBuffer+1, X
 	STA MNEM, X
 
 	; start storing operands in IN if we have any
-	LDA INPUT_BUF
+	LDA InputBuffer
 	CMP #3
 	BNE @OPPER					; we only have 3 character
 	STZ IN
@@ -163,9 +163,9 @@ ProcessInput_ASM:
 	INX						; skip space
 	INX
 @loop:	
-	CPX INPUT_BUF
+	CPX InputBuffer
 	BEQ @DONE
-	LDA INPUT_BUF+1, X
+	LDA InputBuffer+1, X
 	STA IN + 1, Y
 	INX
 	INY
@@ -925,7 +925,7 @@ ToUpper:
 @NotLower:
 	RTS
 
-PrintChar:
+WriteChar:
 	PHA
 	PHX
 	PHY
@@ -937,15 +937,15 @@ PrintChar:
 
 PrintCR:
 	LDA #CR
-	JSR PrintChar        ; New line
+	JSR WriteChar        ; New line
 	LDA #NEWL
-	JSR PrintChar
+	JSR WriteChar
 	RTS
 
 PrintSpace:
 	PHA
 	LDA #SP
-	JSR PrintChar
+	JSR WriteChar
 	PLA
 	RTS
 

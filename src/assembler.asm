@@ -39,7 +39,7 @@ AssembleLine:
 	LDY ADDR_A+1
 	JSR PrintAddress
 	LDA #':'                ; Output colon
-	JSR PrintChar
+	JSR WriteChar
 	JSR PrintSpace          ; And space
 
 	JSR GetLine
@@ -48,13 +48,13 @@ AssembleLine:
 ProcessInput_ASM:			; No escape, that implies an enter, sp start processing
 	STX T1					; save total length of input in T1		
 	LDX #0
-	LDA INPUT_BUF, X
+	LDA InputBuffer, X
 	STA MNEM1, X
 	INX
-	LDA INPUT_BUF, X
+	LDA InputBuffer, X
 	STA MNEM1, X
 	INX
-	LDA INPUT_BUF, X
+	LDA InputBuffer, X
 	STA MNEM1, X
 
 	; start storing operands in IN if we have any
@@ -71,7 +71,7 @@ ProcessInput_ASM:			; No escape, that implies an enter, sp start processing
 @loop:	
 	CPX T1
 	BEQ @DONE
-	LDA INPUT_BUF, X
+	LDA InputBuffer, X
 	STA IN + 1, Y
 	INX
 	INY
@@ -828,27 +828,17 @@ ToUpper:
 @NotLower:
 	RTS
 
-PrintChar:
-	PHA
-	PHX
-	PHY
-	JSR WriteChar
-	PLY
-	PLX
-	PLA
-	RTS
-
 PrintCR:
 	LDA #CR
-	JSR PrintChar        ; New line
+	JSR WriteChar        ; New line
 	LDA #NEWL
-	JSR PrintChar
+	JSR WriteChar
 	RTS
 
 PrintSpace:
 	PHA
 	LDA #SP
-	JSR PrintChar
+	JSR WriteChar
 	PLA
 	RTS
 

@@ -258,7 +258,7 @@ ONE:
   LDY #3
 MNEM:
   LDA MNEMONICS,X       ; print three chars of mnemonic
-  JSR PrintChar
+  JSR WriteChar
   INX
   DEY
   BNE MNEM
@@ -304,7 +304,7 @@ DOBB:                   ; handle special BBRn and BBSn instructions
   LDA (ADDR),Y          ; get 1st operand byte (address)
   JSR PrintByte         ; display it
   LDA #','
-  JSR PrintChar
+  JSR WriteChar
   JSR PrintDollar
 ; Handle relative addressing
 ; Destination address is Current address + relative (sign extended so upper byte is $00 or $FF) + 3
@@ -352,14 +352,14 @@ TRYACC:
   BNE TRYIMM
  .ifndef NOACCUMULATOR
   LDA #'A'
-  JSR PrintChar
+  JSR WriteChar
  .endif                 ; .ifndef NOACCUMULATOR
   JMP DONEOPS
 TRYIMM:
   CMP #AM_IMMEDIATE
   BNE TRYZP
   LDA #'#'
-  JSR PrintChar
+  JSR WriteChar
   JSR PrintDollar
   LDY #1
   LDA (ADDR),Y          ; get 1st operand byte (low address)
@@ -532,7 +532,7 @@ DONEOPS:
 PrintDollar:
   PHA
   LDA #'$'
-  JSR PrintChar
+  JSR WriteChar
   PLA
   RTS
 
@@ -541,9 +541,9 @@ PrintDollar:
 PrintCommaX:
   PHA
   LDA #','
-  JSR PrintChar
+  JSR WriteChar
   LDA #'X'
-  JSR PrintChar
+  JSR WriteChar
   PLA
   RTS
 
@@ -552,9 +552,9 @@ PrintCommaX:
 PrintCommaY:
   PHA
   LDA #','
-  JSR PrintChar
+  JSR WriteChar
   LDA #'Y'
-  JSR PrintChar
+  JSR WriteChar
   PLA
   RTS
 
@@ -563,9 +563,9 @@ PrintCommaY:
 PrintLParenDollar:
   PHA
   LDA #'('
-  JSR PrintChar
+  JSR WriteChar
   LDA #'$'
-  JSR PrintChar
+  JSR WriteChar
   PLA
   RTS
 
@@ -574,7 +574,7 @@ PrintLParenDollar:
 PrintRParen:
   PHA
   LDA #')'
-  JSR PrintChar
+  JSR WriteChar
   PLA
   RTS
 
@@ -583,7 +583,7 @@ PrintRParen:
 PrintCR:
   PHA
   LDA #CR
-  JSR PrintChar
+  JSR WriteChar
   PLA
   RTS
 
@@ -592,7 +592,7 @@ PrintCR:
 PrintSpace:
   PHA
   LDA #SP
-  JSR PrintChar
+  JSR WriteChar
   PLA
   RTS
 
@@ -602,7 +602,7 @@ PrintSpaces:
   PHA
   LDA #SP
 @LOOP:
-  JSR PrintChar
+  JSR WriteChar
   DEX
   BNE @LOOP
   PLA
@@ -611,7 +611,7 @@ PrintSpaces:
 ; Output a character
 ; Calls Woz monitor ECHO routine
 ; Registers changed: none
-PrintChar:
+WriteChar:
     PHY
     PHX
     PHA
@@ -673,7 +673,7 @@ PrintString:
 @loop:
   LDA (T1),Y
   BEQ done
-  JSR PrintChar
+  JSR WriteChar
   INY
   BNE @loop       ; if doesn't branch, string is too long
 done:

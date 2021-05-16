@@ -15,11 +15,8 @@
 ;
 .SETCPU "65C02"
 
-; WriteChar  = $C070
-; ReadChar   = $C060
-
-ReadChar   = $C000
-WriteChar  = $C003
+WriteChar  = $C000
+ReadChar   = $C003
 
 ; page zero variables
 ;

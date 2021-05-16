@@ -235,15 +235,15 @@ FETCH2:
 
 ProcessInput_XM:
 	LDX #0
-	LDA INPUT_BUF, X
+	LDA InputBuffer, X
 	INX
-	LDY INPUT_BUF, X
+	LDY InputBuffer, X
 	JSR Hex2Bin
 	STA TARGET + 1
 	INX
-	LDA INPUT_BUF, X
+	LDA InputBuffer, X
 	INX
-	LDY INPUT_BUF, X
+	LDY InputBuffer, X
 	JSR Hex2Bin
 	STA TARGET
 	RTS

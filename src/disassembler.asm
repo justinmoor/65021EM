@@ -105,7 +105,7 @@ ONE:
   LDY #3
 MNEM:
   LDA MNEMONICS,X       ; print three chars of mnemonic
-  JSR PrintChar
+  JSR WriteChar
   INX
   DEY
   BNE MNEM
@@ -151,7 +151,7 @@ DOBB:                   ; handle special BBRn and BBSn instructions
   LDA (ADDR),Y          ; get 1st operand byte (address)
   JSR PrintByte         ; display it
   LDA #','
-  JSR PrintChar
+  JSR WriteChar
   JSR PrintDollar
 ; Handle relative addressing
 ; Destination address is Current address + relative (sign extended so upper byte is $00 or $FF) + 3
@@ -202,7 +202,7 @@ TRYIMM:
   CMP #AM_IMMEDIATE
   BNE TRYZP
   LDA #'#'
-  JSR PrintChar
+  JSR WriteChar
   JSR PrintDollar
   LDY #1
   LDA (ADDR),Y          ; get 1st operand byte (low address)
@@ -375,7 +375,7 @@ DONEOPS:
 PrintDollar:
   PHA
   LDA #'$'
-  JSR PrintChar
+  JSR WriteChar
   PLA
   RTS
 
@@ -384,9 +384,9 @@ PrintDollar:
 PrintCommaX:
   PHA
   LDA #','
-  JSR PrintChar
+  JSR WriteChar
   LDA #'X'
-  JSR PrintChar
+  JSR WriteChar
   PLA
   RTS
 
@@ -395,9 +395,9 @@ PrintCommaX:
 PrintCommaY:
   PHA
   LDA #','
-  JSR PrintChar
+  JSR WriteChar
   LDA #'Y'
-  JSR PrintChar
+  JSR WriteChar
   PLA
   RTS
 
@@ -406,9 +406,9 @@ PrintCommaY:
 PrintLParenDollar:
   PHA
   LDA #'('
-  JSR PrintChar
+  JSR WriteChar
   LDA #'$'
-  JSR PrintChar
+  JSR WriteChar
   PLA
   RTS
 
@@ -417,7 +417,7 @@ PrintLParenDollar:
 PrintRParen:
   PHA
   LDA #')'
-  JSR PrintChar
+  JSR WriteChar
   PLA
   RTS
 
@@ -427,7 +427,7 @@ PrintSpaces:
   PHA
   LDA #SP
 @LOOP:
-  JSR PrintChar
+  JSR WriteChar
   DEX
   BNE @LOOP
   PLA
