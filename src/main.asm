@@ -69,7 +69,7 @@ StartMonitor:	JSR START_MON
 StartBasic:		JSR LAB_COLD
 				JMP StartPrompt
 
-StartXModem:	JSR XMODEM_FILE_RECV
+StartXModem		JSR XMODEM_FILE_RECV
 				JMP StartPrompt
 
 InvalidCommand:	JSR PrintNewline
@@ -156,9 +156,9 @@ HexDigit2Ascii:
 
 ; prints a byte as 2 ascii hex characters
 PrintByte:		
-    			PHA
+				PHA
 				PHX
-    			PHY
+				PHY
 				JSR Bin2Hex
 				JSR WriteChar
 				TYA 
@@ -168,7 +168,7 @@ PrintByte:
 				PLA
 				RTS
 
-PrintBanner:	LDA #<Banner
+PrintBanner		LDA #<Banner
 				STA StrPtrLow
 				LDA #>Banner
 				STA StrPtrHi
@@ -196,7 +196,7 @@ GetLine:		LDX	#0                  ; reset input buffer index
 				BCC	@PollInput
 				CMP	#$60                ; is it lowercase?
 				BMI	@Continue           ; yes, just continue processing
-				AND	#$df				; convert to uppercase
+				AND	#$DF				; convert to uppercase
 @Continue:
 				CMP	#BS                 ; is it a backspace?
 				BNE	@NoBackspace        ; if not, branch
@@ -211,14 +211,14 @@ GetLine:		LDX	#0                  ; reset input buffer index
 @NoBackspace:
 				CMP	#ESC				; is escape key pressed?
 				BEQ	@EscOrEnter			; quit
-                PHA	
-                JSR	WriteChar          ; display character.
-                PLA	
-                CMP	#CR                 ; is it an enter?
-                BEQ	@EscOrEnter   		; yes, caller can now start processing from $0200
-                STA	INPUT_BUF, x      	; no we append to input buffer
-                INX	                     ; increment buffer index
-                JMP	@PollInput          ; poll more characters
+				PHA	
+				JSR	WriteChar          ; display character.
+				PLA	
+				CMP	#CR                 ; is it an enter?
+				BEQ	@EscOrEnter   		; yes, caller can now start processing from $0200
+				STA	INPUT_BUF, x      	; no we append to input buffer
+				INX	                     ; increment buffer index
+				JMP	@PollInput          ; poll more characters
 @EscOrEnter:	RTS	
 
 
