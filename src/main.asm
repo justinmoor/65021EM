@@ -26,7 +26,7 @@ NMI:    		RTI
 IRQ:    		RTI
 
 
-Start:			LDX #$FF        ; setup stack
+Start:				LDX #$FF        ; setup stack
 				TXS    
 				CLD             ; Clear decimal arithmetic mode.
 				CLI
