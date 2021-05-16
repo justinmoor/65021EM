@@ -21,12 +21,12 @@
 .INCLUDE "macros.asm"
 .INCLUDE "bios.asm"
 
-Reset:  		JMP Start
-NMI:    		RTI
-IRQ:    		RTI
+Reset:          JMP Start
+NMI:            RTI
+IRQ:            RTI
 
 
-Start:			LDX #$FF        ; setup stack
+Start:          LDX #$FF        ; setup stack
                 TXS    
                 CLD             ; Clear decimal arithmetic mode.
                 CLI
@@ -65,7 +65,7 @@ ProcessInput:
 
 StartMonitor:	JSR START_MON
 
-StartBasic:		JSR LAB_COLD
+StartBasic:     JSR LAB_COLD
                 JMP StartPrompt
 
 StartXModem		JSR XMODEM_FILE_RECV
@@ -77,7 +77,7 @@ InvalidCommand:	JSR PrintNewline
                 ASCLN "ONLY WORKS IN MONITOR MODE!"
                 JMP StartPrompt
 
-PrintHelp:		JSR PrintCommands
+PrintHelp:      JSR PrintCommands
                 JMP StartPrompt
 
 PrintPrompt:	LDA #CR
@@ -99,7 +99,8 @@ PrintNewline:	PHA
                 RTS
 
 ; converts 2 ascii hexadecimal digits to a byte
-Hex2Bin:		PHA
+Hex2Bin:		
+                PHA
                 TYA
                 JSR A2Hex
                 STA T1
@@ -169,7 +170,7 @@ PrintByte:
                 PLA
                 RTS
 
-PrintBanner		LDA #<Banner
+PrintBanner:    LDA #<Banner
                 STA StrPtrLow
                 LDA #>Banner
                 STA StrPtrHi
