@@ -47,7 +47,7 @@
 ; NEWL
 ; IN
 ; ImPrint
-; Print_BYTE
+; PrintByte
 ; BS
 
 ; Assemble code entered a line at a time.
@@ -77,7 +77,7 @@ OPERAND = $02
 ReadChar   = $C000
 WriteChar  = $C003
 Imprint     = $C006
-Print_BYTE  = $C009
+PrintByte  = $C009
 
 .macro DEBUG_Print addr
 	PHA
@@ -86,7 +86,7 @@ Print_BYTE  = $C009
 	JSR PrintCR
 	JSR PrintCR
 	LDA addr
-	JSR Print_BYTE
+	JSR PrintByte
 	JSR PrintCR
 	JSR PrintCR
 	PLY
@@ -134,12 +134,12 @@ AssembleLine:
     JSR WriteChar          ; display character.
     PLA
     CMP #CR                 ; is it an enter?
-    BEQ PROCESS_INPUT_ASM   ; yes, we start processing
+    BEQ ProcessInput_ASM   ; yes, we start processing
     STA INPUT_BUF+1, X      ; no we append to input buffer, reverse first byte for length
     INX                     ; increment buffer index
     JMP @POLL_INPUT         ; poll more characters
 
-PROCESS_INPUT_ASM:
+ProcessInput_ASM:
 	STX INPUT_BUF			; holds total length now
 	LDX #0
 	LDA INPUT_BUF+1, X
@@ -969,7 +969,7 @@ PrintAddress:
 PrintByte:
     PHA
     PHY
-    JSR Print_BYTE
+    JSR PrintByte
     PLY
     PLA
     RTS

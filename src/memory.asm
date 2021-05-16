@@ -6,8 +6,8 @@ T2          = $01       ; one byte temp register 2
 T3          = $02       ; two byte temp register 3
 T4          = $04       ; two byte temp register 4
 
-STRING_LO   = $06       ; low address of string to print
-STRIG_HI    = $07
+StrPtrLow   = $06       ; low address of string to print
+StrPtrHi    = $07
 
 ; BIOS
 SPIReadBuf  = $08       ; 1 byte (possibly 2 bytes in future)

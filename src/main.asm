@@ -2,7 +2,7 @@
 ;   65021EM START UP CODE
 ;
 ;   Responsible for calling the BIOS to initialize hardware
-;   Once the BIOS is initialized, the monitor is started
+;   Once the BIOS is initialized, prompt is showed
 ; 
 ;-------------------------------------------------------------------------
 
@@ -12,7 +12,7 @@
 .SEGMENT "VECTORS"
 
 .WORD   NMI
-.WORD   RESET
+.WORD   Reset
 .WORD   IRQ
 
 .CODE
@@ -22,76 +22,76 @@
 .INCLUDE "macros.asm"
 .INCLUDE "bios.asm"
 
-RESET:  JMP START
-NMI:    RTI
-IRQ:    RTI
+Reset:  		JMP Start
+NMI:    		RTI
+IRQ:    		RTI
 
 
-START:			LDX #$FF        ; setup stack
+Start:			LDX #$FF        ; setup stack
 				TXS    
 				CLD             ; Clear decimal arithmetic mode.
 				CLI
 				JSR InitBios
-				JSR Print_START_MSG
-				JMP START_PROMPT
+				JSR PrintBanner
+				JMP StartPrompt
 SoftResetOS:    LDX #$FF        ; reset stack
 				TXS
 				CLD             ; Clear decimal arithmetic mode.
 				CLI
-START_PROMPT:	JSR Print_PROMPT_NEWL
+StartPrompt:	JSR PrintPrompt
 				JSR GetLine
 				CMP #CR
-				BEQ PROCESS_INPUT
-				JMP START_PROMPT
+				BEQ ProcessInput
+				JMP StartPrompt
 
 ; X contains the length of the input we've received
 ; Input buffer starts at $200 
-PROCESS_INPUT:	LDA INPUT_BUF
+ProcessInput:	
+				LDA INPUT_BUF
 				CMP #'M'
-				BEQ START_MONITOR
+				BEQ StartMonitor
 				CMP #'B'
-				BEQ START_BASIC
+				BEQ StartBasic
 				CMP #'X'
-				BEQ START_XMODEM
+				BEQ StartXModem
 				CMP #'R'
-				BEQ RUN_INVALID
+				BEQ InvalidCommand
 				CMP #'H'
-				BEQ Print_COMMANDS
-				JSR CRNEWL
-				JSR CRNEWL
+				BEQ PrintHelp
+				JSR PrintNewline
+				JSR PrintNewline
 				JSR PrintImmediate
 				ASCLN "UNKNOWN COMMAND"
-				JMP START_PROMPT
+				JMP StartPrompt
 
-START_MONITOR:	JSR START_MON
+StartMonitor:	JSR START_MON
 
-START_BASIC:	JSR LAB_COLD
-				JMP START_PROMPT
+StartBasic:		JSR LAB_COLD
+				JMP StartPrompt
 
-START_XMODEM:	JSR XMODEM_FILE_RECV
-				JMP START_PROMPT
+StartXModem:	JSR XMODEM_FILE_RECV
+				JMP StartPrompt
 
-RUN_INVALID:	JSR CRNEWL
-				JSR CRNEWL
+InvalidCommand:	JSR PrintNewline
+				JSR PrintNewline
 				JSR PrintImmediate
 				ASCLN "ONLY WORKS IN MONITOR MODE!"
-				JMP START_PROMPT
+				JMP StartPrompt
 
-Print_COMMANDS:	JSR Print_COMMS
-				JMP START_PROMPT
+PrintHelp:		JSR PrintCommands
+				JMP StartPrompt
 
-Print_PROMPT_NEWL:
-				LDA #CR
-				JSR WriteChar        ; New line
+PrintPrompt:	LDA #CR
+				JSR WriteChar   ; New line
 				LDA #NEWL
 				JSR WriteChar
-Print_PROMPT:	LDA #PROMPT     ; ">"
-				JSR WriteChar        ; Output it.
+				LDA #PROMPT     ; ">"
+				JSR WriteChar   ; Output it.
 				LDA #$20        ; "<space>"
 				JSR WriteChar     
 				RTS
 
-CRNEWL:			PHA
+PrintNewline:	PHA
 				LDA #CR
 				JSR WriteChar
 				LDA #NEWL
@@ -100,24 +100,24 @@ CRNEWL:			PHA
 				RTS
 
 ; converts 2 ascii hexadecimal digits to a byte
-HEX2BIN:		PHA
+Hex2Bin:		PHA
 				TYA
-				JSR A2HEX
+				JSR A2Hex
 				STA T1
 				PLA
-				JSR A2HEX
+				JSR A2Hex
 				ASL
 				ASL
 				ASL
 				ASL
 				ORA T1
 				RTS
-A2HEX:			SEC
+A2Hex:			SEC
 				SBC #'0'
 				CMP #10
-				BCC @A2HEX1
+				BCC @Return
 				SBC #7
-@A2HEX1:		RTS
+@Return:		RTS
 
 ; converts one byte of binary data to two ascii characters
 ; entry: 
@@ -126,27 +126,28 @@ A2HEX:			SEC
 ; exit: 
 ; A = first ascii digit, high order value
 ; Y = second ascii digit, low order value
-BIN2HEX:		TAX         ; save original value
+Bin2Hex:		TAX         ; save original value
 				AND #$F0    ; get high nibble
 				LSR
 				LSR
 				LSR
 				LSR         ; move to lower nibble
-				JSR HD2ASCII; convert to ascii
+				JSR HexDigit2Ascii; convert to ascii
 				PHA
 				TXA         ; convert lower nibble
 				AND #$0F
-				JSR HD2ASCII; convert to ascii
+				JSR HexDigit2Ascii; convert to ascii
 				TAY         ; low nibble to register y
 				PLA         ; high nibble to register a
 				RTS
 
 ; converts a hexadecimal digit to ascii
 ; entry:
-; A = binary data in ower nibble
+; A = binary data in lower nibble
 ; exit:
 ; A = ASCII char
-HD2ASCII:		CMP #10
+HexDigit2Ascii:	
+				CMP #10
 				BCC @isDigit
 				CLC
 				ADC #7
@@ -154,29 +155,35 @@ HD2ASCII:		CMP #10
 				RTS
 
 ; prints a byte as 2 ascii hex characters
-Print_BYTE:		JSR BIN2HEX
+PrintByte:		
+    			PHA
+				PHX
+    			PHY
+				JSR Bin2Hex
 				JSR WriteChar
 				TYA 
 				JSR WriteChar
+				PLY
+				PLX
+				PLA
 				RTS
 
-Print_START_MSG:
-				LDA #<BANNER
-				STA STRING_LO
-				LDA #>BANNER
-				STA STRIG_HI
+PrintBanner:	LDA #<Banner
+				STA StrPtrLow
+				LDA #>Banner
+				STA StrPtrHi
 				JSR Print
-Print_SPECS:
-				LDA #<SPECS
-				STA STRING_LO
-				LDA #>SPECS
-				STA STRIG_HI
+PrintSpecs:
+				LDA #<Specs
+				STA StrPtrLow
+				LDA #>Specs
+				STA StrPtrHi
 				JSR Print
-Print_COMMS:
-				LDA #<COMMANDS
-				STA STRING_LO
-				LDA #>COMMANDS
-				STA STRIG_HI
+PrintCommands:
+				LDA #<Commands
+				STA StrPtrLow
+				LDA #>Commands
+				STA StrPtrHi
 				JSR Print
 				RTS
 
@@ -215,18 +222,18 @@ GetLine:		LDX	#0                  ; reset input buffer index
 @EscOrEnter:	RTS	
 
 
-BANNER:
+Banner:
     .BYTE CR, NEWL, CR, NEWL
     .BYTE "  /    __|    \ _  ) _ |    __|   \  |", CR, NEWL
     .BYTE "  _ \ __ \  (  |  /    |    _|   |\/ |", CR, NEWL
     .BYTE "\___/ ___/ \__/ ___|  _|   ___| _|  _|", CR, NEWL
     .BYTE CR, NEWL, 0
-SPECS:
+Specs:
     .BYTE "CPU: 65C02 @ 2 Mhz", CR, NEWL
     .BYTE "RAM: 32KB - LOC.: 0000-7FFF", CR, NEWL
     .BYTE "ROM: 16KB - LOC.: C000-FFFF", CR, NEWL, CR, NEWL
     .BYTE "Welcome to the 65021EM! The following commands are available:", 0
-COMMANDS:
+Commands:
     .BYTE CR, NEWL, CR, NEWL
     .BYTE "B - Start BASIC", CR, NEWL
     .BYTE "X - Receive file over XMODEM", CR, NEWL

@@ -6,8 +6,8 @@
 ;-------------------------------------------------------------------------
 
 START_MON:
-    JSR CRNEWL
-    JSR CRNEWL
+    JSR PrintNewline
+    JSR PrintNewline
     JSR PrintImmediate
     ASCLN "MONITOR ACTIVATED"
 SOFTRESET:
@@ -120,11 +120,11 @@ ACTRUN:
     JMP (XAML)      ; Run at current XAM index.
 
 EXIT_MONITOR:
-    JSR CRNEWL
-    JSR CRNEWL
+    JSR PrintNewline
+    JSR PrintNewline
     JSR PrintImmediate
     ASCLN "EXIT MONITOR"
-    JSR CRNEWL
+    JSR PrintNewline
     JMP SoftResetOS
 
 NOESCAPE:

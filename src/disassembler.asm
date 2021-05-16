@@ -8,16 +8,16 @@ START_DISASM:
   STA ADDR
   LDA XAMH
   STA ADDR+1
-  JSR CRNEWL
-  JSR CRNEWL
+  JSR PrintNewline
+  JSR PrintNewline
 	JSR PrintImmediate              ; Print error message
 	.byte "STARTING DISASSEMBLY AT ADDRESS $", 0
 	LDX ADDR
 	LDY ADDR+1
 	JSR PrintAddress
-  JSR CRNEWL
+  JSR PrintNewline
 OUTER:
-  JSR CRNEWL
+  JSR PrintNewline
   LDA #23
 LOOP:
   PHA
@@ -357,7 +357,7 @@ TRYABINDIND:
   JSR PrintRParen
   JMP DONEOPS
 DONEOPS:
-  JSR CRNEWL
+  JSR PrintNewline
   LDA ADDR              ; update address to next instruction
   CLC
   ADC LEN

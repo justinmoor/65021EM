@@ -45,7 +45,7 @@ AssembleLine:
 	JSR GetLine
 	CMP #ESC				; Escape?
 	BEQ EscPressed			; Yes, return
-PROCESS_INPUT_ASM:			; No escape, that implies an enter, sp start processing
+ProcessInput_ASM:			; No escape, that implies an enter, sp start processing
 	STX T1					; save total length of input in T1		
 	LDX #0
 	LDA INPUT_BUF, X
@@ -865,17 +865,6 @@ PrintAddress:
 	JSR PrintByte
 	PLA
 	RTS
-
-; Print byte in hex
-; Pass byte in A
-; Registers changed: None
-PrintByte:
-    PHA
-    PHY
-    JSR Print_BYTE
-    PLY
-    PLA
-    RTS
 
 ; Instructions. Match indexes into entries in table MNEMONICS1/MENMONICS2.
  OP_INV = $00

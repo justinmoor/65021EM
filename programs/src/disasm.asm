@@ -156,17 +156,17 @@ ECHO     = $C070 ; Woz monitor ECHO routine
 ; Main program disassembles starting from itself. Prompts user to hit
 ; key to continue after each screen.
 START:
-  JSR CRNEWL
+  JSR PrintNewline
   LDX #<WelcomeString
   LDY #>WelcomeString
   JSR PrintString
-  JSR CRNEWL
+  JSR PrintNewline
   LDA #<START
   STA ADDR
   LDA #>START
   STA ADDR+1
 OUTER:
-  JSR CRNEWL
+  JSR PrintNewline
   LDA #23
 LOOP:
   PHA
@@ -514,7 +514,7 @@ TRYABINDIND:
   JSR PrintRParen
   JMP DONEOPS
 DONEOPS:
-  JSR CRNEWL
+  JSR PrintNewline
   LDA ADDR              ; update address to next instruction
   CLC
   ADC LEN
@@ -734,7 +734,7 @@ u_hexdigit:	.byte "0123456789ABCDEF"
 ;     ADC #'0'
 ;     RTS
 
-CRNEWL:
+PrintNewline:
     PHA
     LDA #$0D
     JSR ECHO

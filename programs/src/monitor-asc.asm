@@ -37,7 +37,7 @@ PrintImmediate    = $C08A
 
 .ORG $1000
 
-START_MONITOR:
+StartMonitor:
     CLD             ; Clear decimal arithmetic mode.
     CLI
     JSR PrintImmediate
