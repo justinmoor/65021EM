@@ -94,7 +94,7 @@ PrintByte  = $C009
 	PLA
 .ENDMACRO
 
-start_assembler:
+StartAssembler:
 	JSR PrintCR
 	JSR PrintCR
 	STZ ADDR

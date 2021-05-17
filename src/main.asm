@@ -99,6 +99,7 @@ PrintNewline:	PHA
                 RTS
 
 ; converts 2 ascii hexadecimal digits to a byte
+; e.g. A='1' Y='A' Returns A = $1A
 Hex2Bin:		
                 PHA
                 TYA
@@ -112,6 +113,7 @@ Hex2Bin:
                 ASL
                 ORA T1
                 RTS
+
 A2Hex:          SEC
                 SBC #'0'
                 CMP #10
@@ -192,34 +194,34 @@ PrintCommands:
 ; This routines will read a whole line from user input. It also handles backspace. When user presses
 ; enter or escape, the routine will return. The key that has been pressed (enter or escape) 
 ; will be in the A register. The input length will be in the X register. Line is stored at $0200 (InputBuffer)
-GetLine:        LDX	#0                  ; reset input buffer index
-@PollInput:     JSR	ReadChar
-                BCC	@PollInput
-                CMP	#$60                ; is it lowercase?
-                BMI	@Continue           ; yes, just continue processing
-                AND	#$DF				; convert to uppercase
+GetLine:        LDX #0                  ; reset input buffer index
+@PollInput:     JSR ReadChar
+                BCC @PollInput
+                CMP #$60                ; is it lowercase?
+                BMI @Continue           ; yes, just continue processing
+                AND #$DF				; convert to uppercase
 @Continue:		
-                CMP	#BS                 ; is it a backspace?
-                BNE	@NoBackspace        ; if not, branch
+                CMP #BS                 ; is it a backspace?
+                BNE @NoBackspace        ; if not, branch
 @OnBackspace	DEX	                    ; we got a backspace, decrement input buffer
-                BMI	GetLine				; just reset when there are no characters to backspace
-                JSR	WriteChar			; display the backspace.
-                LDA	#$20                ; space, overwrite the backspaced char.
-                JSR	WriteChar			; display space
-                LDA	#BS                 ; backspace again to get to correct pos.
-                JSR	WriteChar		
-                JMP	@PollInput
+                BMI GetLine				; just reset when there are no characters to backspace
+                JSR WriteChar			; display the backspace.
+                LDA #$20                ; space, overwrite the backspaced char.
+                JSR WriteChar			; display space
+                LDA #BS                 ; backspace again to get to correct pos.
+                JSR WriteChar		
+                JMP @PollInput
 @NoBackspace:
-                CMP	#ESC				; is escape key pressed?
-                BEQ	@Return				; quit
+                CMP #ESC				; is escape key pressed?
+                BEQ @Return				; quit
                 PHA	
-                JSR	WriteChar			; display character.
+                JSR WriteChar			; display character.
                 PLA	
-                CMP	#CR                 ; is it an enter?
-                BEQ	@Return				; yes, caller can now start processing from $0200
-                STA	InputBuffer, x		; no we append to input buffer
+                CMP #CR                 ; is it an enter?
+                BEQ @Return				; yes, caller can now start processing from $0200
+                STA InputBuffer, x		; no we append to input buffer
                 INX						; increment buffer index
-                JMP	@PollInput          ; poll more characters
+                JMP @PollInput          ; poll more characters
 @Return:        RTS	
 
 

@@ -42,10 +42,6 @@ NEXTCHAR:
     AND #$5F        ; *If lower case, convert to Upper case
 CONVERT:     
     ORA #$80        ; The Apple 1 assumes high ascii, several coding tricks by Woz use this fact for memory optimalization
-    CMP #'K' + $80     ; <Shift key> ? (high ascii $D2)
-    BEQ ST_ASM      ; Yes, run user program.
-    CMP #'L' + $80  ; "R"? (high ascii $D2)
-    BEQ ST_DISASM   ; Yes, run user program.
     STA InputBuffer,Y ; Add to text buffer.
     JSR ECHO        ; Display character.
     CMP #ENT        ; CR?
@@ -68,6 +64,10 @@ NEXTITEM:
     BEQ SETMODE     ; Set BLOCK XAM mode.
     CMP #':' + $80  ; ":"? (high ascii $BA)
     BEQ SETSTOR     ; Yes, set STOR mode.
+    CMP #'P' + $80  ; Program in assembler
+    BEQ ST_ASM      ; Yes, start assembler
+    CMP #'L' + $80  ; List disassembly
+    BEQ ST_DISASM   ; Yes, start disassembler
     CMP #'R' + $80  ; "R"? (high ascii $D2)
     BEQ RUN         ; Yes, run user program.
     CMP #'M' + $80  ; exit monitor
@@ -106,7 +106,7 @@ NEXTITEM1:
     JMP NEXTITEM
 
 ST_ASM:
-    JSR start_assembler
+    JSR StartAssembler
     JMP SOFTRESET
 
 ST_DISASM:
@@ -136,7 +136,7 @@ NOESCAPE:
     BNE NEXTITEM1   ; Get next item. (no carry).
     INC STH         ; Add carry to 'store index' high order.
 TONEXTITEM:
-    JMP NEXTITEM1    ; Get next command item.
+    JMP NEXTITEM    ; Get next command item.
 NOTSTOR:
     BMI XAMNEXT     ; B7=0 for XAM, 1 for BLOCK XAM.
     LDX #$02        ; Byte count.
