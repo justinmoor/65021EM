@@ -29,7 +29,7 @@ StartAssembler:
                 JSR PrintNewline
                 JSR PrintNewline
                 JSR PrintImmediate              
-                ASC "STARTING ASSEMBLING ON ADDRESS $"
+                ASC "STARTING ASSEMBLING ON ADDRESS $" 
                 LDX ADDR_A
                 LDY ADDR_A+1
                 JSR PrintAddress

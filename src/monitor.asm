@@ -124,7 +124,6 @@ EXIT_MONITOR:
     JSR PrintNewline
     JSR PrintImmediate
     ASCLN "EXIT MONITOR"
-    JSR PrintNewline
     JMP SoftResetOS
 
 NOESCAPE:
