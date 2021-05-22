@@ -305,8 +305,8 @@ TK_READ		= TK_DIM+1		; READ token
 TK_LET		= TK_READ+1		; LET token
 TK_DEC		= TK_LET+1		; DEC token
 TK_GOTO		= TK_DEC+1		; GOTO token
-TK_RUN		= TK_GOTO+1		; RUN token
-TK_IF			= TK_RUN+1		; IF token
+TK_Run		= TK_GOTO+1		; Run token
+TK_IF			= TK_Run+1		; IF token
 TK_RESTORE		= TK_IF+1		; RESTORE token
 TK_GOSUB		= TK_RESTORE+1	; GOSUB token
 TK_RETIRQ		= TK_GOSUB+1	; RETIRQ token
@@ -965,7 +965,7 @@ LAB_INLN
 
 ; receive line from keyboard
 
-					; $08 as delete key (BACKSPACE on standard keyboard)
+					; $08 as delete key (Backspace on standard keyboard)
 LAB_134B
 	JSR	LAB_PRNA		; go print the character
 	DEX				; decrement the buffer counter (delete)
@@ -996,7 +996,7 @@ LAB_1359
 	BCC	LAB_1359		; if < ignore character
 
 LAB_1374
-	CMP	#$08			; compare with [BACKSPACE] (delete last character)
+	CMP	#$08			; compare with [Backspace] (delete last character)
 	BEQ	LAB_134B		; go delete last character
 
 LAB_1378
@@ -1512,7 +1512,7 @@ LAB_15C2
 	LDY	Bpntrh		; get BASIC execute pointer high byte
 
 	LDX	Clineh		; continue line is $FFxx for immediate mode
-					; ($00xx for RUN from immediate mode)
+					; ($00xx for Run from immediate mode)
 	INX				; increment it (now $00 if immediate mode)
 	BEQ	LAB_15D1		; branch if null (immediate mode)
 
@@ -1730,14 +1730,14 @@ LAB_166C
 	STY	Clineh		; set current line high byte
 	RTS
 
-; perform RUN
+; perform Run
 
-LAB_RUN
-	BNE	LAB_1696		; branch if RUN n
+LAB_Run
+	BNE	LAB_1696		; branch if Run n
 	JMP	LAB_1477		; reset execution to start, clear variables, flush stack and
 					; return
 
-; does RUN n
+; does Run n
 
 LAB_1696
 	JSR	LAB_147A		; go do "CLEAR"
@@ -7947,7 +7947,7 @@ LAB_CTBL
 	.word	LAB_LET-1		; LET
 	.word	LAB_DEC-1		; DEC			new command
 	.word	LAB_GOTO-1		; GOTO
-	.word	LAB_RUN-1		; RUN
+	.word	LAB_Run-1		; Run
 	.word	LAB_IF-1		; IF
 	.word	LAB_RESTORE-1	; RESTORE		modified command
 	.word	LAB_GOSUB-1		; GOSUB
@@ -8358,8 +8358,8 @@ LBB_RIGHTS
 					; RIGHT$(
 LBB_RND
 	.byte	"ND(",TK_RND	; RND(
-LBB_RUN
-	.byte	"UN",TK_RUN		; RUN
+LBB_Run
+	.byte	"UN",TK_Run		; Run
 	.byte	$00
 TAB_ASCS
 LBB_SADD
@@ -8450,7 +8450,7 @@ LAB_KEYT
 	.byte	4,'G'
 	.word	LBB_GOTO		; GOTO
 	.byte	3,'R'
-	.word	LBB_RUN		; RUN
+	.word	LBB_Run		; Run
 	.byte	2,'I'
 	.word	LBB_IF		; IF
 	.byte	7,'R'

@@ -22,8 +22,7 @@ STH         = $27
 L           = $28
 H           = $29
 YSAV        = $2A
-MODE        = $2B
-COUNTER     = $2C
+Mode        = $2B
 
 ; ASSEMBLER / DISASSEMBLER
 OPERAND = $10

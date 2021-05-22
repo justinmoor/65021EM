@@ -7,3 +7,4 @@ J_WriteChar:        JMP WriteChar       ; $C000 in ROM
 J_ReadChar:         JMP ReadChar        ; $C003 in ROM
 J_PrintImm:         JMP PrintImmediate  ; $C006 in ROM
 J_PrintByte:        JMP PrintByte       ; $C009 in ROM
+J_GetLine:          JMP GetLine         ; $C00C in ROM

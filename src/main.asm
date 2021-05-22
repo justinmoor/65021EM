@@ -63,7 +63,7 @@ ProcessInput:
                 ASCLN "UNKNOWN COMMAND"
                 JMP StartPrompt
 
-StartMonitor:	JSR START_MON
+StartMonitor:	JSR RunMonitor
 
 StartBasic:     JSR LAB_COLD
                 JMP StartPrompt

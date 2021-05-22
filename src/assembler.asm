@@ -25,7 +25,7 @@
 ; - no symbols or labels
 ; - all values in hex, 2 or 4 digits
 
-StartAssembler:
+RunAssembler:
                 JSR PrintNewline
                 JSR PrintNewline
                 JSR PrintImmediate              
