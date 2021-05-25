@@ -77,7 +77,7 @@ AssembleLine:
                 INX
                 INY
                 JMP @Loop
-@Done:			STY IN
+@Done:          STY IN
                 JMP Parse
 
 EscPressed:     JMP PrintNewline             ; Return via caller	
