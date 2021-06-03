@@ -75,9 +75,9 @@ STARTING ASSEMBLING ON ADDRESS $1000
 1005: RTS
 1006: 
 
-* 1000
+* 1000                          select address 1000
   1000: A9
-* R
+* R                             <R> to run from last selected address
 * 3000
   3000: 00
 ```
