@@ -250,7 +250,7 @@ NOMAX:
 		DEC	STATE
 		LDA	#$FB           	; IF STATE=FB
 		CMP	STATE        	; TIME TO TURN
-		BEQ	UPTREE        	; AROUND
+		BEQ	UPTREE        	; Around
 		JSR	GENRM         	; GENERATE FURTHER
 UPTREE:
 		INC	STATE        	; CAPTURES

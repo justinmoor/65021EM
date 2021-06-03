@@ -1,4 +1,5 @@
-; --------------------------------------ZERO PAGE --------------------------------------
+; ============================== ZERO PAGE VARIABLES ================================
+
 
 ; GENERAL PURPOSE VARIABLES
 T1          = $00       ; one byte temp register 1
@@ -9,12 +10,12 @@ T4          = $04       ; two byte temp register 4
 StrPtrLow   = $06       ; low address of string to print
 StrPtrHi    = $07
 
-; BIOS
+; ---------------------------------- BIOS ----------------------------
 SPIReadBuf  = $08       ; 1 byte (possibly 2 bytes in future)
-SPIWriteBuf  = $0A       ; 1 byte (possibly 2 bytes in future)
+SPIWriteBuf  = $0A      ; 1 byte (possibly 2 bytes in future)
 M3100ReadBuf = $0C      ; 2 bytes
 
-; WOZMON
+; -------------------------------- Monitor ---------------------------
 XAML        = $24       ; index pointers
 XAMH        = $25
 STL         = $26
@@ -24,9 +25,9 @@ H           = $29
 YSAV        = $2A
 Mode        = $2B
 
-; ASSEMBLER / DISASSEMBLER
+; ------------------------- ASSEMBLER / DISASSEMBLER -------------------
 OPERAND = $10
-ADDR_A  = $24   ; ADDRES TO ASSEMBLE
+ADDR_A  = $24       ; Address to assemble
 
 ADDR       = $37     ; instruction address, 2 bytes (low/high)
 OPCODE     = $39     ; instruction opcode
@@ -36,7 +37,7 @@ LEN        = $42     ; instruction length
 REL        = $43     ; relative addressing branch offset (2 bytes)
 DEST       = $45     ; relative address destination address (2 bytes)
 
-; XMODEM
+; ----------------------------------- XMODEM -----------------------------------
 CRC		    = $38		; CRC lo byte  (two byte variable)
 CRCH	    = $39		; CRC hi byte  
 TARGET	    = $3A		; pointer to store the file
@@ -47,7 +48,7 @@ BLCK_FLAG	= $3F	    ; block flag
 
 
 
-; ---------------------------------OHTHER VARIABLES -----------------------------------
+; ================================== OHTHER VARIABLES ==================================
 
 ; -------------------------------- ASSEMBLER / DISASSEMBLER ---------------------------
 IN      = $300  ; buffer to hold operand

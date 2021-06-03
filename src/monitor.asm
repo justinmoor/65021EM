@@ -104,7 +104,7 @@ StartAssembler:
                 JMP SoftReset
 
 StartDisassembler:      
-                JSR START_DISASM
+                JSR RunDisassembler
                 JMP SoftReset
 
 Run:            
