@@ -114,7 +114,7 @@ PrintImmediate:
                 STA T3 + 1
                 BRA @P1
 @P0:            JSR WriteChar
-@P1:            INC T3
+@P1:            INC T3          ; for each character printed, increment the new return address
                 BNE @P3
                 INC T3 + 1
 @P3:            LDA (T3)
@@ -122,7 +122,7 @@ PrintImmediate:
                 LDA T3 + 1		; restore stack with the new return adress
                 PHA				
                 LDA T3
-                PHA				
+                PHA
                 RTS
 
 Print:			

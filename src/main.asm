@@ -68,7 +68,7 @@ StartMonitor:	JSR RunMonitor
 StartBasic:     JSR LAB_COLD
                 JMP StartPrompt
 
-StartXModem:    JSR XMODEM_FILE_RECV
+StartXModem:    JSR RunXModem
                 JMP StartPrompt
 
 InvalidCommand:	JSR PrintNewline

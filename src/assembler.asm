@@ -13,7 +13,7 @@
 
 ; Example:
 ;
-; Press "K" in monitor, assembler will start at last selected address
+; Press "P" in monitor, assembler will start at last selected address
 ; 6000: NOP
 ; 6001: LDA #68
 ; 6003: JSR C000

@@ -193,7 +193,7 @@ Echo:
                 RTS
 
 PrintMonPrompt:
-                LDA #'*'        ; ">"
+                LDA #'*'        ; Promp character
                 JSR Echo        ; Output it.
                 LDA #$20
                 JSR Echo    
