@@ -40,7 +40,7 @@ StartCRC:
                 BCS GotByte		; byte received, process it
                 BCC StartCRC	; resend "C"
 
-StartBlock:		LDA #DELAY3S		 
+StartBlock:     LDA #DELAY3S		 
                 STA RETRY2		; set loop counter for ~3 sec delay
                 LDA #$00		
                 STA CRC		
@@ -61,11 +61,11 @@ GotByte1:
 
 BeginBlock:		
                 LDX #$00
-GetBlock:		LDA #DELAY3S	; 3 sec window to receive characters
+GetBlock:       LDA #DELAY3S	; 3 sec window to receive characters
                 STA RETRY2		
-GetBlock1:		JSR GetByte		; get next character
+GetBlock1:      JSR GetByte		; get next character
                 BCC IncorrectCRC	; chr rcv error, flush and send NAK
-GetBlock2:		STA RECV_BUF,X	; good char, save it in the rcv buffer
+GetBlock2:      STA RECV_BUF,X	; good char, save it in the rcv buffer
                 INX				; inc buffer pointer	
                 CPX #$84		; <01> <FE> <128 bytes> <CRCH> <CRCL>
                 BNE GetBlock	; get 132 characters
@@ -89,7 +89,7 @@ GoodBlock:
                 LDA #$FC		; put error code in "A" if desired
                 RTS
                                 ; bad 1's comp of block#	
-GoodBlock2:		LDY	#$02		 
+GoodBlock2:     LDY	#$02		 
 CalculateCRC:	LDA RECV_BUF,y	; calculate the CRC for the 128 bytes of data	
                 JSR UpdateCRC		; could inline sub here for speed
                 INY 		
@@ -108,7 +108,7 @@ IncorrectCRC:	JSR Flush		; flush the input port
                 JSR PutChr		; send NAK to resend block
                 JMP StartBlock	; start over, get the block again			
 
-CorrectCRC:		LDX #$02		
+CorrectCRC:     LDX #$02		
                 LDA BLCK_NUM	; get the block number
                 CMP #$01		; 1st block?
                 BNE CopyBlock	; no, copy all 128 bytes
@@ -116,8 +116,8 @@ CorrectCRC:		LDX #$02
                 BEQ CopyBlock	; no, copy all 128 bytes
                 DEC BLCK_FLAG	; set the flag so we won't get another address		
 
-CopyBlock:		LDY #$00		; set offset to zero
-CopyBlock3:		LDA RECV_BUF,x	; get data byte from buffer
+CopyBlock:      LDY #$00		; set offset to zero
+CopyBlock3:     LDA RECV_BUF,x	; get data byte from buffer
                 STA (TARGET),y	; save to target
                 INC TARGET		; point to next address
                 BNE CopyBlock4	; did it step over page boundary?
@@ -125,7 +125,7 @@ CopyBlock3:		LDA RECV_BUF,x	; get data byte from buffer
 CopyBlock4:		INX 			; point to next data byte
                 CPX #$82		; is it the last byte
                 BNE CopyBlock3	; no, get the next one
-IncBlock:		INC BLCK_NUM	; done.  Inc the block #
+IncBlock:       INC BLCK_NUM	; done.  Inc the block #
                 LDA #ACK		; send ACK
                 JSR PutChr		
                 JMP StartBlock	; get next block
@@ -138,7 +138,7 @@ XModemDone:
                 ASCLN "UPLOAD SUCCESFULL!"
                 RTS
 
-GetByte:		LDA #$00		; wait for chr input and cycle timing loop
+GetByte:        LDA #$00		; wait for chr input and cycle timing loop
                 STA RETRY		; set low value of timing loop
 StartCRC_LP:	JSR ReadChar	; get chr from serial port, don't wait 
                 BCS @Done		; got one, so exit
@@ -147,7 +147,7 @@ StartCRC_LP:	JSR ReadChar	; get chr from serial port, don't wait
                 DEC RETRY2		; dec hi byte of counter
                 BNE StartCRC_LP	; look for character again
                 CLC				; if loop times out, CLC, else SEC and return
-@Done:			RTS 			; with character in "A"
+@Done:          RTS 			; with character in "A"
 
 Flush:
                 LDA #$09		; flush receive buffer
@@ -201,7 +201,7 @@ Fetch:
                 EOR CRCHI,x
                 STA CRCHI,x
                 LDY #$08
-Fetch1:			ASL CRCLO,x
+Fetch1:         ASL CRCLO,x
                 ROL CRCHI,x
                 BCC Fetch2
                 LDA CRCHI,x
@@ -210,7 +210,7 @@ Fetch1:			ASL CRCLO,x
                 LDA CRCLO,x
                 EOR #$21
                 STA CRCLO,x
-Fetch2:			DEY
+Fetch2:         DEY
                 BNE Fetch1
                 INX
                 BNE Fetch
