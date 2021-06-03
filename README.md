@@ -23,7 +23,7 @@
 
 ### Machine Language Monitor Usage
 ```
-> M                               press M to activate monitor
+> M                               <M> to activate monitor
 
 MONITOR ACTIVATED
 
