@@ -5,15 +5,15 @@
 
 RunDisassembler:
                 LDA XAML    
-                STA ADDR
+                STA AddrD
                 LDA XAMH
-                STA ADDR+1
+                STA AddrD+1
                 JSR PrintNewline
                 JSR PrintNewline
                 JSR PrintImmediate              ; Print error message
-                .byte "STARTING DISASSEMBLY AT ADDRESS $", 0
-                LDX ADDR
-                LDY ADDR+1
+                ASC "STARTING DISASSEMBLY AT ADDRESS $"
+                LDX AddrD
+                LDY AddrD+1
                 JSR PrintAddress
                 JSR PrintNewline
 Outer:
@@ -35,12 +35,12 @@ Outer:
                 BNE @SpaceOrEscape
                 RTS
 
-; Disassemble instruction at address ADDR (low) / ADDR+1 (high). On
-; return ADDR/ADDR+1 points to next instruction so it can be called
+; Disassemble instruction at address AddrD (low) / AddrD+1 (high). On
+; return AddrD/AddrD+1 points to next instruction so it can be called
 ; again.
 Disassemble:
                 LDX #0
-                LDA (ADDR,X)          ; get instruction op code
+                LDA (AddrD,X)          ; get instruction op code
                 STA OPCODE
                 BMI @Upper            ; if bit 7 set, in upper half of table
                 ASL A                 ; double it since table is two bytes per entry
@@ -63,8 +63,8 @@ Around:
                 TAX                   ; put addressing mode in X
                 LDA LENGTHS,X         ; get instruction length given addressing mode
                 STA LEN               ; store it
-                LDX ADDR
-                LDY ADDR+1
+                LDX AddrD
+                LDY AddrD+1
                 JSR PrintAddress      ; print address
                 LDX #3
                 JSR PrintSpaces       ; then three spaces
@@ -81,18 +81,18 @@ Around:
                 JMP One
 Two:
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte
+                LDA (AddrD),Y          ; get 1st operand byte
                 JSR PrintByte         ; display it
                 LDX #3
                 JSR PrintSpaces
                 JMP One
 Three:
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte
+                LDA (AddrD),Y          ; get 1st operand byte
                 JSR PrintByte         ; display it
                 JSR PrintSpace
                 LDY #2
-                LDA (ADDR),Y          ; get 2nd operand byte
+                LDA (AddrD),Y          ; get 2nd operand byte
                 JSR PrintByte         ; display it
 One:              
                 LDX #4
@@ -127,7 +127,7 @@ DOMB:
                 JSR PrintSpaces
                 JSR PrintDollar
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte (low address)
+                LDA (AddrD),Y          ; get 1st operand byte (low address)
                 JSR PrintByte         ; display it
                 JMP DoneOps
 TryBB:
@@ -148,7 +148,7 @@ DOBB:           ; handle special BBRn and BBSn instructions
                 JSR PrintSpaces
                 JSR PrintDollar
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte (address)
+                LDA (AddrD),Y          ; get 1st operand byte (address)
                 JSR PrintByte         ; display it
                 LDA #','
                 JSR WriteChar
@@ -156,7 +156,7 @@ DOBB:           ; handle special BBRn and BBSn instructions
                 ; Handle relative addressing
                 ; Destination address is Current address + relative (sign extended so upper byte is $00 or $FF) + 3
                 LDY #2
-                LDA (ADDR),Y          ; get 2nd operand byte (relative branch offset)
+                LDA (AddrD),Y          ; get 2nd operand byte (relative branch offset)
                 STA REL               ; save low byte of offset
                 BMI @Negative              ; if negative, need to sign extend
                 LDA #0                ; high byte is zero
@@ -165,11 +165,11 @@ DOBB:           ; handle special BBRn and BBSn instructions
                 LDA #$FF              ; negative offset, high byte if $FF
 @Add:
                 STA REL+1             ; save offset high byte
-                LDA ADDR              ; take adresss
+                LDA AddrD              ; take adresss
                 CLC
                 ADC REL               ; add offset
                 STA DEST              ; and store
-                LDA ADDR+1            ; also high byte (including carry)
+                LDA AddrD+1            ; also high byte (including carry)
                 ADC REL+1
                 STA DEST+1
                 LDA DEST              ; now need to add 3 more to the address
@@ -205,7 +205,7 @@ TryInv:
                 JSR WriteChar
                 JSR PrintDollar
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte (low address)
+                LDA (AddrD),Y          ; get 1st operand byte (low address)
                 JSR PrintByte         ; display it
                 JMP DoneOps
 TryZP:
@@ -213,14 +213,14 @@ TryZP:
                 BNE TryZPX
                 JSR PrintDollar
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte (low address)
+                LDA (AddrD),Y          ; get 1st operand byte (low address)
                 JSR PrintByte         ; display it
                 JMP DoneOps
 TryZPX:
                 CMP #AM_ZEROPAGE_X
                 BNE TryZPY
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte (address)
+                LDA (AddrD),Y          ; get 1st operand byte (address)
                 JSR PrintDollar
                 JSR PrintByte         ; display it
                 JSR PrintCommaX
@@ -229,7 +229,7 @@ TryZPY:
                 CMP #AM_ZEROPAGE_Y
                 BNE TryRel
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte (address)
+                LDA (AddrD),Y          ; get 1st operand byte (address)
                 JSR PrintByte         ; display it
                 JSR PrintCommaY
                 JMP DoneOps       
@@ -240,7 +240,7 @@ TryRel:
                 ; Handle relative addressing
                 ; Destination address is Current address + relative (sign extended so upper byte is $00 or $FF) + 2
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte (relative branch offset)
+                LDA (AddrD),Y          ; get 1st operand byte (relative branch offset)
                 STA REL               ; save low byte of offset
                 BMI @Negative               ; if negative, need to sign extend
                 LDA #0                ; high byte is zero
@@ -249,11 +249,11 @@ TryRel:
                 LDA #$FF              ; negative offset, high byte if $FF
 @Add:
                 STA REL+1             ; save offset high byte
-                LDA ADDR              ; take adresss
+                LDA AddrD              ; take adresss
                 CLC
                 ADC REL               ; add offset
                 STA DEST              ; and store
-                LDA ADDR+1            ; also high byte (including carry)
+                LDA AddrD+1            ; also high byte (including carry)
                 ADC REL+1
                 STA DEST+1
                 LDA DEST              ; now need to add 2 more to the address
@@ -272,10 +272,10 @@ TryAbs:
                 BNE TryAbsX
                 JSR PrintDollar
                 LDY #2
-                LDA (ADDR),Y          ; get 2nd operand byte (high address)
+                LDA (AddrD),Y          ; get 2nd operand byte (high address)
                 JSR PrintByte         ; display it
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte (low address)
+                LDA (AddrD),Y          ; get 1st operand byte (low address)
                 JSR PrintByte         ; display it
                 JMP DoneOps
 TryAbsX:
@@ -283,10 +283,10 @@ TryAbsX:
                 BNE TryAbsY
                 JSR PrintDollar
                 LDY #2
-                LDA (ADDR),Y          ; get 2nd operand byte (high address)
+                LDA (AddrD),Y          ; get 2nd operand byte (high address)
                 JSR PrintByte         ; display it
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte (low address)
+                LDA (AddrD),Y          ; get 1st operand byte (low address)
                 JSR PrintByte         ; display it
                 JSR PrintCommaX
                 JMP DoneOps
@@ -295,10 +295,10 @@ TryAbsY:
                 BNE TryInd
                 JSR PrintDollar
                 LDY #2
-                LDA (ADDR),Y          ; get 2nd operand byte (high address)
+                LDA (AddrD),Y          ; get 2nd operand byte (high address)
                 JSR PrintByte         ; display it
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte (low address)
+                LDA (AddrD),Y          ; get 1st operand byte (low address)
                 JSR PrintByte         ; display it
                 JSR PrintCommaY
                 JMP DoneOps
@@ -307,10 +307,10 @@ TryInd:
                 BNE TryIndXInd
                 JSR PrintLParenDollar
                 LDY #2
-                LDA (ADDR),Y          ; get 2nd operand byte (high address)
+                LDA (AddrD),Y          ; get 2nd operand byte (high address)
                 JSR PrintByte         ; display it
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte (low address)
+                LDA (AddrD),Y          ; get 1st operand byte (low address)
                 JSR PrintByte         ; display it
                 JSR PrintRParen
                 JMP DoneOps
@@ -319,7 +319,7 @@ TryIndXInd:
                 BNE TryIndIndX
                 JSR PrintLParenDollar
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte (low address)
+                LDA (AddrD),Y          ; get 1st operand byte (low address)
                 JSR PrintByte         ; display it
                 JSR PrintCommaX
                 JSR PrintRParen
@@ -329,7 +329,7 @@ TryIndIndX:
                 BNE TryIndZ
                 JSR PrintLParenDollar
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte (low address)
+                LDA (AddrD),Y          ; get 1st operand byte (low address)
                 JSR PrintByte         ; display it
                 JSR PrintRParen
                 JSR PrintCommaY
@@ -339,7 +339,7 @@ TryIndZ:
                 BNE TryAbIndInd
                 JSR PrintLParenDollar
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte (low address)
+                LDA (AddrD),Y          ; get 1st operand byte (low address)
                 JSR PrintByte         ; display it
                 JSR PrintRParen
                 JMP DoneOps
@@ -348,23 +348,23 @@ TryAbIndInd:
                 BNE DoneOps
                 JSR PrintLParenDollar
                 LDY #2
-                LDA (ADDR),Y          ; get 2nd operand byte (high address)
+                LDA (AddrD),Y          ; get 2nd operand byte (high address)
                 JSR PrintByte         ; display it
                 LDY #1
-                LDA (ADDR),Y          ; get 1st operand byte (low address)
+                LDA (AddrD),Y          ; get 1st operand byte (low address)
                 JSR PrintByte         ; display it
                 JSR PrintCommaX
                 JSR PrintRParen
                 JMP DoneOps
 DoneOps:
                 JSR PrintNewline
-                LDA ADDR              ; update address to next instruction
+                LDA AddrD              ; update address to next instruction
                 CLC
                 ADC LEN
-                STA ADDR
-                LDA ADDR+1
+                STA AddrD
+                LDA AddrD+1
                 ADC #0                ; to add carry
-                STA ADDR+1
+                STA AddrD+1
                 RTS
 
 ;------------------------------------------------------------------------

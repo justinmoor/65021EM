@@ -26,13 +26,13 @@ RunXModem:
                 JSR PrintImmediate
                 ASCLN "READY TO RECEIVE OVER XMODEM. PLEASE SELECT A FILE TO TRANSFER OR PRESS <ESC> TO CANCEL."
                 LDA #$01
-                STA BLCK_NUM	; set block # to 1
-                STA BLCK_FLAG	; set flag to get address from block 1
+                STA BlockNumber	; set block # to 1
+                STA BlockFlag	; set flag to get address from block 1
 StartCRC:
                 LDA #REC_CMD	; "C" start with CRC mode
                 JSR PutChr		; send it
                 LDA #DELAY3S	
-                STA RETRY2		; set loop counter for ~3 sec delay
+                STA Retry2		; set loop counter for ~3 sec delay
                 LDA #$00
                 STA CRC
                 STA CRCH		; init CRC value	
@@ -41,7 +41,7 @@ StartCRC:
                 BCC StartCRC	; resend "C"
 
 StartBlock:     LDA #DELAY3S		 
-                STA RETRY2		; set loop counter for ~3 sec delay
+                STA Retry2		; set loop counter for ~3 sec delay
                 LDA #$00		
                 STA CRC		
                 STA CRCH		; init CRC value	
@@ -62,16 +62,16 @@ GotByte1:
 BeginBlock:		
                 LDX #$00
 GetBlock:       LDA #DELAY3S	; 3 sec window to receive characters
-                STA RETRY2		
+                STA Retry2		
 GetBlock1:      JSR GetByte		; get next character
                 BCC IncorrectCRC	; chr rcv error, flush and send NAK
-GetBlock2:      STA RECV_BUF,X	; good char, save it in the rcv buffer
+GetBlock2:      STA ReceiveBuf,X	; good char, save it in the rcv buffer
                 INX				; inc buffer pointer	
                 CPX #$84		; <01> <FE> <128 bytes> <CRCH> <CRCL>
                 BNE GetBlock	; get 132 characters
                 LDX #$00		;
-                LDA RECV_BUF,X	; get block # from buffer
-                CMP BLCK_NUM	; compare to expected block #	
+                LDA ReceiveBuf,X	; get block # from buffer
+                CMP BlockNumber	; compare to expected block #	
                 BEQ GoodBlock	; matched!
                 JSR PrintImmediate		; Unexpected block number - abort	
                 ASCLN "UPLOAD ERROR!"
@@ -81,7 +81,7 @@ GetBlock2:      STA RECV_BUF,X	; good char, save it in the rcv buffer
 GoodBlock:	
                 EOR #$FF		; 1's comp of block #
                 INX 		
-                CMP RECV_BUF,X	; compare with expected 1's comp of block #
+                CMP ReceiveBuf,X	; compare with expected 1's comp of block #
                 BEQ GoodBlock2 	; matched!
                 JSR PrintImmediate		; Unexpected block number - abort	
                 ASCLN "UPLOAD ERROR!"
@@ -90,16 +90,16 @@ GoodBlock:
                 RTS
                                 ; bad 1's comp of block#	
 GoodBlock2:     LDY	#$02		 
-CalculateCRC:	LDA RECV_BUF,y	; calculate the CRC for the 128 bytes of data	
+CalculateCRC:	LDA ReceiveBuf,y	; calculate the CRC for the 128 bytes of data	
                 JSR UpdateCRC		; could inline sub here for speed
                 INY 		
                 CPY #$82		; 128 bytes
                 BNE CalculateCRC	
-                LDA RECV_BUF,y	; get hi CRC from buffer
+                LDA ReceiveBuf,y	; get hi CRC from buffer
                 CMP CRCH		; compare to calculated hi CRC
                 BNE IncorrectCRC	; bad CRC, send NAK
                 INY 		
-                LDA RECV_BUF,y	; get lo CRC from buffer
+                LDA ReceiveBuf,y	; get lo CRC from buffer
                 CMP CRC			; compare to calculated lo CRC
                 BEQ CorrectCRC	; good CRC
 
@@ -109,23 +109,23 @@ IncorrectCRC:	JSR Flush		; flush the input port
                 JMP StartBlock	; start over, get the block again			
 
 CorrectCRC:     LDX #$02		
-                LDA BLCK_NUM	; get the block number
+                LDA BlockNumber	; get the block number
                 CMP #$01		; 1st block?
                 BNE CopyBlock	; no, copy all 128 bytes
-                LDA BLCK_FLAG	; is it really block 1, not block 257, 513 etc.
+                LDA BlockFlag	; is it really block 1, not block 257, 513 etc.
                 BEQ CopyBlock	; no, copy all 128 bytes
-                DEC BLCK_FLAG	; set the flag so we won't get another address		
+                DEC BlockFlag	; set the flag so we won't get another address		
 
 CopyBlock:      LDY #$00		; set offset to zero
-CopyBlock3:     LDA RECV_BUF,x	; get data byte from buffer
-                STA (TARGET),y	; save to target
-                INC TARGET		; point to next address
+CopyBlock3:     LDA ReceiveBuf,x	; get data byte from buffer
+                STA (Target),y	; save to target
+                INC Target		; point to next address
                 BNE CopyBlock4	; did it step over page boundary?
-                INC TARGET+1	; adjust high address for page crossing
+                INC Target+1	; adjust high address for page crossing
 CopyBlock4:		INX 			; point to next data byte
                 CPX #$82		; is it the last byte
                 BNE CopyBlock3	; no, get the next one
-IncBlock:       INC BLCK_NUM	; done.  Inc the block #
+IncBlock:       INC BlockNumber	; done.  Inc the block #
                 LDA #ACK		; send ACK
                 JSR PutChr		
                 JMP StartBlock	; get next block
@@ -139,19 +139,19 @@ XModemDone:
                 RTS
 
 GetByte:        LDA #$00		; wait for chr input and cycle timing loop
-                STA RETRY		; set low value of timing loop
+                STA Retry		; set low value of timing loop
 StartCRC_LP:	JSR ReadChar	; get chr from serial port, don't wait 
                 BCS @Done		; got one, so exit
-                DEC RETRY		; no character received, so dec counter
+                DEC Retry		; no character received, so dec counter
                 BNE StartCRC_LP	
-                DEC RETRY2		; dec hi byte of counter
+                DEC Retry2		; dec hi byte of counter
                 BNE StartCRC_LP	; look for character again
                 CLC				; if loop times out, CLC, else SEC and return
 @Done:          RTS 			; with character in "A"
 
 Flush:
                 LDA #$09		; flush receive buffer
-                STA RETRY2		; flush until empty for ~1 sec.
+                STA Retry2		; flush until empty for ~1 sec.
                 JSR GetByte		; read the port
                 BCS Flush		; if chr recvd, wait for another
                 RTS				; else done
@@ -222,12 +222,12 @@ StoreTarget:
                 INX
                 LDY InputBuffer, X
                 JSR Hex2Bin
-                STA TARGET + 1
+                STA Target + 1
                 INX
                 LDA InputBuffer, X
                 INX
                 LDY InputBuffer, X
                 JSR Hex2Bin
-                STA TARGET
+                STA Target
                 RTS
 

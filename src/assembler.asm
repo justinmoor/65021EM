@@ -30,13 +30,13 @@ RunAssembler:
                 JSR PrintNewline
                 JSR PrintImmediate              
                 ASC "STARTING ASSEMBLING ON ADDRESS $" 
-                LDX ADDR_A
-                LDY ADDR_A+1
+                LDX AddrA
+                LDY AddrA+1
                 JSR PrintAddress
                 JSR PrintNewline
 AssembleLine:
-                LDX ADDR_A              ; output address
-                LDY ADDR_A+1
+                LDX AddrA              ; output address
+                LDY AddrA+1
                 JSR PrintAddress
                 LDA #':'                ; Output colon
                 JSR WriteChar
@@ -46,21 +46,21 @@ AssembleLine:
                 BEQ EscPressed			; Yes, return
 @ProcessInput:   			            ; No escape, that implies an enter, sp start processing
                 STX T1					; Save total length of input in T1		
-                LDX #0                  ; copy first part of the input buffer into the MNEM1
+                LDX #0                  ; copy first part of the input buffer into the Mnem
                 LDA InputBuffer, X
-                STA MNEM1, X
+                STA Mnem, X
                 INX
                 LDA InputBuffer, X
-                STA MNEM1, X
+                STA Mnem, X
                 INX
                 LDA InputBuffer, X
-                STA MNEM1, X
+                STA Mnem, X
 
-                ; start storing operands in IN if we have any
+                ; start storing operands in OprBufif we have any
                 LDA T1						; get total length of input
                 CMP #3
                 BNE @GotOperand				; we have more than 3 characters, so also an operand
-                STZ IN                      ; we got no operand, just store 0 in the first byte of IN
+                STZ OprBuf                     ; we got no operand, just store 0 in the first byte of IN
                 JMP Parse                   ; start parsing the input
 
 ; The assembler assumes that the operand is stored in IN, where the first byte is the length of the operand. We keep track of the length
@@ -73,11 +73,11 @@ AssembleLine:
                 CPX T1
                 BEQ @Done
                 LDA InputBuffer, X
-                STA IN + 1, Y
+                STA OprBuf+ 1, Y
                 INX
                 INY
                 JMP @Loop
-@Done:          STY IN
+@Done:          STY OprBuf
                 JMP Parse
 
 EscPressed:     JMP PrintNewline             ; Return via caller	
@@ -105,10 +105,10 @@ GetOperands:
 ; Check for addressing mode. Have already checked for implicit.
 ; AM_ACCUMULATOR, e.g. LSR A
 ; Operand is just "A"
-                LDA IN                        ; Get length
+                LDA OprBuf                       ; Get length
                 CMP #1                        ; Is it 1?
                 BNE TryImm
-                LDA IN+1                      ; Get first char of operand
+                LDA OprBuf+1                      ; Get first char of operand
                 JSR ToUpper
                 CMP #'A'                      ; Is it 'A'?
                 BNE TryImm
@@ -119,62 +119,62 @@ GetOperands:
 ; AM_IMMEDIATE, e.g. LDA #nn
 ; Operand is '#' followed by 2 hex digits.
 TryImm:
-                LDA IN                        ; Get length
+                LDA OprBuf                       ; Get length
                 CMP #3                        ; Is it 3?
                 BNE TryZeroPage
-                LDA IN+1                      ; Get first char of operand
+                LDA OprBuf+1                      ; Get first char of operand
                 CMP #'#'                      ; is it '#'?
                 BNE TryZeroPage
-                LDA IN+2                      ; Get second char of operand
+                LDA OprBuf+2                      ; Get second char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryZeroPage
-                LDA IN+3                      ; Get third char of operand
+                LDA OprBuf+3                      ; Get third char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryZeroPage
                 LDA #AM_IMMEDIATE             ; Yes, this is immediate mode
                 STA AM                        ; Save it
-                LDA IN+2                      ; Get operand characters
-                LDY IN+3
+                LDA OprBuf+2                      ; Get operand characters
+                LDY OprBuf+3
                 JSR Hex2Bin                     ; Convert to binary
-                STA OPERAND                   ; Save it as the operand
+                STA Operand                   ; Save it as the operand
                 JMP GenerateCode
 
 ; AM_ZEROPAGE e.g. LDA nn
 ; Operand is 2 hex digits.
 TryZeroPage:
-                LDA IN                        ; Get length
+                LDA OprBuf                       ; Get length
                 CMP #2                        ; Is it 2?
                 BNE TryAbsRel
-                LDA IN+1                      ; Get first char of operand
+                LDA OprBuf+1                      ; Get first char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryAbsRel
-                LDA IN+2                      ; Get second char of operand
+                LDA OprBuf+2                      ; Get second char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryAbsRel
                 LDA #AM_ZEROPAGE              ; Yes, this is zero page
                 STA AM                        ; Save it
-                LDA IN+1                      ; Get operand characters
-                LDY IN+2
+                LDA OprBuf+1                      ; Get operand characters
+                LDY OprBuf+2
                 JSR Hex2Bin                     ; Convert to binary
-                STA OPERAND                   ; Save it as the operand
+                STA Operand                   ; Save it as the operand
                 JMP GenerateCode
 
 ; AM_ABSOLUTE, e.g. LDA nnnn or AM_RELATIVE, e.g. BEQ nnnn
 ; Operand is 4 hex digits.
 TryAbsRel:
-                LDA IN                        ; Get length
+                LDA OprBuf                       ; Get length
                 CMP #4                        ; Is it 4?
                 BNE TryZeroPageX
-                LDA IN+1                      ; Get first char of operand
+                LDA OprBuf+1                      ; Get first char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryZeroPageX
-                LDA IN+2                      ; Get second char of operand
+                LDA OprBuf+2                      ; Get second char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryZeroPageX
-                LDA IN+3                      ; Get third char of operand
+                LDA OprBuf+3                      ; Get third char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryZeroPageX
-                LDA IN+4                      ; Get fourth char of operand
+                LDA OprBuf+4                      ; Get fourth char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryZeroPageX
 
@@ -186,14 +186,14 @@ TryAbsRel:
                 BEQ TryRelative               ; No, try relative
 
 Save2Operands:
-                LDA IN+1                      ; Get operand characters
-                LDY IN+2
+                LDA OprBuf+1                      ; Get operand characters
+                LDY OprBuf+2
                 JSR Hex2Bin             ; Convert to binary
-                STA OPERAND+1                 ; Save it as the operand
-                LDA IN+3                      ; Get operand characters
-                LDY IN+4
+                STA Operand+1                 ; Save it as the operand
+                LDA OprBuf+3                      ; Get operand characters
+                LDY OprBuf+4
                 JSR Hex2Bin             ; Convert to binary
-                STA OPERAND                   ; Save it as the operand
+                STA Operand                   ; Save it as the operand
                 JMP GenerateCode
 
 TryRelative:
@@ -206,299 +206,299 @@ TryRelative:
 ; AM_ZEROPAGE_X e.g. LDA nn,X
 ; Operand is 2 hex digits followed by ,X
 TryZeroPageX:
-                LDA IN                        ; Get length
+                LDA OprBuf                       ; Get length
                 CMP #4                        ; Is it 4?
                 BNE TryZeroPageY
-                LDA IN+1                      ; Get first char of operand
+                LDA OprBuf+1                      ; Get first char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryZeroPageY
-                LDA IN+2                      ; Get second char of operand
+                LDA OprBuf+2                      ; Get second char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryZeroPageY
-                LDA IN+3                      ; Get third char of operand
+                LDA OprBuf+3                      ; Get third char of operand
                 CMP #','                      ; Is it a comma?
                 BNE TryZeroPageY
-                LDA IN+4                      ; Get fourth char of operand
+                LDA OprBuf+4                      ; Get fourth char of operand
                 JSR ToUpper
                 CMP #'X'                      ; Is it an X?
                 BNE TryZeroPageY
                 LDA #AM_ZEROPAGE_X            ; Yes, this is zero page X
                 STA AM                        ; Save it
-                LDA IN+1                      ; Get operand characters
-                LDY IN+2
+                LDA OprBuf+1                      ; Get operand characters
+                LDY OprBuf+2
                 JSR Hex2Bin             ; Convert to binary
-                STA OPERAND                   ; Save it as the operand
+                STA Operand                   ; Save it as the operand
                 JMP GenerateCode
 
 ; AM_ZEROPAGE_Y e.g. LDA nn,Y
 ; 2 hex digits followed by ,Y
 TryZeroPageY:
-                LDA IN                        ; Get length
+                LDA OprBuf                       ; Get length
                 CMP #4                        ; Is it 4?
                 BNE TryAbsoluteX
-                LDA IN+1                      ; Get first char of operand
+                LDA OprBuf+1                      ; Get first char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryAbsoluteX
-                LDA IN+2                      ; Get second char of operand
+                LDA OprBuf+2                      ; Get second char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryAbsoluteX
-                LDA IN+3                      ; Get third char of operand
+                LDA OprBuf+3                      ; Get third char of operand
                 CMP #','                      ; Is it a comma?
                 BNE TryAbsoluteX
-                LDA IN+4                      ; Get fourth char of operand
+                LDA OprBuf+4                      ; Get fourth char of operand
                 JSR ToUpper
                 CMP #'Y'                      ; Is it an Y?
                 BNE TryAbsoluteX
                 LDA #AM_ZEROPAGE_Y            ; Yes, this is zero page Y
                 STA AM                        ; Save it
-                LDA IN+1                      ; Get operand characters
-                LDY IN+2
+                LDA OprBuf+1                      ; Get operand characters
+                LDY OprBuf+2
                 JSR Hex2Bin             ; Convert to binary
-                STA OPERAND                   ; Save it as the operand
+                STA Operand                   ; Save it as the operand
                 JMP GenerateCode
 
 ; AM_ABSOLUTE_X, e.g. LDA nnnn,X
 ; 4 hex digits followed by ,X
 TryAbsoluteX:
-                LDA IN                        ; Get length
+                LDA OprBuf                       ; Get length
                 CMP #6                        ; Is it 6?
                 BNE TryAbsoluteY
-                LDA IN+1                      ; Get first char of operand
+                LDA OprBuf+1                      ; Get first char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryAbsoluteY
-                LDA IN+2                      ; Get second char of operand
+                LDA OprBuf+2                      ; Get second char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryAbsoluteY
-                LDA IN+3                      ; Get third char of operand
+                LDA OprBuf+3                      ; Get third char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryAbsoluteY
-                LDA IN+4                      ; Get fourth char of operand
+                LDA OprBuf+4                      ; Get fourth char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryAbsoluteY
-                LDA IN+5
+                LDA OprBuf+5
                 CMP #','
                 BNE TryAbsoluteY
-                LDA IN+6
+                LDA OprBuf+6
                 JSR ToUpper
                 CMP #'X'
                 BNE TryAbsoluteY
                 LDA #AM_ABSOLUTE_X
                 STA AM
-                LDA IN+1                      ; Get operand characters
-                LDY IN+2
+                LDA OprBuf+1                      ; Get operand characters
+                LDY OprBuf+2
                 JSR Hex2Bin             ; Convert to binary
-                STA OPERAND+1                 ; Save it as the operand
-                LDA IN+3                      ; Get operand characters
-                LDY IN+4
+                STA Operand+1                 ; Save it as the operand
+                LDA OprBuf+3                      ; Get operand characters
+                LDY OprBuf+4
                 JSR Hex2Bin             ; Convert to binary
-                STA OPERAND                   ; Save it as the operand
+                STA Operand                   ; Save it as the operand
                 JMP GenerateCode
 
 ; AM_ABSOLUTE_Y, e.g. LDA nnnn,Y
 ; 4 hex digits followed by ,Y
 TryAbsoluteY:
-                LDA IN                        ; Get length
+                LDA OprBuf                       ; Get length
                 CMP #6                        ; Is it 6?
                 BNE TryIndexedIndirect
-                LDA IN+1                      ; Get first char of operand
+                LDA OprBuf+1                      ; Get first char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryIndexedIndirect
-                LDA IN+2                      ; Get second char of operand
+                LDA OprBuf+2                      ; Get second char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryIndexedIndirect
-                LDA IN+3                      ; Get third char of operand
+                LDA OprBuf+3                      ; Get third char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryIndexedIndirect
-                LDA IN+4                      ; Get fourth char of operand
+                LDA OprBuf+4                      ; Get fourth char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryIndexedIndirect
-                LDA IN+5
+                LDA OprBuf+5
                 CMP #','
                 BNE TryIndexedIndirect
-                LDA IN+6
+                LDA OprBuf+6
                 JSR ToUpper
                 CMP #'Y'
                 BNE TryIndexedIndirect
                 LDA #AM_ABSOLUTE_Y
                 STA AM
-                LDA IN+1                      ; Get operand characters
-                LDY IN+2
+                LDA OprBuf+1                      ; Get operand characters
+                LDY OprBuf+2
                 JSR Hex2Bin             ; Convert to binary
-                STA OPERAND+1                 ; Save it as the operand
-                LDA IN+3                      ; Get operand characters
-                LDY IN+4
+                STA Operand+1                 ; Save it as the operand
+                LDA OprBuf+3                      ; Get operand characters
+                LDY OprBuf+4
                 JSR Hex2Bin             ; Convert to binary
-                STA OPERAND                   ; Save it as the operand
+                STA Operand                   ; Save it as the operand
                 JMP GenerateCode
 
 ; AM_INDEXED_INDIRECT, e.g. LDA (nn,X)
 TryIndexedIndirect:
-                LDA IN                        ; Get length
+                LDA OprBuf                       ; Get length
                 CMP #6                        ; Is it 6?
                 BNE TryIndirectIndexed
-                LDA IN+1                      ; Get first char of operand
+                LDA OprBuf+1                      ; Get first char of operand
                 CMP #'('
                 BNE TryIndirectIndexed
-                LDA IN+2                      ; Get second char of operand
+                LDA OprBuf+2                      ; Get second char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryIndirectIndexed
-                LDA IN+3                      ; Get third char of operand
+                LDA OprBuf+3                      ; Get third char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryIndirectIndexed
-                LDA IN+4                      ; Get fourth char of operand
+                LDA OprBuf+4                      ; Get fourth char of operand
                 CMP #','                      ; Is it a comma?
                 BNE TryIndirectIndexed
-                LDA IN+5                      ; Get fifth char of operand
+                LDA OprBuf+5                      ; Get fifth char of operand
                 JSR ToUpper
                 CMP #'X'                      ; Is it an X?
                 BNE TryIndirectIndexed
-                LDA IN+6                      ; Get sixth char of operand
+                LDA OprBuf+6                      ; Get sixth char of operand
                 CMP #')'                      ; Is it an )?
                 BNE TryIndirectIndexed
                 LDA #AM_INDEXED_INDIRECT      ; Yes, this is indexed indirect
                 STA AM                        ; Save it
-                LDA IN+2                      ; Get operand characters
-                LDY IN+3
+                LDA OprBuf+2                      ; Get operand characters
+                LDY OprBuf+3
                 JSR Hex2Bin             ; Convert to binary
-                STA OPERAND                   ; Save it as the operand
+                STA Operand                   ; Save it as the operand
                 JMP GenerateCode
 
 ; AM_INDIRECT_INDEXED, e.g. LDA (nn),Y
 TryIndirectIndexed:
-                LDA IN                        ; Get length
+                LDA OprBuf                       ; Get length
                 CMP #6                        ; Is it 6?
                 BNE TryIndirect
-                LDA IN+1                      ; Get first char of operand
+                LDA OprBuf+1                      ; Get first char of operand
                 CMP #'('
                 BNE TryIndirect
-                LDA IN+2                      ; Get second char of operand
+                LDA OprBuf+2                      ; Get second char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryIndirect
-                LDA IN+3                      ; Get third char of operand
+                LDA OprBuf+3                      ; Get third char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryIndirect
-                LDA IN+4                      ; Get fourth char of operand
+                LDA OprBuf+4                      ; Get fourth char of operand
                 CMP #')'                      ; Is it a )?
                 BNE TryIndirect
-                LDA IN+5                      ; Get fifth char of operand
+                LDA OprBuf+5                      ; Get fifth char of operand
                 CMP #','                      ; Is it a comma?
                 BNE TryIndirect
-                LDA IN+6                      ; Get sixth char of operand
+                LDA OprBuf+6                      ; Get sixth char of operand
                 JSR ToUpper
                 CMP #'Y'                      ; Is it a Y?
                 BNE TryIndirect
                 LDA #AM_INDIRECT_INDEXED      ; Yes, this is indirect indexed
                 STA AM                        ; Save it
-                LDA IN+2                      ; Get operand characters
-                LDY IN+3
+                LDA OprBuf+2                      ; Get operand characters
+                LDY OprBuf+3
                 JSR Hex2Bin             ; Convert to binary
-                STA OPERAND                   ; Save it as the operand
+                STA Operand                   ; Save it as the operand
                 JMP GenerateCode
 
 ; AM_INDIRECT, e.g. JMP (nnnn)
 ; l paren, 4 hex digits, r paren
 TryIndirect:
-                LDA IN                        ; Get length
+                LDA OprBuf                       ; Get length
                 CMP #6                        ; Is it 6?
                 BNE TryIndirectZP
-                LDA IN+1                      ; Get first char of operand
+                LDA OprBuf+1                      ; Get first char of operand
                 CMP #'('
                 BNE TryIndirectZP
-                LDA IN+2                      ; Get second char of operand
+                LDA OprBuf+2                      ; Get second char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryIndirectZP
-                LDA IN+3                      ; Get third char of operand
+                LDA OprBuf+3                      ; Get third char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryIndirectZP
-                LDA IN+4                      ; Get fourth char of operand
+                LDA OprBuf+4                      ; Get fourth char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryIndirectZP
-                LDA IN+5                      ; Get fifth char of operand
+                LDA OprBuf+5                      ; Get fifth char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryIndirectZP
-                LDA IN+6                      ; Get fourth char of operand
+                LDA OprBuf+6                      ; Get fourth char of operand
                 CMP #')'                      ; Is it a )?
                 BNE TryIndirectZP
                 LDA #AM_INDIRECT              ; Yes, this is indirect
                 STA AM                        ; Save it
 
-                LDA IN+2                      ; Get operand characters
-                LDY IN+3
+                LDA OprBuf+2                      ; Get operand characters
+                LDY OprBuf+3
                 JSR Hex2Bin             ; Convert to binary
-                STA OPERAND+1                 ; Save it as the operand
-                LDA IN+4                      ; Get operand characters
-                LDY IN+5
+                STA Operand+1                 ; Save it as the operand
+                LDA OprBuf+4                      ; Get operand characters
+                LDY OprBuf+5
                 JSR Hex2Bin             ; Convert to binary
-                STA OPERAND                   ; Save it as the operand
+                STA Operand                   ; Save it as the operand
                 JMP GenerateCode
 
 ; AM_INDIRECT_ZEROPAGE, e.g. LDA (nn) [65C02 only]
 TryIndirectZP:
-                LDA IN                        ; Get length
+                LDA OprBuf                       ; Get length
                 CMP #4                        ; Is it 4?
                 BNE TryAbsIndInd
-                LDA IN+1                      ; Get first char of operand
+                LDA OprBuf+1                      ; Get first char of operand
                 CMP #'('
                 BNE TryAbsIndInd
-                LDA IN+2                      ; Get second char of operand
+                LDA OprBuf+2                      ; Get second char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryAbsIndInd
-                LDA IN+3                      ; Get third char of operand
+                LDA OprBuf+3                      ; Get third char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ TryAbsIndInd
-                LDA IN+4                      ; Get fourth char of operand
+                LDA OprBuf+4                      ; Get fourth char of operand
                 CMP #')'                      ; Is it a )?
                 BNE TryAbsIndInd
                 LDA #AM_INDIRECT_ZEROPAGE     ; Yes, this is indirect zeropage
                 STA AM                        ; Save it
 
-                LDA IN+2                      ; Get operand characters
-                LDY IN+3
+                LDA OprBuf+2                      ; Get operand characters
+                LDY OprBuf+3
                 JSR Hex2Bin                   ; Convert to binary
-                STA OPERAND                   ; Save it as the operand
+                STA Operand                   ; Save it as the operand
                 JMP GenerateCode
 
 ; AM_ABSOLUTE_INDEXED_INDIRECT, e.g. JMP (nnnn,X) [65C02 only]
 TryAbsIndInd:
-                LDA IN                        ; Get length
+                LDA OprBuf                       ; Get length
                 CMP #8                        ; Is it 8?
                 BNE InvalidOp
-                LDA IN+1                      ; Get first char of operand
+                LDA OprBuf+1                      ; Get first char of operand
                 CMP #'('
                 BNE InvalidOp
-                LDA IN+2                      ; Get second char of operand
+                LDA OprBuf+2                      ; Get second char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ InvalidOp
-                LDA IN+3                      ; Get third char of operand
+                LDA OprBuf+3                      ; Get third char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ InvalidOp
-                LDA IN+4                      ; Get fourth char of operand
+                LDA OprBuf+4                      ; Get fourth char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ InvalidOp
-                LDA IN+5                      ; Get fifth char of operand
+                LDA OprBuf+5                      ; Get fifth char of operand
                 JSR IsHexDigit                ; Is it a hex digit?
                 BEQ InvalidOp
-                LDA IN+6                      ; Get sixth char of operand
+                LDA OprBuf+6                      ; Get sixth char of operand
                 CMP #','                      ; Is it a ,?
                 BNE InvalidOp
-                LDA IN+7                      ; Get 7th char of operand
+                LDA OprBuf+7                      ; Get 7th char of operand
                 JSR ToUpper
                 CMP #'X'                      ; Is it a X?
                 BNE InvalidOp
-                LDA IN+8                      ; Get 8th char of operand
+                LDA OprBuf+8                      ; Get 8th char of operand
                 CMP #')'                      ; Is it a )?
                 BNE InvalidOp
                 LDA #AM_ABSOLUTE_INDEXED_INDIRECT ; Yes, this is abolute indexed indirect
                 STA AM                        ; Save it
 
-                LDA IN+2                      ; Get operand characters
-                LDY IN+3
+                LDA OprBuf+2                      ; Get operand characters
+                LDY OprBuf+3
                 JSR Hex2Bin                   ; Convert to binary
-                STA OPERAND+1                 ; Save it as the operand
-                LDA IN+4                      ; Get operand characters
-                LDY IN+5
+                STA Operand+1                 ; Save it as the operand
+                LDA OprBuf+4                      ; Get operand characters
+                LDY OprBuf+5
                 JSR Hex2Bin                   ; Convert to binary
-                STA OPERAND                   ; Save it as the operand
+                STA Operand                   ; Save it as the operand
                 JMP GenerateCode
 
 ; If not any of the above, report "Invalid operand" and do line again
@@ -527,17 +527,17 @@ OperandOkay:
                 ; Write the opcode to memory
                 LDA OPCODE               ; get opcode
                 LDY #0
-                STA (ADDR_A),Y             ; store it
+                STA (AddrA),Y             ; store it
 
                 ; Check that we can write it back (in case destination memory is not writable).
-                CMP (ADDR_A),Y            ; Do we read back what we wrote?
+                CMP (AddrA),Y            ; Do we read back what we wrote?
                 BEQ WriteOperands        ; Yes, okay
 
                 ; Memory is not writable for some reason, Report error and quit.
                 JSR PrintImmediate              ; Print error message
                 ASC "Unable to write to $"
-                LDX ADDR_A
-                LDY ADDR_A+1
+                LDX AddrA
+                LDY AddrA+1
                 JSR PrintAddress
                 JMP PrintNewline            
 
@@ -589,29 +589,29 @@ TryZpY:
 
 ; BEQ nnnn        Relative
 ; Write 1 byte calculated as destination - current address - instruction length
-; i.e. (OPERAND,OPERAND+1) - ADDR_A,ADDR_A+1 - 2
+; i.e. (Operand,Operand+1) - AddrA,AddrA+1 - 2
 ; Report error if branch is out of 8-bit offset range.
 Relative:
-                LDA OPERAND                 ; destination low byte
+                LDA Operand                 ; destination low byte
                 SEC
-                SBC ADDR_A                    ; subtract address low byte
-                STA OPERAND                 ; Save it
-                LDA OPERAND+1               ; destination high byte
-                SBC ADDR_A+1                  ; subtract address high byte (with any borrow)
-                STA OPERAND+1               ; store it
+                SBC AddrA                    ; subtract address low byte
+                STA Operand                 ; Save it
+                LDA Operand+1               ; destination high byte
+                SBC AddrA+1                  ; subtract address high byte (with any borrow)
+                STA Operand+1               ; store it
 
-                LDA OPERAND
+                LDA Operand
                 SEC
                 SBC #2                      ; subtract 2 more
-                STA OPERAND                 ; store it
-                LDA OPERAND+1               ; destination high byte
+                STA Operand                 ; store it
+                LDA Operand+1               ; destination high byte
                 SBC #0                      ; subtract 0 (with any borrow)
-                STA OPERAND+1               ; store it
+                STA Operand+1               ; store it
 
 ; Report error if branch is out of 8-bit offset range.
 ; Valid range is $0000 - $007F and $FF80 - $FFFF
 
-                LDA OPERAND+1              ; High byte
+                LDA Operand+1              ; High byte
                 BEQ OkayZero               ; Should be $))
                 CMP #$FF
                 BEQ OkayFF                 ; Or $FF
@@ -622,42 +622,42 @@ OutOfRange:
                 JMP AssembleLine
 
 OkayZero:
-                LDA OPERAND                ; Low byte
+                LDA Operand                ; Low byte
                 BMI OutOfRange             ; must be $00-$7F (i.e. positive)
                 JMP OneOperand
 
 OkayFF:
-                LDA OPERAND                ; Low byte
+                LDA Operand                ; Low byte
                 BPL OutOfRange             ; must be $80-$FF (i.e. negative)
 
 ; Now fall through to one operand code
 
 OneOperand:
-                LDA OPERAND                  ; Get operand
+                LDA Operand                  ; Get operand
                 LDY #1                       ; Offset from instruction
-                STA (ADDR_A),Y                ; write it
+                STA (AddrA),Y                ; write it
                 JMP ZeroOperands             ; done
 
 TwoOperands:
-                LDA OPERAND                  ; Get operand low byte
+                LDA Operand                  ; Get operand low byte
                 LDY #1                       ; Offset from instruction
-                STA (ADDR_A),Y               ; write it
+                STA (AddrA),Y               ; write it
                 INY
-                LDA OPERAND+1                ; Get operand high byte
-                STA (ADDR_A),Y               ; write it
+                LDA Operand+1                ; Get operand high byte
+                STA (AddrA),Y               ; write it
 
 ZeroOperands:                        ; Nothing to do
 ;
                 CLC                         ;Update current address with instruction length
-                LDA ADDR_A                  ; Low byte
+                LDA AddrA                  ; Low byte
                 ADC LEN                     ; Add length
-                STA ADDR_A                  ; Store it
-                LDA ADDR_A+1                ; High byte
+                STA AddrA                  ; Store it
+                LDA AddrA+1                ; High byte
                 ADC #0                      ; Add any carry
-                STA ADDR_A+1                ; Store it
+                STA AddrA+1                ; Store it
                 JMP AssembleLine            ; loop back to start of AssembleLine
 
-; Look up three letter mnemonic, e.g. "NOP". On entry mnemonic is stored in MNEM1.
+; Look up three letter mnemonic, e.g. "NOP". On entry mnemonic is stored in Mnem.
 ; Write index value, e.g. OP_NOP, to OP. Set sit to OP_INV if not found.
 ; Registers changed: A, X, Y.
 LookupMnemonic:
@@ -668,15 +668,15 @@ LookupMnemonic:
                 STA T3+1
 Loop:
                 LDY #0                  ; Holds offset of string in table entry
-                LDA MNEM1,Y             ; Compare first char of mnemonic to table entry
+                LDA Mnem,Y             ; Compare first char of mnemonic to table entry
                 CMP (T3),Y
                 BNE NextOp              ; If different, try next opcode
                 INY
-                LDA MNEM1,Y             ; Compare second char of mnemonic to table entry
+                LDA Mnem,Y             ; Compare second char of mnemonic to table entry
                 CMP (T3),Y
                 BNE NextOp              ; If different, try next opcode
                 INY
-                LDA MNEM1,Y             ; Compare third char of mnemonic to table entry
+                LDA Mnem,Y             ; Compare third char of mnemonic to table entry
                 CMP (T3),Y
                 BNE NextOp              ; If different, try next opcode
                                         ; We found a match

@@ -26,10 +26,10 @@ YSAV        = $2A
 Mode        = $2B
 
 ; ------------------------- ASSEMBLER / DISASSEMBLER -------------------
-OPERAND = $10
-ADDR_A  = $24       ; Address to assemble
+Operand = $10
+AddrA  = $24       ; Address to assemble
 
-ADDR       = $37     ; instruction address, 2 bytes (low/high)
+AddrD       = $37     ; instruction address, 2 bytes (low/high)
 OPCODE     = $39     ; instruction opcode
 OP         = $3A     ; instruction type OP_*
 AM         = $41     ; addressing mode AM_*
@@ -40,19 +40,18 @@ DEST       = $45     ; relative address destination address (2 bytes)
 ; ----------------------------------- XMODEM -----------------------------------
 CRC		    = $38		; CRC lo byte  (two byte variable)
 CRCH	    = $39		; CRC hi byte  
-TARGET	    = $3A		; pointer to store the file
-BLCK_NUM    = $3C		; block number 
-RETRY	    = $3D		; retry counter 
-RETRY2	    = $3E		; 2nd counter
-BLCK_FLAG	= $3F	    ; block flag 
-
+Target	    = $3A		; pointer to store the file
+BlockNumber = $3C		; block number 
+Retry	    = $3D		; retry counter 
+Retry2	    = $3E		; 2nd counter
+BlockFlag	= $3F	    ; block flag 
 
 
 ; ================================== OHTHER VARIABLES ==================================
 
 ; -------------------------------- ASSEMBLER / DISASSEMBLER ---------------------------
-IN      = $300  ; buffer to hold operand
-MNEM1   = $800  ; hold three letter mnemonic string used by assembler
+OprBuf      = $300  ; buffer to hold operand
+Mnem        = $800  ; hold three letter mnemonic string used by assembler
 
 ; ---------------------------------------- BIOS ----------------------------------------
 VIADataB   = $8000
@@ -68,7 +67,7 @@ InputBuffer   = $0200     ; Input buffer
 ; ---------------------------------------- XMODEM ----------------------------------------
 
 ; non-zero page variables and buffers
-RECV_BUF    = $500	; temp 132 byte receive buffer (place anywhere, page aligned)
+ReceiveBuf    = $500	; temp 132 byte receive buffer (place anywhere, page aligned)
 
 ; The CRCLO & CRCHI labels are used to point to a lookup table to calculate
 ; the CRC for the 128 byte data blocks.  Tables will be generated runtime
