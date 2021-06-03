@@ -2,7 +2,7 @@
 ;
 ; Implementation from: http://www.6502.org/source/io/xmodem/xmodem.htm
 ; Changes:
-;	- Removed o64 file format requirements (file will be stored at last examined memory address)
+;	- Removed o64 file format requirements (user will get prompted to specify in a target memory address)
 ;	- CRC lookup tables are generated runtime
 ;	- Delay fix
 ; 
