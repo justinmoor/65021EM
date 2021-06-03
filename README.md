@@ -64,7 +64,7 @@ C02B   60          RTS
 C02C   5A          PHY
 C02D   A0 40       LDY   #$40
 C02F   A9 00       LDA   #$00
-
+                                <L> to continue disassembling, <Esc> to exit
 * 1000                          select address 1000
   1000: AA
 * P                             <P> to start assembler at last selected address
@@ -73,7 +73,7 @@ STARTING ASSEMBLING ON ADDRESS $1000
 1000: LDA #00
 1002: STA 3000
 1005: RTS
-1006: 
+1006:                           <Esc> to exit
 
 * 1000                          select address 1000
   1000: A9
