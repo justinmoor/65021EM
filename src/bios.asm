@@ -11,19 +11,19 @@
 ;-------------------------------------------------------------------------
 
 InitBios:    
-                LDA #%00000011  ; configure the MOSI and CLK pin as outputs, others as inputs
+                LDA #%00000011      ; configure the MOSI and CLK pin as outputs, others as inputs
                 STA VIADataDirB
                 LDA #$FF
-                STA VIADataDirA    ; configure all pins as outputs, 8 slave selects available
-                STA VIADataA   ; set all to high
+                STA VIADataDirA     ; configure all pins as outputs, 8 slave selects available
+                STA VIADataA        ; set all to high
                 JSR WriteM3100Config
                 RTS
 
 WriteM3100Config:
                 PHY
                 PHA
-                LDY #%11000000      ; MAX3100 Config: 11000000 00001010
-                LDA #%00001001      ; 9600 baud
+                LDY #%11000000      ; MAX3100 Config: 11000000 00001001
+                LDA #%00001001      ; 19200 baud
                 JSR WriteM3100
                 PLY
                 PLA
@@ -59,14 +59,14 @@ SPIWriteByte:
                 LDY #$8                 ; write 8 bits
 WriteBit:       LDA #%0                 ; zero bit the output line
                 ROL SPIWriteBuf         ; rotate the buffer so the bit to be written is represented by the carry flag
-                BCC @Write               ; 0 in carry flag? continue to writing the zero bit
+                BCC @Write              ; 0 in carry flag? continue to writing the zero bit
                 ORA #%00000010          ; 1 in carry flag, set MOSI to high
-@Write:         STA VIADataB           ; write bit
-                INC VIADataB           ; set clock high
-                LDA VIADataB           ; read bit
+@Write:         STA VIADataB            ; write bit
+                INC VIADataB            ; set clock high
+                LDA VIADataB            ; read bit
                 ROL                     ; just read bit is represented in PB7, rotate it into carry
-                ROL SPIReadBuf         ; rotate bit from carry into SPIReadBuf
-                DEC VIADataB           ; set clock low
+                ROL SPIReadBuf          ; rotate bit from carry into SPIReadBuf
+                DEC VIADataB            ; set clock low
                 DEY
                 BNE WriteBit
                 LDA SPIReadBuf

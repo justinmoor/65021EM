@@ -26,82 +26,82 @@ RunXModem:
                 JSR PrintImmediate
                 ASCLN "READY TO RECEIVE OVER XMODEM. PLEASE SELECT A FILE TO TRANSFER OR PRESS <ESC> TO CANCEL."
                 LDA #$01
-                STA BlockNumber	; set block # to 1
-                STA BlockFlag	; set flag to get address from block 1
+                STA BlockNumber	    ; set block # to 1
+                STA BlockFlag	    ; set flag to get address from block 1
 StartCRC:
-                LDA #REC_CMD	; "C" start with CRC mode
-                JSR PutChr		; send it
+                LDA #REC_CMD	    ; "C" start with CRC mode
+                JSR PutChr		    ; send it
                 LDA #DELAY3S	
-                STA Retry2		; set loop counter for ~3 sec delay
+                STA Retry2		    ; set loop counter for ~3 sec delay
                 LDA #$00
                 STA CRC
-                STA CRCH		; init CRC value	
-                JSR GetByte		; wait for input
-                BCS GotByte		; byte received, process it
-                BCC StartCRC	; resend "C"
+                STA CRCH		    ; init CRC value	
+                JSR GetByte		    ; wait for input
+                BCS GotByte		    ; byte received, process it
+                BCC StartCRC	    ; resend "C"
 
 StartBlock:     LDA #DELAY3S		 
-                STA Retry2		; set loop counter for ~3 sec delay
+                STA Retry2		    ; set loop counter for ~3 sec delay
                 LDA #$00		
                 STA CRC		
-                STA CRCH		; init CRC value	
-                JSR GetByte		; get first byte of block
-                BCC StartBlock	; timed out, keep waiting...
+                STA CRCH		    ; init CRC value	
+                JSR GetByte		    ; get first byte of block
+                BCC StartBlock	    ; timed out, keep waiting...
 GotByte:
-                CMP #ESC		; quitting?
-                BNE GotByte1	; no
-                LDA #$FE		; Error code in "A" if desired
-                RTS 			; YES - do BRK or change to RTS if desired
+                CMP #ESC		    ; quitting?
+                BNE GotByte1	    ; no
+                LDA #$FE		    ; Error code in "A" if desired
+                RTS 			    ; YES - do BRK or change to RTS if desired
 GotByte1:
-                CMP #SOH		; start of block?
-                BEQ BeginBlock	; yes
+                CMP #SOH		    ; start of block?
+                BEQ BeginBlock	    ; yes
                 CMP #EOT		
                 BNE IncorrectCRC	; Not SOH or EOT, so flush buffer & send NAK	
                 JMP XModemDone		; EOT - all done!
 
 BeginBlock:		
                 LDX #$00
-GetBlock:       LDA #DELAY3S	; 3 sec window to receive characters
+GetBlock:       LDA #DELAY3S	    ; 3 sec window to receive characters
                 STA Retry2		
-GetBlock1:      JSR GetByte		; get next character
+GetBlock1:      JSR GetByte		    ; get next character
                 BCC IncorrectCRC	; chr rcv error, flush and send NAK
 GetBlock2:      STA ReceiveBuf,X	; good char, save it in the rcv buffer
-                INX				; inc buffer pointer	
-                CPX #$84		; <01> <FE> <128 bytes> <CRCH> <CRCL>
-                BNE GetBlock	; get 132 characters
-                LDX #$00		;
+                INX				    ; inc buffer pointer	
+                CPX #$84		    ; <01> <FE> <128 bytes> <CRCH> <CRCL>
+                BNE GetBlock	    ; get 132 characters
+                LDX #$00		    ;
                 LDA ReceiveBuf,X	; get block # from buffer
-                CMP BlockNumber	; compare to expected block #	
-                BEQ GoodBlock	; matched!
-                JSR PrintImmediate		; Unexpected block number - abort	
+                CMP BlockNumber	    ; compare to expected block #	
+                BEQ GoodBlock	    ; matched!
+                JSR PrintImmediate  ; Unexpected block number - abort	
                 ASCLN "UPLOAD ERROR!"
-                JSR Flush		; mismatched - flush buffer and then do BRK
-                LDA #$FD		; put error code in "A" if desired
-                RTS 			; unexpected block # - fatal error - BRK or RTS
+                JSR Flush		    ; mismatched - flush buffer and then do BRK
+                LDA #$FD		    ; put error code in "A" if desired
+                RTS 			    ; unexpected block # - fatal error - BRK or RTS
 GoodBlock:	
-                EOR #$FF		; 1's comp of block #
+                EOR #$FF		    ; 1's comp of block #
                 INX 		
                 CMP ReceiveBuf,X	; compare with expected 1's comp of block #
-                BEQ GoodBlock2 	; matched!
-                JSR PrintImmediate		; Unexpected block number - abort	
+                BEQ GoodBlock2 	    ; matched!
+                JSR PrintImmediate  ; Unexpected block number - abort	
                 ASCLN "UPLOAD ERROR!"
-                JSR Flush		; mismatched - flush buffer and then do BRK
-                LDA #$FC		; put error code in "A" if desired
+                JSR Flush		    ; mismatched - flush buffer and then do BRK
+                LDA #$FC		    ; put error code in "A" if desired
                 RTS
-                                ; bad 1's comp of block#	
+                                    ; bad 1's comp of block#	
 GoodBlock2:     LDY	#$02		 
 CalculateCRC:	LDA ReceiveBuf,y	; calculate the CRC for the 128 bytes of data	
                 JSR UpdateCRC		; could inline sub here for speed
                 INY 		
-                CPY #$82		; 128 bytes
+                CPY #$82	        ; 128 bytes
                 BNE CalculateCRC	
                 LDA ReceiveBuf,y	; get hi CRC from buffer
-                CMP CRCH		; compare to calculated hi CRC
+                CMP CRCH            ; compare to calculated hi CRC
                 BNE IncorrectCRC	; bad CRC, send NAK
                 INY 		
-                LDA ReceiveBuf,y	; get lo CRC from buffer
-                CMP CRC			; compare to calculated lo CRC
-                BEQ CorrectCRC	; good CRC
+                LDA ReceiveBuf,y    ; get lo CRC from buffer
+                CMP CRC		        ; compare to calculated lo CRC
+                BEQ CorrectCRC      ; good CRC
 
 IncorrectCRC:	JSR Flush		; flush the input port
                 LDA #NAK		

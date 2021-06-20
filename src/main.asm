@@ -37,7 +37,7 @@ SoftResetOS:    LDX #$FF        ; reset stack
                 TXS
                 CLD             ; Clear decimal arithmetic mode.
                 CLI
-StartPrompt:	JSR PrintPrompt
+StartPrompt     JSR PrintPrompt
                 JSR GetLine
                 CMP #CR
                 BEQ ProcessInput
@@ -63,7 +63,7 @@ ProcessInput:
                 ASCLN "UNKNOWN COMMAND"
                 JMP StartPrompt
 
-StartMonitor:	JSR RunMonitor
+StartMonitor    JSR RunMonitor
 
 StartBasic:     JSR LAB_COLD
                 JMP StartPrompt
@@ -71,7 +71,7 @@ StartBasic:     JSR LAB_COLD
 StartXModem:    JSR RunXModem
                 JMP StartPrompt
 
-InvalidCommand:	JSR PrintNewline
+InvalidCommand  JSR PrintNewline
                 JSR PrintNewline
                 JSR PrintImmediate
                 ASCLN "ONLY WORKS IN MONITOR MODE!"
@@ -90,7 +90,7 @@ PrintPrompt:	LDA #CR
                 JSR WriteChar     
                 RTS
 
-PrintNewline:	PHA
+PrintNewline    PHA
                 LDA #CR
                 JSR WriteChar
                 LDA #NEWL
@@ -203,7 +203,7 @@ GetLine:        LDX #0                  ; reset input buffer index
 @Continue:		
                 CMP #BS                 ; is it a backspace?
                 BNE @NoBackspace        ; if not, branch
-@OnBackspace	DEX	                    ; we got a backspace, decrement input buffer
+@OnBackspace    DEX	                    ; we got a backspace, decrement input buffer
                 BMI GetLine				; just reset when there are no characters to backspace
                 JSR WriteChar			; display the backspace.
                 LDA #$20                ; space, overwrite the backspaced char.
