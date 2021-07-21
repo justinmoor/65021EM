@@ -259,11 +259,11 @@ Interrupt:
                 SBC	#$00    ; Decrement high byte of rtn address (if no carry)
                 STA	$0103,X
 
-                LDA TA
+                LDA TA      ; restore A, X, and Y registers to continue execution
                 LDX TX
                 LDY TY
 
-                RTI
+                RTI         ; return from interrupt
 
 Banner:
     .BYTE CR, NEWL, CR, NEWL
