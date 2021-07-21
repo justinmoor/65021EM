@@ -15,6 +15,10 @@ SPIReadBuf  = $08       ; 1 byte (possibly 2 bytes in future)
 SPIWriteBuf  = $0A      ; 1 byte (possibly 2 bytes in future)
 M3100ReadBuf = $0C      ; 2 bytes
 
+TA  = $0E       ; temp storage for A register when debug breakpoint
+TX  = $0F       ; temp storage for X register when debug breakpoint
+TY  = $12       ; temp storage for Y register when debug breakpoint
+
 ; -------------------------------- Monitor ---------------------------
 XAML        = $24       ; index pointers
 XAMH        = $25

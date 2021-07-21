@@ -23,8 +23,7 @@
 
 Reset:          JMP Start
 NMI:            RTI
-IRQ:            RTI
-
+IRQ:            JMP Interrupt
 
 Start:          LDX #$FF        ; setup stack
                 TXS    
@@ -224,6 +223,47 @@ GetLine:        LDX #0                  ; reset input buffer index
                 JMP @PollInput          ; poll more characters
 @Return:        RTS	
 
+Interrupt:
+                STA TA  ; store A, X, Y in temp locations, stack is unsuitable for now, more info below
+                STX TX
+                STY TY
+                JSR PrintNewline
+                ; TODO add detection for software interrupt or hardware interrupt; now only assumes software interrupt
+                ; TODO add more debugging insights such as contents of status register, stack pointer, possibly program counter, etc.
+@Break          
+                JSR PrintImmediate
+                ASC "   A = $"
+                LDA TA
+                JSR PrintByte
+                JSR PrintImmediate
+                ASC "   X = $"
+                TXA
+                JSR PrintByte
+                JSR PrintImmediate
+                ASC "   Y = $"
+                TYA
+                JSR PrintByte
+                JSR PrintNewline
+@Wait           JSR ReadChar
+                BCC @Wait
+
+                ; BRK instruction is actually a 2 byte instruction, but most assembler assemble it as a 1 byte instruction
+                ; this means we need to manually decrement the return address stored on the stack before returning.
+                ; Source: http://nesdev.com/the%20%27B%27%20flag%20&%20BRK%20instruction.txt
+                TSX         ; Stack pointer into index register
+                SEC     
+                LDA	$0102,X
+                SBC	#$01    ; Decrement low byte of rtn address
+                STA	$0102,X
+                LDA	$0103,X
+                SBC	#$00    ; Decrement high byte of rtn address (if no carry)
+                STA	$0103,X
+
+                LDA TA
+                LDX TX
+                LDY TY
+
+                RTI
 
 Banner:
     .BYTE CR, NEWL, CR, NEWL
