@@ -58,11 +58,17 @@ OprBuf      = $300  ; buffer to hold operand
 Mnem        = $800  ; hold three letter mnemonic string used by assembler
 
 ; ---------------------------------------- BIOS ----------------------------------------
-VIADataB   = $8000
-VIADataA   = $8001
+; VIADataB   = $8000
+; VIADataA   = $8001
 
-VIADataDirB    = $8002
-VIADataDirA    = $8003
+; VIADataDirB    = $8002
+; VIADataDirA    = $8003
+
+VIADataB   = $B000
+VIADataA   = $B001
+
+VIADataDirB    = $B002
+VIADataDirA    = $B003
 
 ; ---------------------------------- OPERATING SYSTEM-------------------------------------
 

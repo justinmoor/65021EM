@@ -17,9 +17,10 @@
 
 ### Memory Map
 
-- **RAM**: \$0000 - \$7FFF (binary 0xxxxxxxxxxxxxxx)
-- **ROM**: \$C000 - \$FFFF (binary 11xxxxxxxxxxxxxx)
-- **SERIAL**: \$8000 - \$800F (binary 1000000000001111)
+- **RAM**:      \$0000 - \$7FFF (binary 0xxxxxxxxxxxxxxx)
+- **TMS9918**:  \$A800 - \$A80F (binary 10101xxxxxxx1111) (TODO)
+- **SERIAL**:   \$B000 - \$B00F (binary 10110xxxxxxx1111)
+- **ROM**:      \$C000 - \$FFFF (binary 11xxxxxxxxxxxxxx)
 
 ### Machine Language Monitor Usage
 ```
