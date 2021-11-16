@@ -43,7 +43,7 @@ AssembleLine:
                 JSR PrintSpace          ; And space
                 JSR GetLine             ; Get user input
                 CMP #ESC				; Escape?
-                BEQ EscPressed			; Yes, return
+                BEQ EscPressed          ; Yes, return
 @ProcessInput:   			            ; No escape, that implies an enter, sp start processing
                 STX T1					; Save total length of input in T1		
                 LDX #0                  ; copy first part of the input buffer into the Mnem
