@@ -60,7 +60,7 @@ AssembleLine:
                 LDA T1						; get total length of input
                 CMP #3
                 BNE @GotOperand				; we have more than 3 characters, so also an operand
-                STZ OprBuf                     ; we got no operand, just store 0 in the first byte of IN
+                STZ OprBuf                  ; we got no operand, just store 0 in the first byte of IN
                 JMP Parse                   ; start parsing the input
 
 ; The assembler assumes that the operand is stored in IN, where the first byte is the length of the operand. We keep track of the length
