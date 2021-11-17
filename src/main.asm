@@ -192,7 +192,8 @@ PrintCommands:
 
 ; This routines will read a whole line from user input. It also handles backspace. When user presses
 ; enter or escape, the routine will return. The key that has been pressed (enter or escape) 
-; will be in the A register. The input length will be in the X register. Line is stored at $0200 (InputBuffer)
+; will be in the A register. The input length will be in the X register. Input is zero-terminated.
+; Line is stored at $0200 (InputBuffer)
 GetLine:        LDX #0                  ; reset input buffer index
 @PollInput:     JSR ReadChar
                 BCC @PollInput
@@ -218,10 +219,11 @@ GetLine:        LDX #0                  ; reset input buffer index
                 PLA	
                 CMP #CR                 ; is it an enter?
                 BEQ @Return				; yes, caller can now start processing from $0200
-                STA InputBuffer, x		; no we append to input buffer
+                STA InputBuffer, X		; no we append to input buffer
                 INX						; increment buffer index
                 JMP @PollInput          ; poll more characters
-@Return:        RTS	
+@Return:        STZ InputBuffer, X
+                RTS	
 
 Interrupt:
                 STA TA  ; store A, X, Y in temp locations, stack is unsuitable for now, more info below

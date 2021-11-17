@@ -17,8 +17,8 @@ CR = $0D
 StrPtrLow   = $06       ; low address of string to print
 StrPtrHi    = $07
 
-Str1            = $0
-Str2            = $02
+StrPtr1            = $0
+StrPtr2            = $02
 
 InputBuffer   = $200
 CommandBuffer = $300
@@ -32,6 +32,7 @@ Start:          JSR GetLine
 ; read the command from the input buffer
 ReadCommand:    LDX #0
 @Loop:          LDA InputBuffer, X
+                BEQ @Done                       ; zero means end of line
                 CMP #' '                        ; space means end of command, start of operands
                 BEQ @Done
                 STA CommandBuffer, X
@@ -40,16 +41,10 @@ ReadCommand:    LDX #0
 @Done:          STZ CommandBuffer, X            ; terminate string
 
 PrintCommand:   
-                ; JSR PrintImm
-                ; ASCLN "Command length: "
-                ; TXA
-                ; JSR PrintByte
                 JSR PrintNewline
                 JSR PrintImm
                 ASCLN "Command: "
-PrintCommand2:  
-                ; LDA #0
-                ; STA CommandBuffer+1,x
+
                 LDA #<CommandBuffer
                 STA StrPtrLow
                 LDA #>CommandBuffer
@@ -59,14 +54,14 @@ PrintCommand2:
                 JSR PrintNewline
 
 TestStrComp:    LDA #<CommandBuffer
-                STA Str1
+                STA StrPtr1
                 LDA #>CommandBuffer
-                STA Str1 + 1
+                STA StrPtr1 + 1
 
-                LDA #<Kak
-                STA Str2
-                LDA #>Kak
-                STA Str2 + 1
+                LDA #<TestStr
+                STA StrPtr2
+                LDA #>TestStr
+                STA StrPtr2 + 1
 
                 JSR StrComp
                 BEQ @Eq
@@ -91,26 +86,28 @@ PrintNewline:   PHA
 ; Destroys A and Y register 
 StrComp:
                 LDY #0
-@Loop:          LDA (Str1), Y
-                BEQ @2          ; got 0
-                CMP (Str2), Y
-                BNE @Done       ; current char is not equal
+@Loop:          LDA (StrPtr1), Y
+                BEQ @2                  ; got 0
+                CMP (StrPtr2), Y
+                BNE @Done               ; current char is not equal
                 INY
                 BNE @Loop
-                INC Str1 + 1
-                INC Str2 + 1
-                BCS @Loop       ; always
-@2:             CMP (Str2), Y   ; compare last char
+                INC StrPtr1 + 1
+                INC StrPtr2 + 1
+                BCS @Loop               ; always
+@2:             CMP (StrPtr2), Y        ; compare last char
 @Done:          RTS
 
 Commands:
 .byte "MD", 0
 .byte "MM", 0
-; .byte "MF", MemoryFill          ; $02
-; .byte "ASM", Assemble           ; $03
-; .byte "DIS", Disassmble         ; $04
-; .byte "GO", RUN                 ; $05
+.byte "MF", 0
+.byte "ASM", 0
+.byte "DIS", 0
+.byte "GO", 0
 
 ; CommandRoutines:
 ; .byte <MemoryDump, >MemoryDump
 ; .byte <MemoryModify, >MemoryModify
+
+TestStr: .byte "123456", 0
