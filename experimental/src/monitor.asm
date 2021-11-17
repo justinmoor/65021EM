@@ -17,6 +17,9 @@ CR = $0D
 StrPtrLow   = $06       ; low address of string to print
 StrPtrHi    = $07
 
+Str1            = $0
+Str2            = $02
+
 InputBuffer   = $200
 CommandBuffer = $300
 OperandBuffer = $400
@@ -31,51 +34,50 @@ ReadCommand:    LDX #0
 @Loop:          LDA InputBuffer, X
                 CMP #' '                        ; space means end of command, start of operands
                 BEQ @Done
-                STA CommandBuffer + 1, X
+                STA CommandBuffer, X
                 INX
                 JMP @Loop
-@Done:          STX CommandBuffer               ; store length in the beginning of command
+@Done:          STZ CommandBuffer, X            ; terminate string
 
-PrintCommand:   JSR PrintImm
-                ASCLN "Command length: "
-                TXA
-                JSR PrintByte
+PrintCommand:   
+                ; JSR PrintImm
+                ; ASCLN "Command length: "
+                ; TXA
+                ; JSR PrintByte
                 JSR PrintNewline
                 JSR PrintImm
                 ASCLN "Command: "
-PrintCommand2:  LDA #0
-                STA CommandBuffer+1,x
+PrintCommand2:  
+                ; LDA #0
+                ; STA CommandBuffer+1,x
                 LDA #<CommandBuffer
                 STA StrPtrLow
                 LDA #>CommandBuffer
                 STA StrPtrHi
                 JSR Print
+                JSR PrintNewline
+                JSR PrintNewline
+
+TestStrComp:    LDA #<CommandBuffer
+                STA Str1
+                LDA #>CommandBuffer
+                STA Str1 + 1
+
+                LDA #<Kak
+                STA Str2
+                LDA #>Kak
+                STA Str2 + 1
+
+                JSR StrComp
+                BEQ @Eq
+                JSR PrintImm
+                ASCLN "Not equal"
+                RTS
+@Eq:            JSR PrintImm
+                ASCLN "Equal"
                 RTS
 
-MemoryDump:     JSR PrintImm
-                ASCLN "Got MM!"
-                RTS
 
-MemoryModify:   JSR PrintImm
-                ASCLN "Got MM!"
-                RTS
-
-STREQU:     LDY #$00        ;Compare strings, case-sensitive
-            LDA ($FA),Y     ;Naturally, the zero flag is used to return if the strings are equal
-            CMP ($FC),Y
-            BEQ STREQU1
-            RTS
-STREQU1:    TAY
-STREQULP:   LDA ($FC),Y
-            AND #$7F
-            STA $FF
-            LDA ($FA),Y
-            AND #$7F
-            CMP $FF
-            BNE STREQUEX
-            DEY
-            BNE STREQULP
-STREQUEX:   RTS
 
 PrintNewline:   PHA
                 LDA #$0D
@@ -85,11 +87,30 @@ PrintNewline:   PHA
                 PLA
                 RTS
 
+; Zero flag is set if equal
+; Destroys A and Y register 
+StrComp:
+                LDY #0
+@Loop:          LDA (Str1), Y
+                BEQ @2          ; got 0
+                CMP (Str2), Y
+                BNE @Done       ; current char is not equal
+                INY
+                BNE @Loop
+                INC Str1 + 1
+                INC Str2 + 1
+                BCS @Loop       ; always
+@2:             CMP (Str2), Y   ; compare last char
+@Done:          RTS
+
 Commands:
-.byte 2, "MD", <MemoryDump           ; $00
-.byte 2, "MM", <MemoryModify         ; $00
-; .byte "MM", MemoryModify        ; $01
+.byte "MD", 0
+.byte "MM", 0
 ; .byte "MF", MemoryFill          ; $02
 ; .byte "ASM", Assemble           ; $03
 ; .byte "DIS", Disassmble         ; $04
 ; .byte "GO", RUN                 ; $05
+
+; CommandRoutines:
+; .byte <MemoryDump, >MemoryDump
+; .byte <MemoryModify, >MemoryModify
