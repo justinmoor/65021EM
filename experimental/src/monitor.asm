@@ -40,6 +40,30 @@ ReadCommand:    LDX #0
                 JMP @Loop
 @Done:          STZ CommandBuffer, X            ; terminate string
 
+LookupCommand:  LDA #<CommandBuffer             ; prepare string compare
+                STA StrPtr1
+                LDA #>CommandBuffer
+                STA StrPtr1 + 1
+                LDX #0
+@Loop:          LDA CommandTable, X
+                STA StrPtr2
+                LDA CommandTable + 1, X
+                STA StrPtr2 + 1
+                JSR StrComp
+                BEQ @Hit
+                INX
+                INX
+                INX
+                INX
+                BEQ @Done
+                JMP @Loop
+@Hit:           JSR PrintImm
+                ASCLN "Got a valid command"
+                JMP (CommandTable + 2, X)
+@Done:          JSR PrintImm
+                ASCLN "Invalid command"
+                RTS
+
 PrintCommand:   
                 JSR PrintNewline
                 JSR PrintImm
@@ -98,16 +122,25 @@ StrComp:
 @2:             CMP (StrPtr2), Y        ; compare last char
 @Done:          RTS
 
-Commands:
-.byte "MD", 0
-.byte "MM", 0
-.byte "MF", 0
-.byte "ASM", 0
-.byte "DIS", 0
-.byte "GO", 0
+MemoryDump:     JSR PrintImm
+                ASCLN "Got MD!"
+                RTS
 
-; CommandRoutines:
-; .byte <MemoryDump, >MemoryDump
-; .byte <MemoryModify, >MemoryModify
+MemoryModify:   JSR PrintImm
+                ASCLN "Got MM!"
+                RTS
+
+CommandTable:
+.byte <MD, >MD, <MemoryDump, >MemoryDump
+.byte <MM, >MM, <MemoryModify, >MemoryModify
+
+Commands:
+MD: .byte "MD", 0
+MM: .byte "MM", 0
+MF: .byte "MF", 0
+ASM: .byte "ASM", 0
+DIS: .byte "DIS", 0
+GO: .byte "GO", 0
+
 
 TestStr: .byte "123456", 0
