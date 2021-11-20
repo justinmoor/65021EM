@@ -1,5 +1,6 @@
 
 .SETCPU "65C02"
+.INCLUDE "../../src/variables.asm"
 
 .MACRO ASCLN text
     .BYTE text, $0D, $0A, 0
@@ -13,24 +14,21 @@ Print = $C009
 PrintImm = $C00C
 PrintByte = $C00F
 
-CR = $0D
-StrPtrLow   = $06       ; low address of string to print
-StrPtrHi    = $07
+StrPtr1 = $0
+StrPtr2 = $02
 
-StrPtr1            = $0
-StrPtr2            = $02
-
-InputBuffer   = $200
 CommandBuffer = $300
 OperandBuffer = $400
 
-Start:          JSR GetLine     
+Start:          JSR PrintPrompt
+                JSR GetLine     
                 CMP #CR
                 BEQ ReadCommand
                 RTS
 
 ; read the command from the input buffer
-ReadCommand:    LDX #0
+ReadCommand:    JSR PrintNewline
+                LDX #0
 @Loop:          LDA InputBuffer, X
                 BEQ @Done                       ; zero means end of line
                 CMP #' '                        ; space means end of command, start of operands
@@ -40,63 +38,31 @@ ReadCommand:    LDX #0
                 JMP @Loop
 @Done:          STZ CommandBuffer, X            ; terminate string
 
-LookupCommand:  LDA #<CommandBuffer             ; prepare string compare
-                STA StrPtr1
+LookupCommand:  LDA #<CommandBuffer             ; prepare string compare for each command table entry
+                STA StrPtr1                     
                 LDA #>CommandBuffer
                 STA StrPtr1 + 1
                 LDX #0
-@Loop:          LDA CommandTable, X
-                STA StrPtr2
+@Loop:          LDA CommandTable, X             ; string compare current entry with what's in the command buffer
+                STA StrPtr2                     
                 LDA CommandTable + 1, X
                 STA StrPtr2 + 1
                 JSR StrComp
-                BEQ @Hit
+                BEQ @Hit                        ; got a hit, let's branch!
+                INX                             ; no hit, increment 4 times because each entry in 4 bytes
                 INX
                 INX
                 INX
-                INX
-                BEQ @Done
+                BEQ @Done                       
                 JMP @Loop
-@Hit:           JSR PrintImm
-                ASCLN "Got a valid command"
-                JMP (CommandTable + 2, X)
+@Hit:           JSR ExecCommand
+                JMP Start
+
 @Done:          JSR PrintImm
-                ASCLN "Invalid command"
-                RTS
+                ASCLN "INVALID COMMAND"
+                JMP Start
 
-PrintCommand:   
-                JSR PrintNewline
-                JSR PrintImm
-                ASCLN "Command: "
-
-                LDA #<CommandBuffer
-                STA StrPtrLow
-                LDA #>CommandBuffer
-                STA StrPtrHi
-                JSR Print
-                JSR PrintNewline
-                JSR PrintNewline
-
-TestStrComp:    LDA #<CommandBuffer
-                STA StrPtr1
-                LDA #>CommandBuffer
-                STA StrPtr1 + 1
-
-                LDA #<TestStr
-                STA StrPtr2
-                LDA #>TestStr
-                STA StrPtr2 + 1
-
-                JSR StrComp
-                BEQ @Eq
-                JSR PrintImm
-                ASCLN "Not equal"
-                RTS
-@Eq:            JSR PrintImm
-                ASCLN "Equal"
-                RTS
-
-
+ExecCommand:    JMP (CommandTable + 2, X)       ; jump to the routine from the table
 
 PrintNewline:   PHA
                 LDA #$0D
@@ -104,6 +70,16 @@ PrintNewline:   PHA
                 LDA #$0A
                 JSR WriteChar
                 PLA
+                RTS
+
+PrintPrompt:	LDA #CR
+                JSR WriteChar   ; New line
+                LDA #NEWL
+                JSR WriteChar
+                LDA #PROMPT     ; ">"
+                JSR WriteChar   ; Output it.
+                LDA #$20        ; "<space>"
+                JSR WriteChar     
                 RTS
 
 ; Zero flag is set if equal
@@ -141,6 +117,3 @@ MF: .byte "MF", 0
 ASM: .byte "ASM", 0
 DIS: .byte "DIS", 0
 GO: .byte "GO", 0
-
-
-TestStr: .byte "123456", 0
