@@ -18,7 +18,7 @@ StrPtr1 = $0
 StrPtr2 = $02
 
 CommandBuffer = $300
-OperandBuffer = $400
+ArgBuffer = $400
 
 Start:          JSR PrintPrompt
                 JSR GetLine     
@@ -26,17 +26,29 @@ Start:          JSR PrintPrompt
                 BEQ ReadCommand
                 RTS
 
-; read the command from the input buffer
+; read the command from the input buffer into the command buffer
 ReadCommand:    JSR PrintNewline
                 LDX #0
 @Loop:          LDA InputBuffer, X
                 BEQ @Done                       ; zero means end of line
-                CMP #' '                        ; space means end of command, start of operands
-                BEQ @Done
+                CMP #' '                        ; space means end of command, start of arguments
+                BEQ ReadArguments
                 STA CommandBuffer, X
                 INX
                 JMP @Loop
-@Done:          STZ CommandBuffer, X            ; terminate string
+@Done:          STZ CommandBuffer, X            ; terminate command buffer with 0
+                JMP LookupCommand
+
+; if there are arguments we read those into the argument buffer for easy parsing later
+ReadArguments:  STZ CommandBuffer, X            ; terminate command buffer, continue with args
+                LDY #0                          ; index in args buffer
+                INX                             ; continue current index in input buffer
+@Loop:          LDA InputBuffer, X
+                STA ArgBuffer, Y
+                BEQ LookupCommand               ; reuse 0 terminated line as termination in args buffer
+                INX
+                INY
+                JMP @Loop
 
 LookupCommand:  LDA #<CommandBuffer             ; prepare string compare for each command table entry
                 STA StrPtr1                     
@@ -54,8 +66,7 @@ LookupCommand:  LDA #<CommandBuffer             ; prepare string compare for eac
                 INX
                 INX
                 BNE @Loop
-        
-                JSR PrintImm
+                JSR PrintImm                    ; no hit at all
                 ASCLN "INVALID COMMAND"
                 JMP Start
 
