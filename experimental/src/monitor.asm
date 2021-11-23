@@ -111,7 +111,13 @@ StrComp:
 
 MemoryDump:     JSR PrintImm
                 ASCLN "Got MD!"
+                JSR ParseMDArgs
                 RTS
+
+ParseMDArgs:    ; read addr1
+                ; put in 2 byte reg
+                ; read addr2
+                ; put in 2 byte reg
 
 MemoryModify:   JSR PrintImm
                 ASCLN "Got MM!"
