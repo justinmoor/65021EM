@@ -53,13 +53,13 @@ LookupCommand:  LDA #<CommandBuffer             ; prepare string compare for eac
                 INX
                 INX
                 INX
-                BEQ @Done                       
-                JMP @Loop
-@Hit:           JSR ExecCommand
+                BNE @Loop
+        
+                JSR PrintImm
+                ASCLN "INVALID COMMAND"
                 JMP Start
 
-@Done:          JSR PrintImm
-                ASCLN "INVALID COMMAND"
+@Hit:           JSR ExecCommand
                 JMP Start
 
 ExecCommand:    JMP (CommandTable + 2, X)       ; jump to the routine from the table
