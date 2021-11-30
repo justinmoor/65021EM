@@ -172,21 +172,21 @@ PrintByte:
                 RTS
 
 PrintBanner:    LDA #<Banner
-                STA StrPtrLow
+                STA P1
                 LDA #>Banner
-                STA StrPtrHi
+                STA P1 + 1
                 JSR Print
 PrintSpecs:
                 LDA #<Specs
-                STA StrPtrLow
+                STA P1
                 LDA #>Specs
-                STA StrPtrHi
+                STA P1 + 1
                 JSR Print
 PrintCommands:
                 LDA #<Commands
-                STA StrPtrLow
+                STA P1
                 LDA #>Commands
-                STA StrPtrHi
+                STA P1 + 1
                 JSR Print
                 RTS
 

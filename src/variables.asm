@@ -1,23 +1,38 @@
+; NEW
+
+T1 = $00 ; one byte temp register 1
+T2 = $01 ; one byte temp register 2
+T3 = $02 ; one byte temp register 3
+
+T4 = $03 ; two byte temp register 4
+T5 = $05 ; two byte temp register 5
+T6 = $07 ; two byte temp register 6
+
+P1 = $09 ; pointer 1
+P2 = $0B ; pointer 2
+P3 = $0D ; pointer 3
+
 ; ============================== ZERO PAGE VARIABLES ================================
 
 
 ; GENERAL PURPOSE VARIABLES
-T1          = $00       ; one byte temp register 1
-T2          = $01       ; one byte temp register 2
-T3          = $02       ; two byte temp register 3
-T4          = $04       ; two byte temp register 4
+; T1          = $00       ; one byte temp register 1
+; T2          = $01       ; one byte temp register 2
+; T3          = $02       ; two byte temp register 3
+; T4          = $04       ; two byte temp register 4
 
-StrPtrLow   = $06       ; low address of string to print
-StrPtrHi    = $07
+; StrPtrLow   = $06       ; low address of string to print
+; StrPtrHi    = $07
 
 ; ---------------------------------- BIOS ----------------------------
-SPIReadBuf  = $08       ; 1 byte (possibly 2 bytes in future)
-SPIWriteBuf  = $0A      ; 1 byte (possibly 2 bytes in future)
-M3100ReadBuf = $0C      ; 2 bytes
 
-TA  = $0E       ; temp storage for A register when debug breakpoint
-TX  = $0F       ; temp storage for X register when debug breakpoint
-TY  = $12       ; temp storage for Y register when debug breakpoint
+TA  = $F6       ; temp storage for A register when debug breakpoint
+TX  = $F7       ; temp storage for X register when debug breakpoint
+TY  = $F8       ; temp storage for Y register when debug breakpoint
+
+SPIReadBuf  = $F9       ; 1 byte (possibly 2 bytes in future)
+SPIWriteBuf  = $FB      ; 1 byte (possibly 2 bytes in future)
+M3100ReadBuf = $FD      ; 2 bytes
 
 ; -------------------------------- Monitor ---------------------------
 XAML        = $24       ; index pointers

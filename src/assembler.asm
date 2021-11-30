@@ -662,22 +662,22 @@ ZeroOperands:                        ; Nothing to do
 ; Registers changed: A, X, Y.
 LookupMnemonic:
                 LDX #0                  ; Holds current table index
-                LDA #<MNEMONICS         ; Store address of start of table in T3 (L/H)
-                STA T3
+                LDA #<MNEMONICS         ; Store address of start of table in T4 (L/H)
+                STA T4
                 LDA #>MNEMONICS
-                STA T3+1
+                STA T4+1
 Loop:
                 LDY #0                  ; Holds offset of string in table entry
                 LDA Mnem,Y             ; Compare first char of mnemonic to table entry
-                CMP (T3),Y
+                CMP (T4),Y
                 BNE NextOp              ; If different, try next opcode
                 INY
                 LDA Mnem,Y             ; Compare second char of mnemonic to table entry
-                CMP (T3),Y
+                CMP (T4),Y
                 BNE NextOp              ; If different, try next opcode
                 INY
                 LDA Mnem,Y             ; Compare third char of mnemonic to table entry
-                CMP (T3),Y
+                CMP (T4),Y
                 BNE NextOp              ; If different, try next opcode
                                         ; We found a match
                 STX OP                  ; Store index in table (X) in OP
@@ -686,17 +686,17 @@ Loop:
 NextOp:
                 INX                     ; Increment table index
                 CLC
-                LDA T3                  ; Increment pointer to table entry (T3) as 16-bit value
+                LDA T4                  ; Increment pointer to table entry (T4) as 16-bit value
                 ADC #3                  ; Adding three because each entry is 3 bytes
-                STA T3
-                LDA T3+1                ; Add possible carry to high byte
+                STA T4
+                LDA T4+1                ; Add possible carry to high byte
                 ADC #0
-                STA T3+1
+                STA T4+1
 
-                LDA T3                  ; Did we reach the last entry (MNEMONICSEND?)
+                LDA T4                  ; Did we reach the last entry (MNEMONICSEND?)
                 CMP #<MNEMONICSEND      ; If not, keep searching
                 BNE Loop
-                LDA T3+1
+                LDA T4+1
                 CMP #>MNEMONICSEND
                 BNE Loop
                                         ; End of table reached
@@ -713,18 +713,18 @@ NextOp:
 
 CheckAddressingModeValid:
                 LDX #0                  ; Holds current table index
-                LDA #<OPCODES           ; Store address of start of table in T3 (L/H)
-                STA T3
+                LDA #<OPCODES           ; Store address of start of table in T4 (L/H)
+                STA T4
                 LDA #>OPCODES
-                STA T3+1
+                STA T4+1
 OpLoop:
                 LDY #0                  ; Holds offset into table entry
-                LDA (T3),Y              ; Get a table entry (instruction)
+                LDA (T4),Y              ; Get a table entry (instruction)
                 CMP OP                  ; Is it the instruction we are looking for?
                 BNE NextInst            ; If different, try next opcode
                                         ; Instruction matched. Does the addressing mode match?
                 INY                     ; Want second byte of table entry (address mode)
-                LDA (T3),Y              ; Get a table entry (address mode
+                LDA (T4),Y              ; Get a table entry (address mode
                 CMP AM                  ; Is it the address mode we are looking for?
                 BNE NextInst            ; If different, try next opcode
                                         ; We found a match
@@ -737,12 +737,12 @@ NextInst:
                 INX                     ; Increment table index
                 BEQ OpNotFound          ; If wrapped past $FF, we did not find what we were looking for
                 CLC
-                LDA T3                  ; Increment pointer to table entry (T3) as 16-bit value
+                LDA T4                  ; Increment pointer to table entry (T4) as 16-bit value
                 ADC #2                  ; Add two because each entry is 2 bytes
-                STA T3
-                LDA T3+1                ; Add possible carry to high byte
+                STA T4
+                LDA T4+1                ; Add possible carry to high byte
                 ADC #0
-                STA T3+1
+                STA T4+1
                 JMP OpLoop
 OpNotFound:     LDA #0                  ; End of table reached, set false return value
                 RTS

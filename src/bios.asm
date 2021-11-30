@@ -109,26 +109,26 @@ WriteChar:
 ;
 PrintImmediate:
                 PLA				; save original return address in T3
-                STA T3
+                STA T4
                 PLA
-                STA T3 + 1
+                STA T4 + 1
                 BRA @P1
 @P0:            JSR WriteChar
-@P1:            INC T3          ; for each character printed, increment the new return address
+@P1:            INC T4          ; for each character printed, increment the new return address
                 BNE @P3
-                INC T3 + 1
-@P3:            LDA (T3)
+                INC T4 + 1
+@P3:            LDA (T4)
                 BNE @P0
-                LDA T3 + 1		; restore stack with the new return adress
+                LDA T4 + 1		; restore stack with the new return adress
                 PHA				
-                LDA T3
+                LDA T4
                 PHA
                 RTS
 
 Print:			
                 PHY
                 LDY #$00
-@Loop:          LDA (StrPtrLow), Y
+@Loop:          LDA (P1), Y
                 BEQ @Done
                 JSR WriteChar
                 INY
