@@ -23,6 +23,7 @@ MF addr1 amount byte
 ASM addr
 DIS addr
 RUN addr
+XM addr
 
 **V2**
 SBRK addr
