@@ -19,6 +19,7 @@ StrPtr2 = $02
 
 CommandBuffer = $300
 ArgsBuffer = $400
+AmountOfArgs = $40
 
 Start:          JSR PrintPrompt
                 JSR GetLine     
@@ -39,12 +40,19 @@ ReadCommand:    JSR PrintNewline
 @Done:          STZ CommandBuffer, X            ; terminate command buffer with 0
                 JMP LookupCommand
 
+; MD C000 8000 80
 ; if there are arguments we read those into the argument buffer for easy parsing later
 ReadArguments:  STZ CommandBuffer, X            ; terminate command buffer, continue with args
+                LDA #1
+                STA AmountOfArgs                ; at least one
                 LDY #0                          ; index in args buffer
                 INX                             ; continue current index in input buffer
 @Loop:          LDA InputBuffer, X
                 STA ArgsBuffer, Y
+                CMP #' '                        ; is space?
+                BNE @Continue
+                INC AmountOfArgs                ; yes, increment the amount of args
+@Continue:      CMP #$0
                 BEQ LookupCommand               ; reuse 0 terminated line as termination in args buffer
                 INX
                 INY
@@ -114,34 +122,59 @@ MemoryDump:     JSR PrintImm
                 JSR ParseMDArgs
                 LDA (T4)
                 JSR PrintByte
+                LDA AmountOfArgs
+                CMP #$2
+                BNE @Done
+                LDA (T5)
+                JSR PrintByte
 @Done:          RTS
 
 ; Syntax: MD C000 C500
-ParseMDArgs:    LDY #00
-                STZ T4
-                STZ T4+1
-NextHex:        LDA ArgsBuffer,Y; Get character for hex test.
+ParseMDArgs:    LDA #<ArgsBuffer
+                STA P1
+                LDA #>ArgsBuffer
+                STA P1 + 1
+                LDY #0
+                JSR ReadAddress
+                LDA T6
+                STA T4
+                LDA T6 + 1
+                STA T4 + 1
+                INY
+                JSR ReadAddress
+                LDA T6
+                STA T5
+                LDA T6 + 1
+                STA T5 + 1
+                RTS
+
+
+; will read an address in any byte format; C000, C00, C0, C, 000C
+; result will be put in T4. Digits read will be in Y
+ReadAddress:    
+                ; LDY #00
+                STZ T6
+                STZ T6 + 1
+@NextHex:       LDA (P1), Y     ; Get character for hex test.
                 EOR #$30        ; Map digits to $0-9.
                 CMP #$0A        ; Digit?
-                BCC Dig         ; Yes.
+                BCC @IsDigit    ; Yes.
                 ADC #$88        ; Map letter "A"-"F" to $FA-FF.
                 CMP #$FA        ; Hex letter?
-                BCC NotHex      ; No, character not hex.
-Dig:
-                ASL
+                BCC @NotHex     ; No, character not hex.
+@IsDigit:       ASL
                 ASL             ; Hex digit to MSD of A.
                 ASL
                 ASL
                 LDX #$04        ; Shift count.
-HexShift:    
-                ASL             ; Hex digit left MSB to carry.
-                ROL T4          ; Rotate into LSD.
-                ROL T4+1        ; Rotate into MSD's.
+@HexShift:      ASL             ; Hex digit left MSB to carry.
+                ROL T6          ; Rotate into LSD.
+                ROL T6+1        ; Rotate into MSD's.
                 DEX             ; Done 4 shifts?
-                BNE HexShift    ; No, loop.
+                BNE @HexShift   ; No, loop.
                 INY             ; Advance text index.
-                BNE NextHex     ; Always taken. Check next character for hex.
-NotHex:         RTS
+                BNE @NextHex    ; Always taken. Check next character for hex.
+@NotHex:        RTS
 
 
 ; ParseMDArgs:    LDA ArgsBuffer
