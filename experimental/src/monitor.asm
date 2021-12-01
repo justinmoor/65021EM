@@ -121,7 +121,7 @@ ParseMDArgs:    LDY #00
                 STZ T4
                 STZ T4+1
 NextHex:        LDA ArgsBuffer,Y; Get character for hex test.
-                EOR #$B0        ; Map digits to $0-9.
+                EOR #$30        ; Map digits to $0-9.
                 CMP #$0A        ; Digit?
                 BCC Dig         ; Yes.
                 ADC #$88        ; Map letter "A"-"F" to $FA-FF.
