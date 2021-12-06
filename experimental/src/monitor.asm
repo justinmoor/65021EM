@@ -21,6 +21,9 @@ CommandBuffer = $300
 ArgsBuffer = $400
 AmountOfArgs = $40
 
+XL = $50
+XH = $51
+
 Start:          JSR PrintPrompt
                 JSR GetLine     
                 CMP #CR
@@ -28,8 +31,7 @@ Start:          JSR PrintPrompt
                 RTS
 
 ; read the command from the input buffer into the command buffer
-ReadCommand:    JSR PrintNewline
-                LDX #0
+ReadCommand:    LDX #0
 @Loop:          LDA InputBuffer, X  
                 BEQ @Done                       ; zero means end of line
                 CMP #' '                        ; space means end of command, start of arguments
@@ -40,8 +42,7 @@ ReadCommand:    JSR PrintNewline
 @Done:          STZ CommandBuffer, X            ; terminate command buffer with 0
                 JMP LookupCommand
 
-; MD C000 8000 80
-; if there are arguments we read those into the argument buffer for easy parsing later
+; If there are arguments we read those into the argument buffer for easy parsing later
 ReadArguments:  STZ CommandBuffer, X            ; terminate command buffer, continue with args
                 LDA #1
                 STA AmountOfArgs                ; at least one
@@ -101,53 +102,55 @@ PrintPrompt:	LDA #CR
                 JSR WriteChar     
                 RTS
 
-; Zero flag is set if equal
-; Destroys A and Y register 
-StrComp:
-                LDY #0
-@Loop:          LDA (StrPtr1), Y
-                BEQ @2                  ; got 0
-                CMP (StrPtr2), Y
-                BNE @Done               ; current char is not equal
-                INY
-                BNE @Loop
-                INC StrPtr1 + 1
-                INC StrPtr2 + 1
-                BCS @Loop               ; always
-@2:             CMP (StrPtr2), Y        ; compare last char
-@Done:          RTS
-
-MemoryDump:     JSR PrintImm
-                ASCLN "Got MD!"
-                JSR ParseMDArgs
-                LDA (T4)
+MemoryDump:     JSR ParseMDArgs
+                LDA #00
+@PrintRange:    BNE @PrintData
+                JSR PrintNewline
+                LDA #$20
+                JSR WriteChar    
+                LDA #$20
+                JSR WriteChar
+                LDA T5 + 1
                 JSR PrintByte
-                LDA AmountOfArgs
-                CMP #$2
-                BNE @Done
-                LDA (T5)
+                LDA T5
                 JSR PrintByte
+                LDA #':'        ; ":".
+                JSR WriteChar   ; Output it
+@PrintData:     LDA #SP         ; Space
+                JSR WriteChar   ; Output it
+                LDA (T5)        ; Get byte
+                JSR PrintByte
+@XAMNext:       LDA T5
+                CMP T6
+                LDA T5 + 1
+                SBC T6 + 1
+                BCS @Done             ; not less, so no more data to output
+                INC T5
+                BNE @Mod8Check
+                INC T5 + 1
+@Mod8Check:     LDA T5
+                AND #$0F
+                BPL @PrintRange     ; always
 @Done:          RTS
 
 ; Syntax: MD C000 C500
+; First address will be in T5 and second address in T6
 ParseMDArgs:    LDA #<ArgsBuffer
                 STA P1
                 LDA #>ArgsBuffer
                 STA P1 + 1
                 LDY #0
-                JSR ReadAddress
+                JSR ReadAddress     ; read 2 addresses from the ArgsBuffer
                 LDA T6
-                STA T4
-                LDA T6 + 1
-                STA T4 + 1
-                INY
-                JSR ReadAddress
-                LDA T6
-                STA T5
+                STA T5              ; store first one in T5
                 LDA T6 + 1
                 STA T5 + 1
-                RTS
-
+                LDA AmountOfArgs    ; Did we get a range?
+                CMP #$2             ; 2 arguments?
+                BNE @Done
+                INY                 ; Got another argument
+                JSR ReadAddress     ; Read it as an address
+@Done:          RTS
 
 ; will read an address in any byte format; C000, C00, C0, C, 000C
 ; result will be put in T4. Digits read will be in Y
@@ -175,40 +178,6 @@ ReadAddress:
                 INY             ; Advance text index.
                 BNE @NextHex    ; Always taken. Check next character for hex.
 @NotHex:        RTS
-
-
-; ParseMDArgs:    LDA ArgsBuffer
-;                 PHA
-;                 JSR IsHexDigit
-;                 BEQ @Invalid
-;                 LDA ArgsBuffer + 1
-;                 TAY
-;                 JSR IsHexDigit
-;                 BEQ @Invalid
-;                 PLA
-;                 JSR Hex2Bin
-;                 STA T4 + 1
-
-;                 LDA ArgsBuffer + 2
-;                 PHA
-;                 JSR IsHexDigit
-;                 BEQ @Invalid
-;                 LDA ArgsBuffer + 3
-;                 TAY
-;                 JSR IsHexDigit
-;                 BEQ @Invalid
-;                 PLA
-;                 JSR Hex2Bin
-;                 STA T4
-; @Done:          SEC
-;                 RTS
-
-; @Invalid:       PLA
-;                 JSR PrintImm
-;                 ASCLN "INVALID ARGUMENT(S)"
-;                 CLC
-;                 RTS
-
 
 MemoryModify:   JSR PrintImm
                 ASCLN "Got MM!"
@@ -336,3 +305,19 @@ PrintByte:
                 PLX
                 PLA
                 RTS
+
+
+; Zero flag is set if equal
+; Destroys A and Y register 
+StrComp:        LDY #0
+@Loop:          LDA (StrPtr1), Y
+                BEQ @2                  ; got 0
+                CMP (StrPtr2), Y
+                BNE @Done               ; current char is not equal
+                INY
+                BNE @Loop
+                INC StrPtr1 + 1
+                INC StrPtr2 + 1
+                BCS @Loop               ; always
+@2:             CMP (StrPtr2), Y        ; compare last char
+@Done:          RTS
