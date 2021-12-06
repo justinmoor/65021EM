@@ -21,9 +21,6 @@ CommandBuffer = $300
 ArgsBuffer = $400
 AmountOfArgs = $40
 
-XL = $50
-XH = $51
-
 Start:          JSR PrintPrompt
                 JSR GetLine     
                 CMP #CR
@@ -39,43 +36,43 @@ ReadCommand:    LDX #0
                 STA CommandBuffer, X
                 INX
                 JMP @Loop
-@Done:          STZ CommandBuffer, X            ; terminate command buffer with 0
+@Done:          STZ CommandBuffer, X            ; Terminate command buffer with 0
                 JMP LookupCommand
 
 ; If there are arguments we read those into the argument buffer for easy parsing later
-ReadArguments:  STZ CommandBuffer, X            ; terminate command buffer, continue with args
-                LDA #1
-                STA AmountOfArgs                ; at least one
-                LDY #0                          ; index in args buffer
+ReadArguments:  STZ CommandBuffer, X            ; Terminate command buffer, continue with args
+                LDA #1                          ; We got at least one argument
+                STA AmountOfArgs                
+                LDY #0                          ; Index in args buffer
                 INX                             ; continue current index in input buffer
 @Loop:          LDA InputBuffer, X
                 STA ArgsBuffer, Y
-                CMP #' '                        ; is space?
+                CMP #' '                        ; Is it a space?
                 BNE @Continue
-                INC AmountOfArgs                ; yes, increment the amount of args
+                INC AmountOfArgs                ; Yes, increment the amount of args
 @Continue:      CMP #$0
-                BEQ LookupCommand               ; reuse 0 terminated line as termination in args buffer
+                BEQ LookupCommand               ; Reuse 0 terminated line as termination in args buffer
                 INX
                 INY
                 JMP @Loop
 
-LookupCommand:  LDA #<CommandBuffer             ; prepare string compare for each command table entry
+LookupCommand:  LDA #<CommandBuffer             ; Prepare string compare for each command table entry
                 STA StrPtr1                     
                 LDA #>CommandBuffer
                 STA StrPtr1 + 1
                 LDX #0
-@Loop:          LDA CommandTable, X             ; string compare current entry with what's in the command buffer
+@Loop:          LDA CommandTable, X             ; String compare current entry with what's in the command buffer
                 STA StrPtr2                     
                 LDA CommandTable + 1, X
                 STA StrPtr2 + 1
                 JSR StrComp
-                BEQ @Hit                        ; got a hit, let's branch!
-                INX                             ; no hit, increment 4 times because each entry in 4 bytes
+                BEQ @Hit                        ; Got a hit, let's execute the command!
+                INX                             ; No hit yet, increment 4 times because each entry in 4 bytes
                 INX
                 INX
                 INX
                 BNE @Loop
-                JSR PrintImm                    ; no hit at all
+                JSR PrintImm                    ; No hit at all
                 ASCLN "INVALID COMMAND"
                 JMP Start
 
@@ -84,26 +81,8 @@ LookupCommand:  LDA #<CommandBuffer             ; prepare string compare for eac
 
 ExecCommand:    JMP (CommandTable + 2, X)       ; jump to the routine from the table
 
-PrintNewline:   PHA
-                LDA #$0D
-                JSR WriteChar
-                LDA #$0A
-                JSR WriteChar
-                PLA
-                RTS
-
-PrintPrompt:	LDA #CR
-                JSR WriteChar   ; New line
-                LDA #NEWL
-                JSR WriteChar
-                LDA #PROMPT     ; ">"
-                JSR WriteChar   ; Output it.
-                LDA #$20        ; "<space>"
-                JSR WriteChar     
-                RTS
-
 MemoryDump:     JSR ParseMDArgs
-                LDA #00
+                LDA #0
 @PrintRange:    BNE @PrintData
                 JSR PrintNewline
                 LDA #$20
@@ -119,18 +98,18 @@ MemoryDump:     JSR ParseMDArgs
 @PrintData:     LDA #SP         ; Space
                 JSR WriteChar   ; Output it
                 LDA (T5)        ; Get byte
-                JSR PrintByte
-@XAMNext:       LDA T5
+                JSR PrintByte   ; Output it
+                LDA T5          ; Compare with ohter operand to check whether we're done printing the range
                 CMP T6
                 LDA T5 + 1
                 SBC T6 + 1
-                BCS @Done             ; not less, so no more data to output
-                INC T5
-                BNE @Mod8Check
+                BCS @Done       ; Not less, so no more data to output
+                INC T5          ; Increment to the next address to read      
+                BNE @Mod16Check
                 INC T5 + 1
-@Mod8Check:     LDA T5
+@Mod16Check:    LDA T5
                 AND #$0F
-                BPL @PrintRange     ; always
+                BPL @PrintRange     ; Always
 @Done:          RTS
 
 ; Syntax: MD C000 C500
@@ -154,9 +133,7 @@ ParseMDArgs:    LDA #<ArgsBuffer
 
 ; will read an address in any byte format; C000, C00, C0, C, 000C
 ; result will be put in T4. Digits read will be in Y
-ReadAddress:    
-                ; LDY #00
-                STZ T6
+ReadAddress:    STZ T6
                 STZ T6 + 1
 @NextHex:       LDA (P1), Y     ; Get character for hex test.
                 EOR #$30        ; Map digits to $0-9.
@@ -182,18 +159,6 @@ ReadAddress:
 MemoryModify:   JSR PrintImm
                 ASCLN "Got MM!"
                 RTS
-
-CommandTable:
-.byte <MD, >MD, <MemoryDump, >MemoryDump
-.byte <MM, >MM, <MemoryModify, >MemoryModify
-
-Commands:
-MD: .byte "MD", 0
-MM: .byte "MM", 0
-MF: .byte "MF", 0
-ASM: .byte "ASM", 0
-DIS: .byte "DIS", 0
-GO: .byte "GO", 0
 
 IsHexDigit:
                 JSR ToUpper
@@ -306,6 +271,24 @@ PrintByte:
                 PLA
                 RTS
 
+PrintNewline:   PHA
+                LDA #$0D
+                JSR WriteChar
+                LDA #$0A
+                JSR WriteChar
+                PLA
+                RTS
+
+PrintPrompt:	LDA #CR
+                JSR WriteChar   ; New line
+                LDA #NEWL
+                JSR WriteChar
+                LDA #PROMPT     ; ">"
+                JSR WriteChar   ; Output it.
+                LDA #$20        ; "<space>"
+                JSR WriteChar     
+                RTS
+
 
 ; Zero flag is set if equal
 ; Destroys A and Y register 
@@ -321,3 +304,15 @@ StrComp:        LDY #0
                 BCS @Loop               ; always
 @2:             CMP (StrPtr2), Y        ; compare last char
 @Done:          RTS
+
+CommandTable:
+.byte <MD, >MD, <MemoryDump, >MemoryDump
+.byte <MM, >MM, <MemoryModify, >MemoryModify
+
+Commands:
+MD: .byte "MD", 0
+MM: .byte "MM", 0
+MF: .byte "MF", 0
+ASM: .byte "ASM", 0
+DIS: .byte "DIS", 0
+GO: .byte "GO", 0
