@@ -82,7 +82,7 @@ LookupCommand:  LDA #<CommandBuffer             ; Prepare string compare for eac
 ExecCommand:    JMP (CommandTable + 2, X)       ; jump to the routine from the table
 
 MemoryDump:     JSR ParseMDArgs
-                LDA #0
+                LDA #0          ; set zero flag
 @PrintRange:    BNE @PrintData
                 JSR PrintNewline
                 LDA #$20
