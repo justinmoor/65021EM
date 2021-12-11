@@ -48,7 +48,7 @@ Mode        = $2B
 Operand = $10
 AddrA  = $24       ; Address to assemble
 
-AddrD       = $37     ; instruction address, 2 bytes (low/high)
+AddrD       = $37    ; instruction address, 2 bytes (low/high)
 OPCODE     = $39     ; instruction opcode
 OP         = $3A     ; instruction type OP_*
 AM         = $41     ; addressing mode AM_*

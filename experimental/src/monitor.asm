@@ -81,6 +81,7 @@ LookupCommand:  LDA #<CommandBuffer             ; Prepare string compare for eac
 
 ExecCommand:    JMP (CommandTable + 2, X)       ; jump to the routine from the table
 
+; ----------------------------- Memory Dump -----------------------------
 MemoryDump:     JSR ParseMDArgs
                 LDA #0          ; set zero flag
 @PrintRange:    BNE @PrintData
@@ -131,9 +132,39 @@ ParseMDArgs:    LDA #<ArgsBuffer
                 JSR ReadAddress     ; Read it as an address
 @Done:          RTS
 
-; will read an address in any byte format; C000, C00, C0, C, 000C
-; result will be put in T4. Digits read will be in Y
-ReadAddress:    STZ T6
+; ---------------------------- Memory Modify ----------------------------
+MemoryModify:   LDA #<ArgsBuffer
+                STA P1
+                LDA #>ArgsBuffer
+                STA P1 + 1
+                LDY #0
+                JSR ReadAddress     ; Read address to modify
+                LDA T6
+                STA T5              ; Store in T5 so T6 can be reused
+                LDA T6 + 1
+                STA T5 + 1
+                LDX #0
+                LDA AmountOfArgs    ; Remove the adress from amount of args
+                SEC
+                SBC #1
+                STA AmountOfArgs
+@Loop:          INY                 ; skip space
+                JSR ReadAddress
+                PHY                 ; TXY
+                TXA
+                TAY
+                LDA T6
+                STA (T5), Y
+                PLY
+                INX
+                CPX AmountOfArgs
+                BNE @Loop
+                RTS
+
+; Will read an address in any byte format; C000, C00, C0, C, 000C
+; result will be put in T6. Digits read will be in Y
+ReadAddress:    PHX
+                STZ T6
                 STZ T6 + 1
 @NextHex:       LDA (P1), Y     ; Get character for hex test.
                 EOR #$30        ; Map digits to $0-9.
@@ -149,15 +180,12 @@ ReadAddress:    STZ T6
                 LDX #$04        ; Shift count.
 @HexShift:      ASL             ; Hex digit left MSB to carry.
                 ROL T6          ; Rotate into LSD.
-                ROL T6+1        ; Rotate into MSD's.
+                ROL T6 + 1      ; Rotate into MSD's.
                 DEX             ; Done 4 shifts?
                 BNE @HexShift   ; No, loop.
                 INY             ; Advance text index.
                 BNE @NextHex    ; Always taken. Check next character for hex.
-@NotHex:        RTS
-
-MemoryModify:   JSR PrintImm
-                ASCLN "Got MM!"
+@NotHex:        PLX
                 RTS
 
 IsHexDigit:
