@@ -56,7 +56,8 @@ ReadArguments:  STZ CommandBuffer, X            ; Terminate command buffer, cont
                 INY
                 JMP @Loop
 
-LookupCommand:  LDA #<CommandBuffer             ; Prepare string compare for each command table entry
+LookupCommand:  JSR CountArgs
+                LDA #<CommandBuffer             ; Prepare string compare for each command table entry
                 STA StrPtr1                     
                 LDA #>CommandBuffer
                 STA StrPtr1 + 1
@@ -79,7 +80,28 @@ LookupCommand:  LDA #<CommandBuffer             ; Prepare string compare for eac
 @Hit:           JSR ExecCommand
                 JMP Start
 
-ExecCommand:    JMP (CommandTable + 2, X)       ; jump to the routine from the table
+ExecCommand:    JMP (CommandTable + 2, X)       ; Jump to the routine from the table
+
+CountArgs:      STZ AmountOfArgs                ; Initial value
+                LDA #' '                        ; Current reading state = space
+                STA T1                          ; T1 holds current reading state
+                LDY #0
+@Loop:          LDA ArgsBuffer, Y               
+                CMP #0                          ; Check end of line
+                BEQ @Done   
+                CMP #' '                        ; Space?                        
+                BNE @Word                       ; No
+                STA T1                          ; Yes, set current reading state to spaces
+                JMP @Next                       ; Next character
+@Word:          LDA T1                          ; Reading a new word
+                CMP #' '                        ; Check if state was space
+                BNE @Next                       ; Was not, we don't need to increment the AmountOfArgs
+                LDA #'W'                        ; Reading a new word, set state to word ('W')
+                STA T1                          ; Store state
+                INC AmountOfArgs                ; Increment the amount of args we've read
+@Next:          INY
+                BNE @Loop
+@Done:          RTS
 
 ; ----------------------------- Memory Dump -----------------------------
 MemoryDump:     JSR ParseMDArgs
