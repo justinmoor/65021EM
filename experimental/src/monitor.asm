@@ -40,6 +40,8 @@ Start:          JSR PrintPrompt
                 JSR GetLine     
                 CMP #ESC
                 BEQ @Quit
+                TXA                 ; get input length
+                BEQ Start           ; no input, show prompt
                 JSR ReadCommand
                 JSR ReadArguments
                 JSR ExecuteCommand
