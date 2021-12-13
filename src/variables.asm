@@ -66,7 +66,7 @@ Retry2	    = $3E		; 2nd counter
 BlockFlag	= $3F	    ; block flag 
 
 
-; ================================== OHTHER VARIABLES ==================================
+; ===================   =============== OHTHER VARIABLES ==================================
 
 ; -------------------------------- ASSEMBLER / DISASSEMBLER ---------------------------
 OprBuf      = $300  ; buffer to hold operand

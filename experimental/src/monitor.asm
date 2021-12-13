@@ -25,12 +25,12 @@
 
 WriteChar = $C000
 GetLine = $C006
-Print = $C009
 PrintImm = $C00C
+; Print = $C009
 ; PrintByte = $C00F
 
-StrPtr1 = $0
-StrPtr2 = $02
+StrPtr1 = $60
+StrPtr2 = $62
 
 CommandBuffer = $300
 ArgsBuffer = $400
@@ -91,13 +91,16 @@ ReadArguments:  INX                             ; skip space; end of command, st
                 STA ArgsBuffer, Y               ; terminate
                 RTS
 
-ExecuteCommand: LDA #<CommandBuffer             ; Prepare string compare for each command table entry
+ExecuteCommand: CLC
+                LDA #<CommandBuffer             ; Prepare string compare for each command table entry
                 STA StrPtr1                     
                 LDA #>CommandBuffer
                 STA StrPtr1 + 1
                 LDX #0
 @Loop:          LDA CommandTable, X             ; String compare current entry with what's in the command buffer
-                STA StrPtr2                     
+                CMP #'0'
+                BEQ @NoHit                      ; end of table            
+                STA StrPtr2    
                 LDA CommandTable + 1, X
                 STA StrPtr2 + 1
                 JSR StrComp
@@ -107,7 +110,7 @@ ExecuteCommand: LDA #<CommandBuffer             ; Prepare string compare for eac
                 INX
                 INX
                 BNE @Loop
-                JSR PrintNewline
+@NoHit:         JSR PrintNewline
                 JSR PrintIndent
                 JSR PrintImm                    ; No hit at all
                 ASC "INVALID COMMAND"
@@ -157,7 +160,7 @@ ParseMDArgs:    LDA #<ArgsBuffer
                 STA T5 + 1
                 LDA AmountOfArgs    ; Did we get a range?
                 CMP #$2             ; 2 arguments?
-                BNE @Done
+                BCC @Done
                 INY                 ; Got another argument
                 JSR ReadAddress     ; Read it as an address
 @Done:          RTS
@@ -216,6 +219,12 @@ ReadAddress:    PHX
                 INY             ; Advance text index.
                 BNE @NextHex    ; Always taken. Check next character for hex.
 @NotHex:        PLX
+                RTS
+
+InvalidCommand: JSR PrintNewline
+                JSR PrintIndent
+                JSR PrintImm                    ; No hit at all
+                ASC "INVALID COMMAND"
                 RTS
 
 IsHexDigit:
@@ -371,6 +380,7 @@ StrComp:        LDY #0
 CommandTable:
 .byte <MD, >MD, <MemoryDump, >MemoryDump
 .byte <MM, >MM, <MemoryModify, >MemoryModify
+.byte '0'
 
 Commands:
 MD: .byte "MD", 0
@@ -379,3 +389,4 @@ MF: .byte "MF", 0
 ASM: .byte "ASM", 0
 DIS: .byte "DIS", 0
 GO: .byte "GO", 0
+INVALID: .byte "0", 0
