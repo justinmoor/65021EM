@@ -98,7 +98,7 @@ ExecuteCommand: CLC
                 STA StrPtr1 + 1
                 LDX #0
 @Loop:          LDA CommandTable, X             ; String compare current entry with what's in the command buffer
-                CMP #'0'
+                CMP #CommandTableEnd
                 BEQ @NoHit                      ; end of table            
                 STA StrPtr2    
                 LDA CommandTable + 1, X
@@ -377,10 +377,12 @@ StrComp:        LDY #0
 @2:             CMP (StrPtr2), Y        ; compare last char
 @Done:          RTS
 
+CommandTableEnd = '0'
+
 CommandTable:
 .byte <MD, >MD, <MemoryDump, >MemoryDump
 .byte <MM, >MM, <MemoryModify, >MemoryModify
-.byte '0'
+.byte CommandTableEnd   ; terminate whole table with ascii '0'
 
 Commands:
 MD: .byte "MD", 0
