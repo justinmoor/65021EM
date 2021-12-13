@@ -6,6 +6,21 @@
     .BYTE text, $0D, $0A, 0
 .ENDMACRO
 
+.MACRO ASC text
+    .BYTE text, 0
+.ENDMACRO
+
+.MACRO DEBUG_PRINT msg
+    PHA
+    PHX
+    PHY
+    JSR PrintImm                    
+    .BYTE msg, $0D, $0A, 0
+    PLY
+    PLX
+    PLA
+.ENDMACRO
+
 .ORG $1000
 
 WriteChar = $C000
@@ -23,24 +38,27 @@ AmountOfArgs = $40
 
 Start:          JSR PrintPrompt
                 JSR GetLine     
-                CMP #CR
-                BEQ ReadCommand
-                RTS
+                CMP #ESC
+                BEQ @Quit
+                JSR ReadCommand
+                JSR ReadArguments
+                JSR ExecuteCommand
+                JMP Start
+@Quit:          RTS
 
 ; read the command from the input buffer into the command buffer
 ReadCommand:    LDX #0
 @Loop:          LDA InputBuffer, X  
                 BEQ @Done                       ; zero means end of line
                 CMP #' '                        ; space means end of command, start of arguments
-                BEQ ReadArguments
+                BEQ @Done
                 STA CommandBuffer, X
                 INX
                 JMP @Loop
 @Done:          STZ CommandBuffer, X            ; Terminate command buffer with 0
-                JMP LookupCommand
+                RTS
 
-ReadArguments:  STZ CommandBuffer, X
-                INX                             ; skip space; end of command, start of arguments                     
+ReadArguments:  INX                             ; skip space; end of command, start of arguments                     
                 STZ AmountOfArgs                ; Initial value
                 LDA #' '                        ; Current reading state = space
                 STA T1                          ; T1 holds current reading state
@@ -71,8 +89,9 @@ ReadArguments:  STZ CommandBuffer, X
                 BNE @Loop
 @Done:          LDA #0
                 STA ArgsBuffer, Y               ; terminate
+                RTS
 
-LookupCommand:  LDA #<CommandBuffer             ; Prepare string compare for each command table entry
+ExecuteCommand: LDA #<CommandBuffer             ; Prepare string compare for each command table entry
                 STA StrPtr1                     
                 LDA #>CommandBuffer
                 STA StrPtr1 + 1
@@ -88,24 +107,19 @@ LookupCommand:  LDA #<CommandBuffer             ; Prepare string compare for eac
                 INX
                 INX
                 BNE @Loop
+                JSR PrintNewline
+                JSR PrintIndent
                 JSR PrintImm                    ; No hit at all
-                ASCLN "INVALID COMMAND"
-                JMP Start
-
-@Hit:           JSR ExecCommand
-                JMP Start
-
-ExecCommand:    JMP (CommandTable + 2, X)       ; Jump to the routine from the table
+                ASC "INVALID COMMAND"
+                RTS
+@Hit:           JMP (CommandTable + 2, X)       ; Jump to the routine from the table
 
 ; ----------------------------- Memory Dump -----------------------------
 MemoryDump:     JSR ParseMDArgs
                 LDA #0          ; set zero flag
 @PrintRange:    BNE @PrintData
                 JSR PrintNewline
-                LDA #$20
-                JSR WriteChar    
-                LDA #$20
-                JSR WriteChar
+                JSR PrintIndent
                 LDA T5 + 1
                 JSR PrintByte
                 LDA T5
@@ -333,6 +347,11 @@ PrintPrompt:	LDA #CR
                 JSR WriteChar     
                 RTS
 
+PrintIndent:    LDA #SP
+                JSR WriteChar    
+                LDA #SP
+                JSR WriteChar
+                RTS
 
 ; Zero flag is set if equal
 ; Destroys A and Y register 
