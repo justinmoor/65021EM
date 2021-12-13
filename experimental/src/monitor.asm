@@ -40,21 +40,54 @@ ReadCommand:    LDX #0
                 JMP LookupCommand
 
 ; If there are arguments we read those into the argument buffer for easy parsing later
-ReadArguments:  STZ CommandBuffer, X            ; Terminate command buffer, continue with args
-                LDA #1                          ; We got at least one argument
-                STA AmountOfArgs                
-                LDY #0                          ; Index in args buffer
-                INX                             ; continue current index in input buffer
-@Loop:          LDA InputBuffer, X
+; ReadArguments:  STZ CommandBuffer, X            ; Terminate command buffer, continue with args
+;                 LDA #1                          ; We got at least one argument
+;                 STA AmountOfArgs                
+;                 LDY #0                          ; Index in args buffer
+;                 INX                             ; continue current index in input buffer``
+; @Loop:          LDA InputBuffer, X
+;                 STA ArgsBuffer, Y
+;                 CMP #' '                        ; Is it a space?
+;                 BNE @Continue
+;                 INC AmountOfArgs                ; Yes, increment the amount of args
+; @Continue:      CMP #$0
+;                 BEQ LookupCommand               ; Reuse 0 terminated line as termination in args buffer
+;                 INX
+;                 INY
+;                 JMP @Loop
+
+ReadArguments:  STZ CommandBuffer, X
+                INX                             ; skip space; end of command, start of arguments                     
+                STZ AmountOfArgs                ; Initial value
+                LDA #' '                        ; Current reading state = space
+                STA T1                          ; T1 holds current reading state
+                LDY #0
+@Loop:          LDA InputBuffer, X              ; read character
+                CMP #0                          ; Check end of line
+                BEQ @Done   
+                CMP #' '                        ; Space?                        
+                BNE @Word                       ; No
+                STA T1                          ; Yes, set current reading state to spaces
+                JMP @Next                       ; Next character
+@Word:          LDA T1                          ; Reading a new word
+                CMP #' '                        ; Check if state was space
+                BNE @W1                         ; Was not, we don't need to increment the AmountOfArgs
+                LDA AmountOfArgs                
+                CMP #0                          ; Are we reading the first argument?
+                BEQ @Continue                   ; If we are, we don't need to add a space
+                LDA #' '                        
                 STA ArgsBuffer, Y
-                CMP #' '                        ; Is it a space?
-                BNE @Continue
-                INC AmountOfArgs                ; Yes, increment the amount of args
-@Continue:      CMP #$0
-                BEQ LookupCommand               ; Reuse 0 terminated line as termination in args buffer
-                INX
                 INY
-                JMP @Loop
+@Continue:      LDA #'W'                        ; Reading a new word, set state to word ('W')
+                STA T1                          ; Store state
+                INC AmountOfArgs                ; Increment the amount of args we've read
+@W1:            LDA InputBuffer, X
+                STA ArgsBuffer, Y
+                INY
+@Next:          INX
+                BNE @Loop
+@Done:          LDA #0
+                STA ArgsBuffer, Y               ; terminate
 
 LookupCommand:  JSR CountArgs
                 LDA #<CommandBuffer             ; Prepare string compare for each command table entry
