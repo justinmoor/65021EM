@@ -12,7 +12,10 @@
 ;
 ; modified by Daryl Rictor to work over a serial terminal connection, August 2002.
 ;
+; To assemble: 
+; cl65 -t none programs/src/microchess.asm -o programs/microchess
 ;
+
 .SETCPU "65C02"
 
 WriteChar  = $C000
@@ -67,7 +70,7 @@ temp    =   $FC
 ; INPUT	=	$200
 ;
 ;
-		.ORG $1000
+		.ORG $3000
 
 		LDA     #$00		; REVERSE TOGGLE
 		STA     REV
@@ -977,7 +980,3 @@ OPNING:
 		.byte	$07, $36, $34, $0D, $34, $34, $0E, $52
         .byte 	$25, $0D, $45, $35, $04, $55, $22, $06
 		.byte	$43, $33, $0F, $CC
-
-;
-;
-; end of file

@@ -74,3 +74,15 @@ MemoryModify:   LDA #<ArgsBuffer
                 CPX AmountOfArgs
                 BNE @Loop
                 RTS
+
+; ------------------------- Run (Execute program) -----------------------
+Run:            LDA #<ArgsBuffer
+                STA P1
+                LDA #>ArgsBuffer
+                STA P1 + 1
+                LDY #0
+                JSR Read2Bytes     ; Read address to disassemble from
+                JSR @Exec
+                RTS
+@Exec:          JMP (T6)
+

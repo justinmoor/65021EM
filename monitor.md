@@ -21,7 +21,7 @@ MD addr1 (addr2)
 MM addr
 MF addr1 amount byte
 ASM addr
-DIS addr
+DIS addr (amount of lines)
 RUN addr
 XM addr
 
