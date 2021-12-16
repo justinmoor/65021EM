@@ -41,7 +41,7 @@ Start:          JSR PrintPrompt
                 CMP #ESC
                 BEQ @Quit
                 TXA                 ; get input length
-                BEQ Start           ; no input, show prompt
+                BEQ Start           ; empty input, show prompt
                 JSR ReadCommand
                 JSR ReadArguments
                 JSR ExecuteCommand
@@ -93,15 +93,14 @@ ReadArguments:  INX                             ; skip space; end of command, st
                 STA ArgsBuffer, Y               ; terminate
                 RTS
 
-ExecuteCommand: CLC
-                LDA #<CommandBuffer             ; Prepare string compare for each command table entry
+ExecuteCommand: LDA #<CommandBuffer             ; Prepare string compare for each command table entry
                 STA StrPtr1                     
                 LDA #>CommandBuffer
                 STA StrPtr1 + 1
                 LDX #0
 @Loop:          LDA CommandTable, X             ; String compare current entry with what's in the command buffer
                 CMP #CommandTableEnd
-                BEQ @NoHit                      ; end of table            
+                BEQ @NoHit                      ; End of table            
                 STA StrPtr2    
                 LDA CommandTable + 1, X
                 STA StrPtr2 + 1
