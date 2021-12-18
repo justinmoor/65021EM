@@ -286,6 +286,7 @@ Commands:
     .BYTE "R - Run program at last selected address (only in monitor mode)", CR, NEWL
     .BYTE "H - Print available commands", CR, NEWL, 0
 
+.INCLUDE
 .INCLUDE "xmodem.asm"
 .INCLUDE "monitor.asm"
 .INCLUDE "assembler.asm"
