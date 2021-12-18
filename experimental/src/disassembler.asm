@@ -5,7 +5,11 @@
 
 LinesToDisAssem = $50
 
-Disassembler:   LDA #20             ; default amount of lines to disassemble
+Disassembler:   LDA AmountOfArgs    ; check whether we received the right amount of arguments
+                CMP #1
+                BCS @Valid
+                JMP InvalidArgs
+@Valid:         LDA #20             ; default amount of lines to disassemble
                 STA LinesToDisAssem
                 LDA #<ArgsBuffer
                 STA P1

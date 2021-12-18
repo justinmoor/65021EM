@@ -17,13 +17,13 @@ end
 ```
 ## Command syntax
 **V1**
-MD addr1 (addr2)
-MM addr
+xMD addr1 (addr2)
+xMM addr
 MF addr1 amount byte
-ASM addr
-DIS addr (amount of lines)
-RUN addr
-XM addr
+xASM addr
+xDIS addr (amount of lines)
+xR addr
+xXM addr
 
 **V2**
 SBRK addr

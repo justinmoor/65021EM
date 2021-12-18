@@ -11,12 +11,16 @@
 ; under 1k of either RAM or ROM, 132 bytes of RAM for the receive buffer,
 ; and 8 bytes of zero page RAM for variable storage.
 
-XModem:         LDA #<ArgsBuffer
+XModem:         LDA AmountOfArgs    ; check whether we received the right amount of arguments
+                CMP #1
+                BCS @Valid
+                JMP InvalidArgs
+@Valid:         LDA #<ArgsBuffer
                 STA P1
                 LDA #>ArgsBuffer
                 STA P1 + 1
                 LDY #0
-                JSR Read2Bytes     ; Read address to disassemble from
+                JSR Read2Bytes      ; Read address to disassemble from
                 LDA T6    
                 STA Target
                 LDA T6+1

@@ -23,7 +23,11 @@
 ; - no symbols or labels
 ; - all values in hex, 2 or 4 digits
 
-Assembler:      LDA #<ArgsBuffer
+Assembler:      LDA AmountOfArgs    ; check whether we received the right amount of arguments
+                CMP #1
+                BCS @Valid
+                JMP InvalidArgs
+@Valid:         LDA #<ArgsBuffer
                 STA P1
                 LDA #>ArgsBuffer
                 STA P1 + 1

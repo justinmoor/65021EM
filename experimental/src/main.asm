@@ -43,6 +43,7 @@ Start:          JSR PrintPrompt
                 BEQ @Quit
                 TXA                 ; get input length
                 BEQ Start           ; empty input, show prompt
+                STZ AmountOfArgs
                 JSR ReadCommand
                 JSR ReadArguments
                 JSR ExecuteCommand
@@ -61,9 +62,7 @@ ReadCommand:    LDX #0
 @Done:          STZ CommandBuffer, X            ; Terminate command buffer with 0
                 RTS
 
-ReadArguments:  INX                             ; skip space; end of command, start of arguments                     
-                STZ AmountOfArgs                ; Initial value
-                LDA #' '                        ; Current reading state = space
+ReadArguments:  LDA #' '                        ; Current reading state = space
                 STA T1                          ; T1 holds current reading state
                 LDY #0
 @Loop:          LDA InputBuffer, X              ; read character
@@ -305,6 +304,13 @@ StrComp:        LDY #0
                 BCS @Loop               ; always
 @2:             CMP (StrPtr2), Y        ; compare last char
 @Done:          RTS
+
+InvalidArgs:    JSR PrintNewline
+                JSR PrintIndent
+                JSR PrintImm
+                ASCLN "INVALID ARGUMENTS"
+                RTS
+
 
 CommandTableEnd = '0'
 

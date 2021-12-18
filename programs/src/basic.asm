@@ -449,7 +449,7 @@ Ibuffe		= Ibuffs+$47; end of input buffer
 
 ; Ram_base		= $0300	; start of user RAM (set as needed, should be page aligned)
 ; Ram_top		= $C000	; end of user RAM+1 (set as needed, should be page aligned)
-Ram_base	= $1000	; start of user RAM (set as needed, should be page aligned)
+Ram_base	= $2000	; start of user RAM (set as needed, should be page aligned)
 Ram_top		= $5000	; end of user RAM+1 (set as needed, should be page aligned)
 
 

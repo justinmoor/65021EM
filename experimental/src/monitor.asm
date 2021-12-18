@@ -1,5 +1,9 @@
-; ----------------------------- Memory Dump -----------------------------
-MemoryDump:     JSR ParseMDArgs
+; ----------------------------- Memory Display -----------------------------
+MemoryDump:     LDA AmountOfArgs ; check whether we received the right amount of arguments
+                CMP #1
+                BCS @Valid
+                JMP InvalidArgs
+@Valid:         JSR ParseMDArgs
                 LDA #0          ; set zero flag
 @PrintRange:    BNE @PrintData
                 JSR PrintNewline
@@ -47,7 +51,11 @@ ParseMDArgs:    LDA #<ArgsBuffer
 @Done:          RTS
 
 ; ---------------------------- Memory Modify ----------------------------
-MemoryModify:   LDA #<ArgsBuffer
+MemoryModify:   LDA AmountOfArgs
+                CMP #2
+                BCS @Valid
+                JMP InvalidArgs
+@Valid:         LDA #<ArgsBuffer
                 STA P1
                 LDA #>ArgsBuffer
                 STA P1 + 1
@@ -76,7 +84,11 @@ MemoryModify:   LDA #<ArgsBuffer
                 RTS
 
 ; ------------------------- Run (Execute program) -----------------------
-Run:            LDA #<ArgsBuffer
+Run:            LDA AmountOfArgs
+                CMP #1
+                BCS @Valid
+                JMP InvalidArgs
+@Valid:         LDA #<ArgsBuffer
                 STA P1
                 LDA #>ArgsBuffer
                 STA P1 + 1
