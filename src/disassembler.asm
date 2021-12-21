@@ -3,14 +3,34 @@
 ;
 ; Credits to Jeff Tranter <tranter@pobox.com>
 
-RunDisassembler:
-                LDA XAML    
+Disassembler:   LDA AmountOfArgs    ; check whether we received the right amount of arguments
+                CMP #1
+                BCS @Valid
+                JMP InvalidArgs
+@Valid:         LDA #20             ; default amount of lines to disassemble
+                STA LinesToDisAssem
+                LDA #<ArgsBuffer
+                STA P1
+                LDA #>ArgsBuffer
+                STA P1 + 1
+                LDY #0
+                JSR Read2Bytes     ; Read address to disassemble from
+                LDA T6    
                 STA AddrD
-                LDA XAMH
+                LDA T6+1
                 STA AddrD+1
+                LDA AmountOfArgs    ; Is an amount of lines specified?
+                CMP #$2             ; 2 arguments?
+                BCC @StartDisassembler
+                INY                ; Got another argument
+                JSR Read2Bytes     ; Read it as an address
+                LDA T6
+                STA LinesToDisAssem
+
+@StartDisassembler:
                 JSR PrintNewline
                 JSR PrintNewline
-                JSR PrintImmediate              ; Print error message
+                JSR PrintImmediate   ; Print error message
                 ASC "STARTING DISASSEMBLY AT ADDRESS $"
                 LDX AddrD
                 LDY AddrD+1
@@ -18,7 +38,7 @@ RunDisassembler:
                 JSR PrintNewline
 Outer:
                 JSR PrintNewline
-                LDA #23
+                LDA LinesToDisAssem
 @Loop:
                 PHA
                 JSR Disassemble
@@ -29,7 +49,7 @@ Outer:
 @SpaceOrEscape:
                 JSR ReadChar
                 BCC @SpaceOrEscape
-                CMP #'l'
+                CMP #SP
                 BEQ Outer
                 CMP #ESC
                 BNE @SpaceOrEscape

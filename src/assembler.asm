@@ -9,11 +9,9 @@
 ; XXXX: instruction
 ; XXXX: instruction
 ; XXXX: <Esc>
-; - no backspace or other editing features
 
 ; Example:
 ;
-; Press "P" in monitor, assembler will start at last selected address
 ; 6000: NOP
 ; 6001: LDA #68
 ; 6003: JSR C000
@@ -25,11 +23,26 @@
 ; - no symbols or labels
 ; - all values in hex, 2 or 4 digits
 
+Assembler:      LDA AmountOfArgs    ; check whether we received the right amount of arguments
+                CMP #1
+                BCS @Valid
+                JMP InvalidArgs
+@Valid:         LDA #<ArgsBuffer
+                STA P1
+                LDA #>ArgsBuffer
+                STA P1 + 1
+                LDY #0
+                JSR Read2Bytes     ; Read address to disassemble from
+                LDA T6    
+                STA AddrA
+                LDA T6+1
+                STA AddrA+1
+
 RunAssembler:
                 JSR PrintNewline
                 JSR PrintNewline
                 JSR PrintImmediate              
-                ASC "STARTING ASSEMBLING ON ADDRESS $" 
+                ASC "STARTING ASSEMBLING AT ADDRESS $" 
                 LDX AddrA
                 LDY AddrA+1
                 JSR PrintAddress
@@ -87,7 +100,7 @@ Parse:
                 LDA OP                  ; Get the returned opcode
                 CMP #OP_INV             ; Not valid?
                 BNE OpOk                ; Branch if okay
-                JSR PrintImmediate      ; Not a valid mnemonic
+                JSR PrintImmediate            ; Not a valid mnemonic
                 ASCLN "Invalid instruction"
                 JSR PrintNewline
                 JMP AssembleLine		
@@ -747,51 +760,10 @@ NextInst:
 OpNotFound:     LDA #0                  ; End of table reached, set false return value
                 RTS
 
-; Return if a character is a valid hex digit (0-9, A-F, or a-f).
-; Pass character in A.
-; Returns 1 in A if valid, 0 if not valid.
-; Registers affected: A
-IsHexDigit:
-                JSR ToUpper
-                CMP #'0'
-                BMI @Invalid
-                CMP #'9'+1
-                BMI @Okay
-                CMP #'A'
-                BMI @Invalid
-                CMP #'F'+1
-                BMI @Okay
-@Invalid:       LDA #0
-                RTS
-@Okay:          LDA #1
-                RTS
-
-ToUpper:
-                CMP #'a'                ; Is it 'a' or higher?
-                BMI @NotLower
-                CMP #'z'+1              ; Is it 'z' or lower?
-                BPL @NotLower
-                AND #%11011111          ; Convert to upper case by clearing bit 5
-@NotLower:      RTS
-
 PrintSpace:
                 PHA
                 LDA #SP
                 JSR WriteChar
-                PLA
-                RTS
-
-; Print 16-bit address in hex
-; Pass byte in X (low) and Y (high)
-; Registers changed: None
-PrintAddress:
-                PHA
-                PHX
-                TYA
-                JSR PrintByte
-                PLX
-                TXA
-                JSR PrintByte
                 PLA
                 RTS
 

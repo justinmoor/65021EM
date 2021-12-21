@@ -461,7 +461,7 @@ Ram_top		= $8000	; end of user RAM+1 (set as needed, should be page aligned)
 ; BASIC cold start entry point
 
 ; new page 2 initialisation, copy block to ccflag on
-
+Basic:
 LAB_COLD
 	LDY	#PG2_TABE-PG2_TABS-1
 					; byte count-1
@@ -512,15 +512,15 @@ TabLoop
 	LDX	#des_sk		; descriptor stack start
 	STX	next_s		; set descriptor stack pointer
 	JSR	LAB_CRLF		; print CR/LF
-	LDA	#<LAB_MSZM		; point to memory size message (low addr)
-	LDY	#>LAB_MSZM		; point to memory size message (high addr)
-	JSR	LAB_18C3		; print null terminated string from memory
-	JSR	LAB_INLN		; print "? " and get BASIC input
+	; LDA	#<LAB_MSZM		; point to memory size message (low addr)
+	; LDY	#>LAB_MSZM		; point to memory size message (high addr)
+	; JSR	LAB_18C3		; print null terminated string from memory
+	; JSR	LAB_INLN		; print "? " and get BASIC input
 	STX	Bpntrl		; set BASIC execute pointer low byte
 	STY	Bpntrh		; set BASIC execute pointer high byte
 	JSR	LAB_GBYT		; get last byte back
 
-	BNE	LAB_2DAA		; branch if not null (user typed something)
+	; BNE	LAB_2DAA		; branch if not null (user typed something)
 
 	LDY	#$00			; else clear Y
 					; character was null so get memory size the hard way

@@ -1,200 +1,100 @@
-;-------------------------------------------------------------------------
-;   65021EM MACHINE LANGUAGE MONITOR
-;
-;   Basic machine language monitor based on Steve Wozniak's Wozmon
-;   for the Apple 1.
-;-------------------------------------------------------------------------
-
-RunMonitor:
+; ----------------------------- Memory Display -----------------------------
+MemoryDump:     LDA AmountOfArgs ; check whether we received the right amount of arguments
+                CMP #1
+                BCS @Valid
+                JMP InvalidArgs
+@Valid:         JSR ParseMDArgs
+                LDA #0          ; set zero flag
+@PrintRange:    BNE @PrintData
                 JSR PrintNewline
-                JSR PrintNewline
-                JSR PrintImmediate
-                ASCLN "MONITOR ACTIVATED"
-SoftReset:      LDA #ESC
-NotCR:          CMP #BSH         
-                BEQ Backspace   ; Yes.
-                CMP #ESC        ; ESC?
-                BEQ Escape      ; Yes.
-                INY             ; Advance text index.
-                BPL NextChar    ; Auto ESC if >127.
-Escape:
-GETLINE:
-                LDA #CR
-                JSR Echo        ; New line.
-                LDA #NEWL
-                JSR Echo
-                JSR PrintMonPrompt
-                LDY #$01        ; Initiallize text index.
-Backspace:   
-                DEY             ; Backup text index.
-                BMI GETLINE     ; Beyond start of line, reinitialize.
-                LDA #$A0        ; *Space, overwrite the backspaced char.
-                JSR Echo
-                LDA #BSH        ; *Backspace again to get to correct pos.
-                JSR Echo
-NextChar:    
-                JSR ReadChar
-                BCC NextChar
-                CMP #$60        ; *Is it Lower case
-                BMI Convert     ; *Nope, just convert it
-                AND #$5F        ; *If lower case, convert to Upper case
-Convert:     
-                ORA #$80        ; The Apple 1 assumes high ascii, several coding tricks by Woz use this fact for memory optimalization
-                STA InputBuffer,Y ; Add to text buffer.
-                JSR Echo        ; Display character.
-                CMP #ENT        ; CR?
-                BNE NotCR       ; No.
-                LDY #$FF        ; Reset text index.
-                LDA #$00        ; For XAM mode.
-                TAX             ; 0->X.
-SetSTOR:        ASL              ;Leaves $7B if setting STOR mode.
-SetMode:        STA Mode        ; $00 = XAM, $7B = STOR, $AE = BLOK XAM.
-BLSKIP:         INY             ; Advance text index.
-NextItem:    
-                LDA InputBuffer,Y ; Get character.
-                CMP #ENT        ; CR?
-                BEQ GETLINE     ; Yes, done this line.
-                CMP #'.' + $80  ; "."?
-                BCC BLSKIP      ; Skip delimiter.
-                BEQ SetMode     ; Set BLOCK XAM mode.
-                CMP #':' + $80  ; ":"? 
-                BEQ SetSTOR     ; Yes, set STOR mode.
-                CMP #'P' + $80  ; Program in assembler
-                BEQ StartAssembler      ; Yes, start assembler
-                CMP #'L' + $80          ; List disassembly
-                BEQ StartDisassembler   ; Yes, start disassembler
-                CMP #'R' + $80          ; "R"?
-                BEQ Run                 ; Yes, run user program.
-                CMP #'M' + $80          ; exit monitor
-                BEQ ExitMonitor
-                STX L           ; $00->L.
-                STX H           ; and H.
-                STY YSAV        ; Save Y for comparison.
-NextHex:
-                LDA InputBuffer,Y        ; Get character for hex test.
-                EOR #$B0        ; Map digits to $0-9.
-                CMP #$0A        ; Digit?
-                BCC Dig         ; Yes.
-                ADC #$88        ; Map letter "A"-"F" to $FA-FF.
-                CMP #$FA        ; Hex letter?
-                BCC NotHex      ; No, character not hex.
-Dig:
-                ASL
-                ASL             ; Hex digit to MSD of A.
-                ASL
-                ASL
-                LDX #$04        ; Shift count.
-HexShift:    
-                ASL             ; Hex digit left MSB to carry.
-                ROL L           ; Rotate into LSD.
-                ROL H           ; Rotate into MSD's.
-                DEX             ; Done 4 shifts?
-                BNE HexShift    ; No, loop.
-                INY             ; Advance text index.
-                BNE NextHex     ; Always taken. Check next character for hex.
-NotHex:      
-                CPY YSAV        ; Check if L, H empty (no hex digits).
-                BNE NoEscape    ; * Branch out of range, had to improvise...
-                JMP Escape      ; Yes, generate ESC sequence.
+                JSR PrintIndent
+                LDA T5 + 1
+                JSR PrintByte
+                LDA T5
+                JSR PrintByte
+                LDA #':'        ; ":".
+                JSR WriteChar   ; Output it
+@PrintData:     LDA #SP         ; Space
+                JSR WriteChar   ; Output it
+                LDA (T5)        ; Get byte
+                JSR PrintByte   ; Output it
+                LDA T5          ; Compare with ohter operand to check whether we're done printing the range
+                CMP T6
+                LDA T5 + 1
+                SBC T6 + 1
+                BCS @Done       ; Not less, so no more data to output
+                INC T5          ; Increment to the next address to read      
+                BNE @Mod16Check
+                INC T5 + 1
+@Mod16Check:    LDA T5
+                AND #$0F
+                BPL @PrintRange     ; Always
+@Done:          RTS
 
-NextItem1:      JMP NextItem
+; Syntax: MD C000 C500
+; First address will be in T5 and second address in T6
+ParseMDArgs:    LDA #<ArgsBuffer
+                STA P1
+                LDA #>ArgsBuffer
+                STA P1 + 1
+                LDY #0
+                JSR Read2Bytes     ; read first address from the ArgsBuffer
+                LDA T6
+                STA T5              ; store first one in T5
+                LDA T6 + 1
+                STA T5 + 1
+                LDA AmountOfArgs    ; Did we get a range?
+                CMP #$2             ; 2 arguments?
+                BCC @Done
+                INY                 ; Got another argument
+                JSR Read2Bytes     ; Read it as an address
+@Done:          RTS
 
-StartAssembler:         
-                JSR RunAssembler
-                JMP SoftReset
-
-StartDisassembler:      
-                JSR RunDisassembler
-                JMP SoftReset
-
-Run:            
-                JSR @R1      ; * JSR to the Address we want to run.
-                JMP SoftReset   ; * When returned for the program, reset EWOZ.
-@R1:            JMP (XAML)      ; Run at current XAM index.
-
-ExitMonitor:
-                JSR PrintNewline
-                JSR PrintNewline
-                JSR PrintImmediate
-                ASCLN "EXIT MONITOR"
-                JMP SoftResetOS
-
-NoEscape:
-                BIT Mode        ; Test Mode byte.
-                BVC NotSTOR     ; B6=0 for STOR, 1 for XAM and BLOCK XAM
-                LDA L           ; LSD's of hex data.
-                STA (STL, X)    ; Store at current "store index".
-                INC STL         ; Increment store index.
-                BNE NextItem1   ; Get next item. (no carry).
-                INC STH         ; Add carry to 'store index' high order.
-ToNextItem:     JMP NextItem    ; Get next command item.
-NotSTOR:        BMI XAMNext     ; B7=0 for XAM, 1 for BLOCK XAM.
-                LDX #$02        ; Byte count.
-SetAdr:         LDA L-1,X       ; Copy hex data to
-                STA STL-1,X     ; "store index".
-                STA XAML-1,X    ; And to "XAM index'.
-                DEX             ; Next of 2 bytes.
-                BNE SetAdr      ; Loop unless X = 0.
-NextPrint:      BNE PrintData      ; NE means no address to print.
-                LDA #CR
-                JSR Echo        ; * New line.
-                LDA #NEWL
-                JSR Echo
-                LDA #$20
-                JSR Echo    
-                LDA #$20
-                JSR Echo    
-                LDA XAMH        ; 'Examine index' high-order byte.
-                JSR PrByte      ; Output it in hex format.
-                LDA XAML        ; Low-order "examine index" byte.
-                JSR PrByte      ; Output it in hex format.
-                LDA #$BA        ; ":".
-                JSR Echo        ; Output it.
-PrintData:      LDA #$A0        ; Blank.
-                JSR Echo        ; Output it.
-                LDA (XAML,X)    ; Get data byte at 'examine index".
-                JSR PrByte      ; Output it in hex format.
-XAMNext:        STX Mode        ; 0-> Mode (XAM mode).
-                LDA XAML
-                CMP L           ; Compare 'examine index" to hex data.
-                LDA XAMH
-                SBC H
-                BCS ToNextItem  ; Not less, so no more data to output.
-                INC XAML
-                BNE Mod8Check     ; Increment 'examine index".
-                INC XAMH
-Mod8Check:      LDA XAML        ; Check low-order 'exainine index' byte
-                AND #$0F        ; 16 values per row
-                BPL NextPrint     ; Always taken.
-PrByte:
-                PHA             ; Save A for LSD.
-                LSR
-                LSR
-                LSR             ; MSD to LSD position.
-                LSR
-                JSR PrHex       ; Output hex digit.
-                PLA             ; Restore A.
-PrHex:
-                AND #$0F        ; Mask LSD for hex print.
-                ORA #$B0        ; Add "0".
-                CMP #$BA        ; Digit?
-                BCC Echo        ; Yes, output it.
-                ADC #$06        ; Add offset for letter.
-
-Echo:          
-                PHA
-                PHY
-                PHX
-                AND #$7F
-                JSR WriteChar
-                PLX
-                PLY    
-                PLA
+; ---------------------------- Memory Modify ----------------------------
+MemoryModify:   LDA AmountOfArgs
+                CMP #2
+                BCS @Valid
+                JMP InvalidArgs
+@Valid:         LDA #<ArgsBuffer
+                STA P1
+                LDA #>ArgsBuffer
+                STA P1 + 1
+                LDY #0
+                JSR Read2Bytes     ; Read address to modify
+                LDA T6
+                STA T5              ; Store in T5 so T6 can be reused
+                LDA T6 + 1
+                STA T5 + 1
+                LDX #0
+                LDA AmountOfArgs    ; Remove the adress from amount of args
+                SEC
+                SBC #1
+                STA AmountOfArgs
+@Loop:          INY                 ; skip space
+                JSR Read2Bytes
+                PHY                 ; TXY
+                TXA
+                TAY
+                LDA T6
+                STA (T5), Y
+                PLY
+                INX
+                CPX AmountOfArgs
+                BNE @Loop
                 RTS
 
-PrintMonPrompt:
-                LDA #'*'        ; Promp character
-                JSR Echo        ; Output it.
-                LDA #$20
-                JSR Echo    
+; ------------------------- Run (Execute program) -----------------------
+Run:            LDA AmountOfArgs
+                CMP #1
+                BCS @Valid
+                JMP InvalidArgs
+@Valid:         LDA #<ArgsBuffer
+                STA P1
+                LDA #>ArgsBuffer
+                STA P1 + 1
+                LDY #0
+                JSR Read2Bytes     ; Read address to disassemble from
+                JSR @Exec
                 RTS
+@Exec:          JMP (T6)
+

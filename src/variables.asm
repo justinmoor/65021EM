@@ -1,4 +1,4 @@
-; NEW
+; ============================== ZERO PAGE VARIABLES ================================
 
 T1 = $00 ; one byte temp register 1
 T2 = $01 ; one byte temp register 2
@@ -12,17 +12,12 @@ P1 = $09 ; pointer 1
 P2 = $0B ; pointer 2
 P3 = $0D ; pointer 3
 
-; ============================== ZERO PAGE VARIABLES ================================
+StrPtr1 = $0F
+StrPtr2 = $11
 
+; ---------------------------------- OS -----------------------------
 
-; GENERAL PURPOSE VARIABLES
-; T1          = $00       ; one byte temp register 1
-; T2          = $01       ; one byte temp register 2
-; T3          = $02       ; two byte temp register 3
-; T4          = $04       ; two byte temp register 4
-
-; StrPtrLow   = $06       ; low address of string to print
-; StrPtrHi    = $07
+AmountOfArgs = $40
 
 ; ---------------------------------- BIOS ----------------------------
 
@@ -34,27 +29,18 @@ SPIReadBuf  = $F9       ; 1 byte (possibly 2 bytes in future)
 SPIWriteBuf  = $FB      ; 1 byte (possibly 2 bytes in future)
 M3100ReadBuf = $FD      ; 2 bytes
 
-; -------------------------------- Monitor ---------------------------
-XAML        = $24       ; index pointers
-XAMH        = $25
-STL         = $26
-STH         = $27
-L           = $28
-H           = $29
-YSAV        = $2A
-Mode        = $2B
-
 ; ------------------------- ASSEMBLER / DISASSEMBLER -------------------
-Operand = $10
-AddrA  = $24       ; Address to assemble
 
-AddrD      = $37     ; instruction address, 2 bytes (low/high)
-OPCODE     = $39     ; instruction opcode
-OP         = $3A     ; instruction type OP_*
-AM         = $41     ; addressing mode AM_*
-LEN        = $42     ; instruction length
-REL        = $43     ; relative addressing branch offset (2 bytes)
-DEST       = $45     ; relative address destination address (2 bytes)
+Operand     = $10
+AddrA       = $24       ; Address to assemble
+AddrD       = $37     ; instruction address, 2 bytes (low/high)
+OPCODE      = $39     ; instruction opcode
+LinesToDisAssem = $50
+OP          = $3A     ; instruction type OP_*
+AM          = $41     ; addressing mode AM_*
+LEN         = $42     ; instruction length
+REL         = $43     ; relative addressing branch offset (2 bytes)
+DEST        = $45     ; relative address destination address (2 bytes)
 
 ; ----------------------------------- XMODEM -----------------------------------
 CRC		    = $38		; CRC lo byte  (two byte variable)
@@ -73,11 +59,6 @@ OprBuf      = $300  ; buffer to hold operand
 Mnem        = $800  ; hold three letter mnemonic string used by assembler
 
 ; ---------------------------------------- BIOS ----------------------------------------
-; VIADataB   = $8000
-; VIADataA   = $8001
-
-; VIADataDirB    = $8002
-; VIADataDirA    = $8003
 
 VIADataB   = $B000
 VIADataA   = $B001
@@ -88,6 +69,8 @@ VIADataDirA    = $B003
 ; ---------------------------------- OPERATING SYSTEM-------------------------------------
 
 InputBuffer   = $0200     ; Input buffer
+CommandBuffer = $300
+ArgsBuffer = $400
 
 ; ---------------------------------------- XMODEM ----------------------------------------
 
