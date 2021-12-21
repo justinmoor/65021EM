@@ -30,7 +30,7 @@ This repository holds all the necessary resources for the project, which include
 **Memory display**\
 `MD addr1 (addr2)`
 
-**Memory modify at `addr`:**\
+**Memory modify at `addr`**\
 `MM addr1 byte1 (... byten)`
 
 **Assemble at `addr`:**\
@@ -47,6 +47,17 @@ This repository holds all the necessary resources for the project, which include
 
 **Start BASIC**\
 `BASIC`
+
+### To be added
+
+**Fill memory range with byte**\
+`MF addr amount byte`
+
+**Set breakpoint at `addr`**\
+`SBRK addr`
+
+**Clear breakpoint at `addr` (will clear all breakpoints if no address is specified)**\
+`CBRK (addr) `
 
 ### Assembler syntax
 ```
