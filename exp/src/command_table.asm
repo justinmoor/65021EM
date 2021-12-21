@@ -7,6 +7,7 @@ CommandTable:
 .byte <ASM, >ASM, <Assembler, >Assembler
 .byte <DIS, >DIS, <Disassembler, >Disassembler
 .byte <XM, >XM, <XModem, >XModem
+.byte <BASIC, >BASIC, <Basic, >Basic
 .byte CommandTableEnd   ; terminate whole table with ascii '0'
 
 Commands:
@@ -17,3 +18,4 @@ MF: .byte "MF", 0
 ASM: .byte "ASM", 0
 DIS: .byte "DIS", 0
 XM: .byte "XM", 0
+BASIC: .byte "BASIC", 0
