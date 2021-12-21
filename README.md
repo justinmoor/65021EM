@@ -31,7 +31,7 @@ This repository holds all the necessary resources for the project, which include
 `MD addr1 (addr2)`
 
 **Memory modify at `addr`**\
-`MM addr1 byte1 (... byten)`
+`MM addr byte1 (... byten)`
 
 **Assemble at `addr`:**\
 `ASM addr`

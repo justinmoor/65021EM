@@ -19,7 +19,7 @@ Reset:          JMP Init
 NMI:            RTI
 IRQ:            JMP Interrupt
 
-Init:           LDX #$FF
+Init:           LDX #$FF            ; initialize stack
                 TXS
                 CLD
                 CLI
@@ -110,7 +110,7 @@ ExecuteCommand: LDA #<CommandBuffer             ; Prepare string compare for eac
 InvalidArgs:    JSR PrintNewline
                 JSR PrintIndent
                 JSR PrintImmediate
-                ASCLN "INVALID ARGUMENTS"
+                ASCLN "INVALID ARGUMENT(S)"
                 RTS
 
 PrintPrompt:	LDA #CR
