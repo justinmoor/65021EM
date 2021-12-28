@@ -98,3 +98,36 @@ Run:            LDA AmountOfArgs
                 RTS
 @Exec:          JMP (T6)
 
+MemoryFill:
+                LDA #<ArgsBuffer
+                STA P1
+                LDA #>ArgsBuffer
+                STA P1 + 1
+                LDY #0
+                JSR Read2Bytes     ; read first address from the ArgsBuffer
+                LDA T6
+                STA T4              ; store first one in T4
+                LDA T6 + 1
+                STA T4 + 1
+                INY                 ; Got another argument
+                JSR Read2Bytes     ; Read it as an address
+                LDA T6
+                STA T5              ; store second one in T5
+                LDA T6 + 1
+                STA T5 + 1
+                INY
+                JSR Read2Bytes
+                LDA T6
+                STA T1
+@Loop:          LDA T1
+                STA (T4)
+                LDA T4          
+                CMP T5
+                LDA T4 + 1
+                SBC T5 + 1
+                BCS @Done       ; Not less, so no more data to output
+                INC T4          ; Increment to the next address to read      
+                BNE @Loop
+                INC T4 + 1
+                JMP @Loop
+@Done:          RTS

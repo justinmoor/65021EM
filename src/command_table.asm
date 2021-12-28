@@ -3,6 +3,7 @@ CommandTableEnd = '0'
 CommandTable:
 .byte <MD, >MD, <MemoryDump, >MemoryDump
 .byte <MM, >MM, <MemoryModify, >MemoryModify
+.byte <MF, >MF, <MemoryFill, >MemoryFill
 .byte <RUN, >RUN, <Run, >Run
 .byte <ASM, >ASM, <Assembler, >Assembler
 .byte <DIS, >DIS, <Disassembler, >Disassembler

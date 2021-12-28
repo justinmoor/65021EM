@@ -33,6 +33,9 @@ This repository holds all the necessary resources for the project, which include
 **Memory modify at `addr`**\
 `MM addr byte1 (... byten)`
 
+**Fill memory range with byte**\
+`MF addr1 addr2 byte`
+
 **Assemble at `addr`:**\
 `ASM addr`
 
@@ -49,9 +52,6 @@ This repository holds all the necessary resources for the project, which include
 `BASIC`
 
 ### To be added
-
-**Fill memory range with byte**\
-`MF addr amount byte`
 
 **Set breakpoint at `addr`**\
 `SBRK addr`

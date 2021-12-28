@@ -30,12 +30,12 @@ PrintImm = $C00C
 ; Print = $C009
 ; PrintByte = $C00F
 
-StrPtr1 = $60
-StrPtr2 = $62
+; StrPtr1 = $60
+; StrPtr2 = $62
 
-CommandBuffer = $300
-ArgsBuffer = $400
-AmountOfArgs = $40
+; CommandBuffer = $300
+; ArgsBuffer = $400
+; AmountOfArgs = $40
 
 Start:          JSR PrintPrompt
                 JSR GetLine     
@@ -317,6 +317,7 @@ CommandTableEnd = '0'
 CommandTable:
 .byte <MD, >MD, <MemoryDump, >MemoryDump
 .byte <MM, >MM, <MemoryModify, >MemoryModify
+.byte <MF, >MF, <MemoryFill, >MemoryFill
 .byte <RUN, >RUN, <Run, >Run
 .byte <ASM, >ASM, <Assembler, >Assembler
 .byte <DIS, >DIS, <Disassembler, >Disassembler
@@ -326,8 +327,8 @@ CommandTable:
 Commands:
 MD: .byte "MD", 0
 MM: .byte "MM", 0
-RUN: .byte "R", 0
 MF: .byte "MF", 0
+RUN: .byte "R", 0
 ASM: .byte "ASM", 0
 DIS: .byte "DIS", 0
 XM: .byte "XM", 0

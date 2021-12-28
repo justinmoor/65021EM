@@ -3,7 +3,6 @@
 ;
 ; Credits to Jeff Tranter <tranter@pobox.com>
 
-LinesToDisAssem = $50
 
 Disassembler:   LDA AmountOfArgs    ; check whether we received the right amount of arguments
                 CMP #1
