@@ -17,6 +17,9 @@ Start:
     JSR WriteVDPReg
     JMP @Loop
 
+; Writes to the VDP registers
+; Input: A = data to write, X = register to write to
+; Destroys A and X
 WriteVDPReg:
     STA MODE1   ; data
     TXA
