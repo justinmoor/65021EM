@@ -18,17 +18,10 @@ Start:
     JMP @Loop
 
 WriteVDPReg:
-    PHA
-    STX T1
-    LDA #$80
-    CLC
-    ADC T1
-    TAX
-    PLA
     STA MODE1   ; data
     TXA
+    ORA #$80
     STA MODE1   ; addr
-    RTS
     RTS
 
 InitVDPRegisters:
@@ -48,11 +41,10 @@ ITAB:
     .BYTE $00   ; R0
     ;  This sets register 1 to 0xE0 (B11100000) => So bit 0, 1 & 2 are set, meaning:
 	;    - Selecting 16Kb of VRAM (bit 0)
-	;    - Enable the active display (bit 1)
+	;    - Disable the active display (bit 1)
 	;    - Enable interrupt (bit 2)
 	;
     .BYTE %10100000
-    ; .BYTE $E0   ; R1
     .BYTE $00   ; R2
     .BYTE $00   ; R3
     .BYTE $00   ; R4
