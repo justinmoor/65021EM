@@ -1,7 +1,7 @@
 .SETCPU "65C02"
 .ORG $1000
 
-VDPRAM = $A800 ; MODE = LOW
+VRAM = $A800 ; MODE = LOW
 VDPReg = $A801 ; MODE = HIGH
 
 ReadChar = $C003
@@ -42,7 +42,7 @@ ZapVRAM:
 Nexf:
     LDY #0      ; count low
 Fill:
-    STA VDPRAM   ; write a zero to VRAM
+    STA VRAM   ; write a zero to VRAM
     INY
     BNE Fill
     INX
@@ -113,7 +113,7 @@ WriteAddressedVRAM:
     STX VDPReg      ; setup VRAM address
     STY VDPReg
 WriteVRAM:
-    STA VDPRAM      ; write byte to address
+    STA VRAM      ; write byte to address
     RTS
 
 ; Set ups VRAM address and writes a byte to that address
@@ -124,7 +124,7 @@ ReadAddressedVRAM:
     STX VDPReg      ; setup VRAM address
     STY VDPReg
 ReadVRAM:
-    LDA VDPRAM      ; read byte to address
+    LDA VRAM      ; read byte to address
     RTS
 
 ; VDP software operations:
