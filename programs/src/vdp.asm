@@ -11,6 +11,9 @@ P1 = $09
 Start:		JSR InitVDPRegs
 		JSR ZapVRAM
 		JSR LoadNameTable
+                JSR LoadPatternTable
+                JSR LoadColorTable
+                RTS
 
 InitVDPRegs:	LDY #$80
 		LDX #$0
