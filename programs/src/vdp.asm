@@ -8,7 +8,7 @@ ReadChar = $C003
 T1 = $00
 P1 = $09
 
-Start:		JSR InitVDPRegs
+Start:          JSR InitVDPRegs
 		JSR ZapVRAM
 		JSR LoadNameTable
                 JSR LoadPatternTable
@@ -27,20 +27,19 @@ InitVDPRegs:	LDY #$80
 		RTS
 
 ; Clear all video RAM ($0000-$3FFF)
-ZapVRAM:	LDA #0    ; start at $0000
+ZapVRAM         LDA #0    ; start at $0000
 		LDX #0
     		JSR SetupVRAMWriteAddress
 		LDX #192    ; count high
-Nexf:		LDY #0      ; count low
-Fill:		JSR WriteVRAM ; write zero
+Nexf:           LDY #0      ; count low
+Fill:           JSR WriteVRAM ; write zero
 		INY
 		BNE Fill
 		INX
 		BNE Nexf    ; 192*256
 		RTS
 
-LoadNameTable:	
-		LDA #<NameTable	; set up name table pointer
+LoadNameTable:  LDA #<NameTable	; set up name table pointer
 		STA P1
 		LDA #>NameTable
 		STA P1+1
@@ -74,8 +73,7 @@ LoadPatternTable:
                 BNE @Next
                 RTS
 
-LoadColorTable:
-                LDA #<ColorTable	; set up pattern table pointer
+LoadColorTable: LDA #<ColorTable	; set up pattern table pointer
 		STA P1
 		LDA #>ColorTable
 		STA P1+1
