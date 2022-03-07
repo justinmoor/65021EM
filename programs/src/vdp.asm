@@ -89,17 +89,13 @@ LoadColorTable: LDA #<ColorTable	; set up pattern table pointer
 
 ; Writes A to VRAM and delays for the next write (assumes 2mhz system)
 WriteVRAM:      STA VRAM
-                NOP
                 NOP     ; 1 micro sec
-                NOP
                 NOP     ; 1 micro sec
                 RTS     ; 3 micro secs
 
 ; Reads VRAM into A and delays for the next read (assumes 2mhz system)
 ReadVRAM:       LDA VRAM
-                NOP
                 NOP     ; 1 micro sec
-                NOP
                 NOP     ; 1 micro sec
                 RTS     ; 3 micro secs
 
