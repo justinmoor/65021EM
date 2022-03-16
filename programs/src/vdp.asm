@@ -27,16 +27,16 @@ InitVDPRegs:	LDY #$80
 		RTS
 
 ; Clear all video RAM ($0000-$3FFF)
-ZapVRAM         LDA #0    ; start at $0000
+ZapVRAM:        LDA #0    ; start at $0000
 		LDX #0
     		JSR SetupVRAMWriteAddress
-		LDX #192    ; count high
+		LDX #$40    ; count high
 Nexf:           LDY #0      ; count low
 Fill:           JSR WriteVRAM ; write zero
 		INY
 		BNE Fill
-		INX
-		BNE Nexf    ; 192*256
+		DEX
+		BNE Nexf    ; 64*256
 		RTS
 
 LoadNameTable:  LDA #<NameTable	; set up name table pointer
