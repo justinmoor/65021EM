@@ -101,7 +101,7 @@ CRCHI	    = $7E00      	; (should be page-aligned for speed)
 
 ; ------------------------------------- CONSTANTS --------------------------------------
 
-PROMPT      = '>'       ;'>' Prompt character
+PROMPT      = '*'       ;'>' Prompt character
 BS          = $08       ; Backspace key, arrow left key
 BSH         = $88       ; back space high ascii
 CR          = $0D       ; Carriage Return

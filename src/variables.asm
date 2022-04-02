@@ -29,6 +29,9 @@ SPIReadBuf  = $F9       ; 1 byte (possibly 2 bytes in future)
 SPIWriteBuf  = $FB      ; 1 byte (possibly 2 bytes in future)
 M3100ReadBuf = $FD      ; 2 bytes
 
+VRAM = $A800    ; MODE = LOW
+VDPReg = $A801  ; MODE = HIGH
+
 ; ------------------------- ASSEMBLER / DISASSEMBLER -------------------
 
 Operand     = $10

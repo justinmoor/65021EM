@@ -217,6 +217,7 @@ Welcome:
 
 .INCLUDE "command_table.asm"
 .INCLUDE "monitor.asm"
+.INCLUDE "video.asm"
 .INCLUDE "disassembler.asm"
 .INCLUDE "assembler.asm"
 .INCLUDE "xmodem.asm"

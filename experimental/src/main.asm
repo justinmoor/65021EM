@@ -278,7 +278,7 @@ PrintPrompt:	LDA #CR
                 JSR WriteChar   ; New line
                 LDA #NEWL
                 JSR WriteChar
-                LDA #PROMPT     ; ">"
+                LDA #'*'     ;  "*"
                 JSR WriteChar   ; Output it.
                 LDA #$20        ; "<space>"
                 JSR WriteChar     
@@ -318,6 +318,8 @@ CommandTable:
 .byte <MD, >MD, <MemoryDump, >MemoryDump
 .byte <MM, >MM, <MemoryModify, >MemoryModify
 .byte <MF, >MF, <MemoryFill, >MemoryFill
+.byte <VMD, >VMD, <VMemoryDump, >VMemoryDump
+.byte <VMM, >VMM, <VMemoryModify, >VMemoryModify
 .byte <RUN, >RUN, <Run, >Run
 .byte <ASM, >ASM, <Assembler, >Assembler
 .byte <DIS, >DIS, <Disassembler, >Disassembler
@@ -328,6 +330,8 @@ Commands:
 MD: .byte "MD", 0
 MM: .byte "MM", 0
 MF: .byte "MF", 0
+VMD: .byte "VMD", 0
+VMM: .byte "VMM", 0
 RUN: .byte "R", 0
 ASM: .byte "ASM", 0
 DIS: .byte "DIS", 0

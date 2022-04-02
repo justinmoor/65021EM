@@ -1,3 +1,6 @@
+VRAM = $A800 ; MODE = LOW
+VDPReg = $A801 ; MODE = HIGH
+
 ; ----------------------------- Memory Display -----------------------------
 MemoryDump:     LDA AmountOfArgs ; check whether we received the right amount of arguments
                 CMP #1
