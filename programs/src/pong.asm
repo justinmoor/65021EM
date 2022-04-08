@@ -9,30 +9,79 @@ T1 = $00
 P1 = $09
 
 ISR = $600
-WriteChar  = $C000
+ReadChar  = $C003
 
+BallX = $1000
+BallY = $1001
+
+BallXVRAM = $1000
+BallYVRAM = $1001
+
+; Spite X = $00 - $FF
+; Sprite Y = $00 - $AF
 
 Start:          JSR InitVDPRegs
 		JSR ZapVRAM
 		JSR LoadSpriteAttributeTable
 		JSR LoadSpritePatternTable
-		LDA #<UpdateVRAM
-		STA ISR
-		LDA #>UpdateVRAM
-		STA ISR+1
-		CLI
-@Loop:		NOP
-		NOP
-		NOP
-		LDA #'N'
-		JSR WriteChar
-		JMP @Loop
+		JSR SetupGame
+		JSR GameLoop
                 RTS
 
-UpdateVRAM:	LDA VDPReg
-		LDA #'I'
-		JSR WriteChar
+SetupGame:	LDA #$77	
+		STA BallX
+		LDA #$4F
+		STA BallY
 		RTS
+
+GameLoop:	LDA VDPReg
+		AND #%10000000
+		BEQ GameLoop
+		JSR UpdateScreen
+		JSR GetUserInput
+		JMP GameLoop
+
+UpdateScreen:	LDY #<BallXVRAM
+		LDA #>BallXVRAM
+		JSR SetupVRAMWriteAddress
+		LDA BallY
+		JSR WriteVRAM
+		LDA BallX
+		JSR WriteVRAM
+		RTS
+
+GetUserInput:	JSR ReadChar
+		BCC @Done
+		CMP #'w'
+		BEQ @Up
+		CMP #'s'
+		BEQ @Down
+		CMP #'a'
+		BEQ @Left
+		CMP #'d'
+		BEQ @Right
+		RTS
+@Down:		INC BallY
+		INC BallY
+		INC BallY
+		INC BallY
+		JMP @Done
+@Up:		DEC BallY
+		DEC BallY
+		DEC BallY
+		DEC BallY
+		JMP @Done
+@Left:		DEC BallX
+		DEC BallX
+		DEC BallX
+		DEC BallX
+		JMP @Done
+@Right:		INC BallX
+		INC BallX
+		INC BallX
+		INC BallX
+		JMP @Done
+@Done:		RTS
 
 InitVDPRegs:	LDY #$80
 		LDX #$0
@@ -159,14 +208,17 @@ VDPInitTable:
 
 
 SpriteAttributeTable:
-.BYTE $10, $10, $0, $01	; ball
-.BYTE $30, $30, $1, $01	; paddle 1
-.BYTE $45, $50, $1, $01	; paddle 2
+.BYTE $0, $0, $0, $01	; ball
+; .BYTE $30, $30, $1, $01	; paddle 1
+; .BYTE $45, $50, $1, $01	; paddle 2
+.BYTE $D0
 SpriteAttributeTableEnd:
 
 SpritePatternTable:
-.BYTE $3C, $7E, $FF, $FF, $FF, $FF, $7E, $3C	; ball
+.BYTE $10, $38, $38, $10, $7C, $10, $10, $28	; 0
+; .BYTE $3C, $7E, $FF, $FF, $FF, $FF, $7E, $3C	; ball
 .BYTE $C0, $C0, $C0, $C0, $C0, $C0, $C0, $C0	; paddle
+; .BYTE $00,$66,$FF,$FF,$FF,$7E,$3C,$18
 SpritePatternTableEnd:
 
 ; VRAM is located in the VDP memory map on address 0000 - 3FFF (16KB)

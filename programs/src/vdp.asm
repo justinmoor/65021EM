@@ -212,7 +212,7 @@ VDPInitTable:
 .BYTE %00000000 ; R6 - address of Sprite Pattern Table in VRAM = $0000 (R6 * $800)
 .BYTE $0F       ; R7 - backdrop color
 
-; Name Table 48*16 = 768 unique screen locations
+; Name Table 32*24 = 768 unique screen locations
 ; Each entry of this table is a pointer to a pattern that will be rendered
 ; at a location on the screen represented by the index of the entry.
 NameTable:
@@ -272,6 +272,8 @@ PatternTable:
 .BYTE $10, $38, $38, $10, $7C, $10, $10, $28	; 1
 PatternTableEnd:
 
+; Spite X = $00 - $FF
+; Sprite Y = $00 - $AF
 SpriteAttributeTable:
 .BYTE $10, $10, $0, $01
 .BYTE $30, $30, $1, $0B
