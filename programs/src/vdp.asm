@@ -204,7 +204,7 @@ SetupVRAMWriteAddress:
 
 VDPInitTable:
 .BYTE %00000000 ; R0 - enable Graphics I mode
-.BYTE %11000001 ; R1 - 16KB VRAM, enable active display, disable interrup, Graphics I mode
+.BYTE %11000001 ; R1 - 16KB VRAM, enable active display, disable interrupt, Graphics I mode
 .BYTE %00000101 ; R2 - address of Name Table in VRAM = $1400 (R2 * $400)
 .BYTE %10000000 ; R3 - address of Color Table in VRAM = $2000 (R3 * $40 for Graphics I mode)
 .BYTE %00000001 ; R4 - address of Pattern Table in VRAM = $0800 (R4 * $800 for Graphcis I mode)

@@ -22,7 +22,6 @@ IRQ:            JMP Interrupt
 Init:           LDX #$FF            ; initialize stack
                 TXS
                 CLD
-                CLI
                 JSR InitBios
                 JSR PrintWelome
 
@@ -171,9 +170,9 @@ Interrupt:
                 STY TY
                 PLA                 ; restore original status register
                 PHA
-                AND %00010000       ; is it a software or hardware interrupt?
-                BEQ @Break          ; software interrupt
-                JSR @ExecISR        ; hardware interrup
+                AND #%00010000      ; is it a software or hardware interrupt?
+                BNE @Break          ; software interrupt
+                JSR @ExecISR         ; hardware interrup
                 JMP @EndIRQ
 @ExecISR:       JMP (ISR)           ; execute ISR
 
