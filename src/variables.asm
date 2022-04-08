@@ -46,13 +46,13 @@ REL         = $43     ; relative addressing branch offset (2 bytes)
 DEST        = $45     ; relative address destination address (2 bytes)
 
 ; ----------------------------------- XMODEM -----------------------------------
-CRC		    = $38		; CRC lo byte  (two byte variable)
+CRC         = $38		; CRC lo byte  (two byte variable)
 CRCH	    = $39		; CRC hi byte  
 Target	    = $3A		; pointer to store the file
 BlockNumber = $3C		; block number 
 Retry	    = $3D		; retry counter 
 Retry2	    = $3E		; 2nd counter
-BlockFlag	= $3F	    ; block flag 
+BlockFlag   = $3F	    ; block flag 
 
 
 ; ===================   =============== OHTHER VARIABLES ==================================
@@ -74,6 +74,9 @@ VIADataDirA    = $B003
 InputBuffer   = $0200     ; Input buffer
 CommandBuffer = $300
 ArgsBuffer = $400
+; vector to interrup service routine, user code can put a function pointer to custom routine
+; will be called with JMP (ISR)
+ISR = $600
 
 ; ---------------------------------------- XMODEM ----------------------------------------
 

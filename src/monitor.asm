@@ -12,7 +12,7 @@ MemoryDump:     LDA AmountOfArgs ; check whether we received the right amount of
                 JSR PrintByte
                 LDA T5
                 JSR PrintByte
-                LDA #':'        ; ":".
+                LDA #':'        ; ":"
                 JSR WriteChar   ; Output it
 @PrintData:     LDA #SP         ; Space
                 JSR WriteChar   ; Output it

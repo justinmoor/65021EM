@@ -229,6 +229,7 @@ NameTable:
 PatternTable:
 .BYTE $00, $00, $00, $00, $00, $00, $00, $00    ; 0 
 .BYTE $10, $38, $38, $10, $7C, $10, $10, $28	; 1
+PatternTableEnd:
 
 SpriteAttributeTable:
 .BYTE $10, $10, $0, $01
@@ -237,10 +238,12 @@ SpriteAttributeTable:
 .BYTE $10, $40, $1, $0B
 .BYTE $75, $B0, $1, $0B
 .BYTE $80, $90, $0, $01
+SpriteAttributeTableEnd:
 
 SpritePatternTable:
 .BYTE $10, $38, $38, $10, $7C, $10, $10, $28	; 0
 .BYTE $10, $10, $FE, $FC, $38, $6C, $44, $00    ; 1
+SpritePatternTableEnd:
 
 ColorTable:
 .BYTE $10       ; 0 - color of pattern 0 to 7
@@ -275,7 +278,7 @@ ColorTable:
 .BYTE $00       ; 29
 .BYTE $00       ; 30
 .BYTE $00       ; 31 - color of pattern 248 - 255
-
+ColorTableEnd:
 
 
 ; VDP software operations:

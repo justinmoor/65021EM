@@ -169,10 +169,15 @@ Interrupt:
                 STA TA  ; store A, X, Y in temp locations, stack is unsuitable for now, more info below
                 STX TX
                 STY TY
-                JSR PrintNewline
-                ; TODO add detection for software interrupt or hardware interrupt; now only assumes software interrupt
-                ; TODO add more debugging insights such as contents of status register, stack pointer, possibly program counter, etc.
-@Break          
+                PLA                 ; restore original status register
+                PHA
+                AND %00010000       ; is it a software or hardware interrupt?
+                BEQ @Break          ; software interrupt
+                JSR @ExecISR        ; hardware interrup
+                JMP @EndIRQ
+@ExecISR:       JMP (ISR)           ; execute ISR
+
+@Break          JSR PrintNewline
                 JSR PrintImmediate
                 ASC "A = $"
                 LDA TA
@@ -195,13 +200,13 @@ Interrupt:
                 TSX         ; Stack pointer into index register
                 SEC     
                 LDA	$0102,X
-                SBC	#$01    ; Decrement low byte of rtn address
+                SBC	#$01    ; Decrement low byte of return address
                 STA	$0102,X
                 LDA	$0103,X
-                SBC	#$00    ; Decrement high byte of rtn address (if no carry)
+                SBC	#$00    ; Decrement high byte of return address (if no carry)
                 STA	$0103,X
 
-                LDA TA      ; restore A, X, and Y registers to continue execution
+@EndIRQ         LDA TA      ; restore A, X, and Y registers to continue execution
                 LDX TX
                 LDY TY
 
