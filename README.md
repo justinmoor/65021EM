@@ -78,8 +78,8 @@ cl65 -t none -C memory_layout.cfg --feature labels_without_colons src/main.asm -
 minipro -s -p AT28C256 -w build/os
 
 // open terminal session
-picocom --b 19200 --send-cmd "sx -vv" --receive-cmd "rx -vv" /dev/ttyUSB0 // linux
-picocom --b 19200 --send-cmd "lsx -vv" --receive-cmd "lrx -vv" /dev/cu.usbserial-FT4YNKSL // macos
+picocom --b 19200 --send-cmd "sx -vv" --receive-cmd "rx -vv" --omap delbs /dev/ttyUSB0 // linux
+picocom --b 19200 --send-cmd "lsx -vv" --receive-cmd "lrx -vv" --omap delbs /dev/tty.usbserial-FT4YNKSL // macos
 
 // edit program bytes with hexeditor
 hexeditor -b programs/helloworld 

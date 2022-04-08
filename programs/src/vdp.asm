@@ -1,12 +1,14 @@
+
 .SETCPU "65C02"
 .ORG $5000
 
 VRAM = $A800 ; MODE = LOW
 VDPReg = $A801 ; MODE = HIGH
 
-ReadChar = $C003
 T1 = $00
 P1 = $09
+
+; contians boilerplate for TMS9918 VDP
 
 Start:          JSR InitVDPRegs
 		JSR ZapVRAM
@@ -42,7 +44,8 @@ Fill:           JSR WriteVRAM ; write zero
 		BNE Nexf    ; 64*256
 		RTS
 
-LoadNameTable:  LDA #<NameTable	; set up name table pointer
+LoadNameTable:  
+		LDA #<NameTable	; set up name table pointer
 		STA P1
 		LDA #>NameTable
 		STA P1+1
@@ -51,14 +54,20 @@ LoadNameTable:  LDA #<NameTable	; set up name table pointer
     		JSR SetupVRAMWriteAddress
                 LDX #3          ; page counter
     		LDY #0
-@Next:		LDA (P1), Y
+@Next:          LDA (P1)
                 JSR WriteVRAM
-		INY
+		LDA P1		; check whether we've reached the end of the table
+		CMP #<NameTableEnd
+		BNE @Continue
+                LDA P1 + 1
+		CMP #>NameTableEnd
+		BNE @Continue
+		JMP @Done
+@Continue:	INC P1		; Increment read pointer
 		BNE @Next
-		INC P1+1
-		DEX
-		BNE @Next
-		RTS
+		INC P1 + 1
+		JMP @Next
+@Done:		RTS
 
 LoadPatternTable:
 		LDA #<PatternTable	; set up pattern table pointer
@@ -68,13 +77,20 @@ LoadPatternTable:
     		LDA #$08	        ; $0800
     		LDX #$00
     		JSR SetupVRAMWriteAddress
-                LDY #$0                ; fist two patterns
-@Next:          LDA (P1), Y
+@Next:          LDA (P1)
                 JSR WriteVRAM
-                INY
-                CPY #$0F                 ; done?
-                BNE @Next
-                RTS
+		LDA P1		; check whether we've reached the end of the table
+		CMP #<PatternTableEnd
+		BNE @Continue
+                LDA P1 + 1
+		CMP #>PatternTableEnd
+		BNE @Continue
+		JMP @Done
+@Continue:	INC P1		; Increment read pointer
+		BNE @Next
+		INC P1 + 1
+		JMP @Next
+@Done:		RTS
 
 LoadSpriteAttributeTable:
 		LDA #<SpriteAttributeTable	; set up pattern table pointer
@@ -84,13 +100,21 @@ LoadSpriteAttributeTable:
     		LDA #$10	        ; $1000
     		LDX #$00
     		JSR SetupVRAMWriteAddress
-                LDY #$0                ; fist sprite
-@Next:          LDA (P1), Y
+                LDY #$0                
+@Next:          LDA (P1)
                 JSR WriteVRAM
-                INY
-                CPY #$18                 ; done?
-                BNE @Next
-                RTS
+		LDA P1		; check whether we've reached the end of the table
+		CMP #<SpriteAttributeTableEnd
+		BNE @Continue
+                LDA P1 + 1
+		CMP #>SpriteAttributeTableEnd
+		BNE @Continue
+		JMP @Done
+@Continue:	INC P1		; Increment read pointer
+		BNE @Next
+		INC P1 + 1
+		JMP @Next
+@Done:		RTS
 
 LoadSpritePatternTable:
 		LDA #<SpritePatternTable	; set up pattern table pointer
@@ -101,12 +125,20 @@ LoadSpritePatternTable:
     		LDX #$00
     		JSR SetupVRAMWriteAddress
                 LDY #$0                ; fist sprite
-@Next:          LDA (P1), Y
+@Next:          LDA (P1)
                 JSR WriteVRAM
-                INY
-                CPY #$10                 ; done?
-                BNE @Next
-                RTS
+		LDA P1		; check whether we've reached the end of the table
+		CMP #<SpritePatternTableEnd
+		BNE @Continue
+                LDA P1 + 1
+		CMP #>SpritePatternTableEnd
+		BNE @Continue
+		JMP @Done
+@Continue:	INC P1		; Increment read pointer
+		BNE @Next
+		INC P1 + 1
+		JMP @Next
+@Done:		RTS
 
 LoadColorTable: LDA #<ColorTable	; set up color table pointer
 		STA P1
@@ -116,12 +148,20 @@ LoadColorTable: LDA #<ColorTable	; set up color table pointer
     		LDX #$00
     		JSR SetupVRAMWriteAddress
 		LDY #$0
-@Next:          LDA (P1), Y
+@Next:          LDA (P1)
                 JSR WriteVRAM
-                INY
-                CPY #32                 ; done?
-                BNE @Next
-                RTS
+		LDA P1		; check whether we've reached the end of the table
+		CMP #<ColorTableEnd
+		BNE @Continue
+                LDA P1 + 1
+		CMP #>ColorTableEnd
+		BNE @Continue
+		JMP @Done
+@Continue:	INC P1		; Increment read pointer
+		BNE @Next
+		INC P1 + 1
+		JMP @Next
+@Done:		RTS
 
 ; Writes A to VRAM and delays for the next write (assumes 2mhz system)
 WriteVRAM:      STA VRAM
@@ -224,6 +264,7 @@ NameTable:
 .BYTE $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 .BYTE $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 .BYTE $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+NameTableEnd:
 
 ; 256 patterns max.
 PatternTable:
