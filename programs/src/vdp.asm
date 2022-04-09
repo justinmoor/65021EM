@@ -56,11 +56,11 @@ LoadNameTable:
                 JSR WriteVRAM
 		INC P1		; Increment read pointer
 		BNE @Continue
-		INC P1 + 1
+		INC P1+1
 @Continue:	LDA P1		; check whether we've reached the end of the table
 		CMP #<NameTableEnd
 		BNE @Next
-                LDA P1 + 1
+                LDA P1+1
 		CMP #>NameTableEnd
 		BNE @Next
 @Done:		RTS

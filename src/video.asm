@@ -56,13 +56,13 @@ VMemoryModify:  LDA AmountOfArgs
 @Valid:         LDA #<ArgsBuffer
                 STA P1
                 LDA #>ArgsBuffer
-                STA P1 + 1
+                STA P1+1
                 LDY #0
                 JSR Read2Bytes     ; Read address to modify
                 LDA T6
                 STA T5              ; Store in T5 so T6 can be reused
-                LDA T6 + 1
-                STA T5 + 1
+                LDA T6+1
+                STA T5+1
                 LDA AmountOfArgs    ; Remove the adress from amount of args
                 SEC
                 SBC #1

@@ -18,10 +18,12 @@ Paddle2Y = $1003
 
 BallYVRAM = $1000
 BallXVRAM = $1001
+
 Paddle1YVRAM = $1004
+
 Paddle2YVRAM = $1008
 
-PVelocity = $06
+PVelocity = $0F
 
 
 Start:          JSR InitVDPRegs
@@ -32,7 +34,8 @@ Start:          JSR InitVDPRegs
 		JSR GameLoop
                 RTS
 
-SetupGame:	LDA #$77
+SetupGame:	
+		LDA #$77
 		STA BallX
 		LDA #$4F
 		STA BallY
@@ -46,11 +49,11 @@ GameLoop:	LDA VDPReg
 		AND #%10000000
 		BEQ GameLoop
 		JSR UpdateScreen
-		; JSR GetUserInput
-		RTS
+		JSR GetUserInput
+		JMP GameLoop
 
 UpdateScreen:	
-		LDY #<BallYVRAM
+		LDX #<BallYVRAM
 		LDA #>BallYVRAM
 		JSR SetupVRAMWriteAddress
 		LDA BallY
@@ -58,17 +61,17 @@ UpdateScreen:
 		LDA BallX
 		JSR WriteVRAM
 
-		; LDY #<Paddle1YVRAM
-		; LDA #>Paddle1YVRAM
-		; JSR SetupVRAMWriteAddress
-		; LDA Paddle1Y
-		; JSR WriteVRAM
+		LDX #<Paddle1YVRAM
+		LDA #>Paddle1YVRAM
+		JSR SetupVRAMWriteAddress
+		LDA Paddle1Y
+		JSR WriteVRAM
 
-		; LDY #<Paddle2YVRAM
-		; LDA #>Paddle2YVRAM
-		; JSR SetupVRAMWriteAddress
-		; LDA Paddle2Y
-		; JSR WriteVRAM
+		LDX #<Paddle2YVRAM
+		LDA #>Paddle2YVRAM
+		JSR SetupVRAMWriteAddress
+		LDA Paddle2Y
+		JSR WriteVRAM
 		RTS
 
 GetUserInput:	JSR ReadChar
@@ -77,16 +80,30 @@ GetUserInput:	JSR ReadChar
 		BEQ @Paddle1Up
 		CMP #'s'
 		BEQ @Paddle1Down
+		CMP #'i'
+		BEQ @Paddle2Up
+		CMP #'k'
+		BEQ @Paddle2Down
 		RTS
-@Paddle1Up:	CLC
+@Paddle1Up:	SEC
+		LDA Paddle1Y
+		SBC #PVelocity
+		STA Paddle1Y
+		JMP @Done
+@Paddle1Down:	CLC
 		LDA Paddle1Y
 		ADC #PVelocity
 		STA Paddle1Y
 		JMP @Done
-@Paddle1Down:	SEC
-		LDA Paddle1Y
+@Paddle2Up:	SEC
+		LDA Paddle2Y
 		SBC #PVelocity
-		STA Paddle1Y
+		STA Paddle2Y
+		JMP @Done
+@Paddle2Down:	CLC
+		LDA Paddle2Y
+		ADC #PVelocity
+		STA Paddle2Y
 		JMP @Done
 @Done:		RTS
 
@@ -158,31 +175,6 @@ LoadSpritePatternTable:
 		CMP #>SpritePatternTableEnd
 		BNE @Next
 @Done:		RTS
-
-; LoadSpritePatternTable:
-; 		LDA #<SpritePatternTable	; set up pattern table pointer
-; 		STA P1
-; 		LDA #>SpritePatternTable
-; 		STA P1+1
-;     		LDA #$00	        ; $00
-;     		LDX #$00
-;     		JSR SetupVRAMWriteAddress
-;                 LDY #$0                ; fist sprite
-; @Next:          LDA (P1)
-;                 JSR WriteVRAM
-; 		LDA P1		; check whether we've reached the end of the table
-; 		CMP #<SpritePatternTableEnd
-; 		BNE @Continue
-;                 LDA P1 + 1
-; 		CMP #>SpritePatternTableEnd
-; 		BNE @Continue
-; 		JMP @Done
-; @Continue:	INC P1		; Increment read pointer
-; 		BNE @Next
-; 		INC P1 + 1
-; 		JMP @Next
-; @Done:		RTS
-
 
 ; Writes A to VRAM and delays for the next write (assumes 2mhz system)
 WriteVRAM:      STA VRAM
@@ -269,3 +261,10 @@ SpritePatternTableEnd:
 ; D magenta
 ; E gray
 ; F white
+
+; 5033   A0 04       LDY   #$04
+; 5035   A9 10       LDA   #$10
+; 5037   20 04 51    JSR   $5104
+; 503A   AD 02 10    LDA   $1002
+; 503D   20 E5 50    JSR   $50E5
+; 5040   60          RTS
