@@ -11,14 +11,18 @@ P1 = $09
 ISR = $600
 ReadChar  = $C003
 
-BallX = $1000
-BallY = $1001
+BallY = $1000
+BallX = $1001
+Paddle1Y = $1002
+Paddle2Y = $1003
 
-BallXVRAM = $1000
-BallYVRAM = $1001
+BallYVRAM = $1000
+BallXVRAM = $1001
+Paddle1YVRAM = $1004
+Paddle2YVRAM = $1008
 
-; Spite X = $00 - $FF
-; Sprite Y = $00 - $AF
+PVelocity = $06
+
 
 Start:          JSR InitVDPRegs
 		JSR ZapVRAM
@@ -28,58 +32,61 @@ Start:          JSR InitVDPRegs
 		JSR GameLoop
                 RTS
 
-SetupGame:	LDA #$77	
+SetupGame:	LDA #$77
 		STA BallX
 		LDA #$4F
 		STA BallY
+		LDA #$4F
+		STA Paddle1Y
+		LDA #$4F
+		STA Paddle2Y
 		RTS
 
 GameLoop:	LDA VDPReg
 		AND #%10000000
 		BEQ GameLoop
 		JSR UpdateScreen
-		JSR GetUserInput
-		JMP GameLoop
+		; JSR GetUserInput
+		RTS
 
-UpdateScreen:	LDY #<BallXVRAM
-		LDA #>BallXVRAM
+UpdateScreen:	
+		LDY #<BallYVRAM
+		LDA #>BallYVRAM
 		JSR SetupVRAMWriteAddress
 		LDA BallY
 		JSR WriteVRAM
 		LDA BallX
 		JSR WriteVRAM
+
+		; LDY #<Paddle1YVRAM
+		; LDA #>Paddle1YVRAM
+		; JSR SetupVRAMWriteAddress
+		; LDA Paddle1Y
+		; JSR WriteVRAM
+
+		; LDY #<Paddle2YVRAM
+		; LDA #>Paddle2YVRAM
+		; JSR SetupVRAMWriteAddress
+		; LDA Paddle2Y
+		; JSR WriteVRAM
 		RTS
 
 GetUserInput:	JSR ReadChar
 		BCC @Done
 		CMP #'w'
-		BEQ @Up
+		BEQ @Paddle1Up
 		CMP #'s'
-		BEQ @Down
-		CMP #'a'
-		BEQ @Left
-		CMP #'d'
-		BEQ @Right
+		BEQ @Paddle1Down
 		RTS
-@Down:		INC BallY
-		INC BallY
-		INC BallY
-		INC BallY
+@Paddle1Up:	CLC
+		LDA Paddle1Y
+		ADC #PVelocity
+		STA Paddle1Y
 		JMP @Done
-@Up:		DEC BallY
-		DEC BallY
-		DEC BallY
-		DEC BallY
-		JMP @Done
-@Left:		DEC BallX
-		DEC BallX
-		DEC BallX
-		DEC BallX
-		JMP @Done
-@Right:		INC BallX
-		INC BallX
-		INC BallX
-		INC BallX
+@Paddle1Down:	SEC
+		LDA Paddle1Y
+		SBC #PVelocity
+		STA Paddle1Y
 		JMP @Done
 @Done:		RTS
 
@@ -119,17 +126,15 @@ LoadSpriteAttributeTable:
                 LDY #$0                
 @Next:          LDA (P1)
                 JSR WriteVRAM
-		LDA P1		; check whether we've reached the end of the table
-		CMP #<SpriteAttributeTableEnd
+		INC P1		; Increment read pointer
 		BNE @Continue
+		INC P1 + 1
+@Continue:	LDA P1		; check whether we've reached the end of the table
+		CMP #<SpriteAttributeTableEnd
+		BNE @Next
                 LDA P1 + 1
 		CMP #>SpriteAttributeTableEnd
-		BNE @Continue
-		JMP @Done
-@Continue:	INC P1		; Increment read pointer
 		BNE @Next
-		INC P1 + 1
-		JMP @Next
 @Done:		RTS
 
 LoadSpritePatternTable:
@@ -143,18 +148,40 @@ LoadSpritePatternTable:
                 LDY #$0                ; fist sprite
 @Next:          LDA (P1)
                 JSR WriteVRAM
-		LDA P1		; check whether we've reached the end of the table
-		CMP #<SpritePatternTableEnd
+		INC P1		; Increment read pointer
 		BNE @Continue
+		INC P1 + 1
+@Continue:	LDA P1		; check whether we've reached the end of the table
+		CMP #<SpritePatternTableEnd
+		BNE @Next
                 LDA P1 + 1
 		CMP #>SpritePatternTableEnd
-		BNE @Continue
-		JMP @Done
-@Continue:	INC P1		; Increment read pointer
 		BNE @Next
-		INC P1 + 1
-		JMP @Next
 @Done:		RTS
+
+; LoadSpritePatternTable:
+; 		LDA #<SpritePatternTable	; set up pattern table pointer
+; 		STA P1
+; 		LDA #>SpritePatternTable
+; 		STA P1+1
+;     		LDA #$00	        ; $00
+;     		LDX #$00
+;     		JSR SetupVRAMWriteAddress
+;                 LDY #$0                ; fist sprite
+; @Next:          LDA (P1)
+;                 JSR WriteVRAM
+; 		LDA P1		; check whether we've reached the end of the table
+; 		CMP #<SpritePatternTableEnd
+; 		BNE @Continue
+;                 LDA P1 + 1
+; 		CMP #>SpritePatternTableEnd
+; 		BNE @Continue
+; 		JMP @Done
+; @Continue:	INC P1		; Increment read pointer
+; 		BNE @Next
+; 		INC P1 + 1
+; 		JMP @Next
+; @Done:		RTS
 
 
 ; Writes A to VRAM and delays for the next write (assumes 2mhz system)
@@ -198,7 +225,7 @@ SetupVRAMWriteAddress:
 
 VDPInitTable:
 .BYTE %00000000 ; R0 - enable Graphics I mode
-.BYTE %11000001 ; R1 - 16KB VRAM, enable active display, disable interrupt, Graphics I mode
+.BYTE %11000011 ; R1 - 16KB VRAM, enable active display, disable interrupt, Graphics I mode
 .BYTE %00000101 ; R2 - address of Name Table in VRAM = $1400 (R2 * $400)
 .BYTE %10000000 ; R3 - address of Color Table in VRAM = $2000 (R3 * $40 for Graphics I mode)
 .BYTE %00000001 ; R4 - address of Pattern Table in VRAM = $0800 (R4 * $800 for Graphcis I mode)
@@ -206,19 +233,23 @@ VDPInitTable:
 .BYTE %00000000 ; R6 - address of Sprite Pattern Table in VRAM = $0000 (R6 * $800)
 .BYTE $0F       ; R7 - backdrop color
 
-
+; $1000
 SpriteAttributeTable:
 .BYTE $0, $0, $0, $01	; ball
-; .BYTE $30, $30, $1, $01	; paddle 1
-; .BYTE $45, $50, $1, $01	; paddle 2
-.BYTE $D0
+.BYTE $00, $05, $4, $01	; paddle 1
+.BYTE $00, $F9, $4, $01	; paddle 2
 SpriteAttributeTableEnd:
 
 SpritePatternTable:
-.BYTE $10, $38, $38, $10, $7C, $10, $10, $28	; 0
-; .BYTE $3C, $7E, $FF, $FF, $FF, $FF, $7E, $3C	; ball
-.BYTE $C0, $C0, $C0, $C0, $C0, $C0, $C0, $C0	; paddle
-; .BYTE $00,$66,$FF,$FF,$FF,$7E,$3C,$18
+.BYTE $70, $F8, $F8, $F8, $70, $00, $00, $00	; ball
+.BYTE $00, $00, $00, $00, $00, $00, $00, $00
+.BYTE $00, $00, $00, $00, $00, $00, $00, $00	
+.BYTE $00, $00, $00, $00, $00, $00, $00, $00	
+
+.BYTE $E0, $E0, $E0, $E0, $E0, $E0, $E0, $E0	; paddle
+.BYTE $E0, $E0, $E0, $E0, $E0, $E0, $E0, $E0	
+.BYTE $00, $00, $00, $00, $00, $00, $00, $00	
+.BYTE $00, $00, $00, $00, $00, $00, $00, $00
 SpritePatternTableEnd:
 
 ; VRAM is located in the VDP memory map on address 0000 - 3FFF (16KB)

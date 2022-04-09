@@ -52,21 +52,17 @@ LoadNameTable:
 		LDA #$14	; $1400
     		LDX #$00
     		JSR SetupVRAMWriteAddress
-                LDX #3          ; page counter
-    		LDY #0
 @Next:          LDA (P1)
                 JSR WriteVRAM
-		LDA P1		; check whether we've reached the end of the table
-		CMP #<NameTableEnd
+		INC P1		; Increment read pointer
 		BNE @Continue
+		INC P1 + 1
+@Continue:	LDA P1		; check whether we've reached the end of the table
+		CMP #<NameTableEnd
+		BNE @Next
                 LDA P1 + 1
 		CMP #>NameTableEnd
-		BNE @Continue
-		JMP @Done
-@Continue:	INC P1		; Increment read pointer
 		BNE @Next
-		INC P1 + 1
-		JMP @Next
 @Done:		RTS
 
 LoadPatternTable:
@@ -79,17 +75,15 @@ LoadPatternTable:
     		JSR SetupVRAMWriteAddress
 @Next:          LDA (P1)
                 JSR WriteVRAM
-		LDA P1		; check whether we've reached the end of the table
-		CMP #<PatternTableEnd
+		INC P1		; Increment read pointer
 		BNE @Continue
+		INC P1 + 1
+@Continue:	LDA P1		; check whether we've reached the end of the table
+		CMP #<PatternTableEnd
+		BNE @Next
                 LDA P1 + 1
 		CMP #>PatternTableEnd
-		BNE @Continue
-		JMP @Done
-@Continue:	INC P1		; Increment read pointer
 		BNE @Next
-		INC P1 + 1
-		JMP @Next
 @Done:		RTS
 
 LoadSpriteAttributeTable:
@@ -103,17 +97,15 @@ LoadSpriteAttributeTable:
                 LDY #$0                
 @Next:          LDA (P1)
                 JSR WriteVRAM
-		LDA P1		; check whether we've reached the end of the table
-		CMP #<SpriteAttributeTableEnd
+		INC P1		; Increment read pointer
 		BNE @Continue
+		INC P1 + 1
+@Continue:	LDA P1		; check whether we've reached the end of the table
+		CMP #<SpriteAttributeTableEnd
+		BNE @Next
                 LDA P1 + 1
 		CMP #>SpriteAttributeTableEnd
-		BNE @Continue
-		JMP @Done
-@Continue:	INC P1		; Increment read pointer
 		BNE @Next
-		INC P1 + 1
-		JMP @Next
 @Done:		RTS
 
 LoadSpritePatternTable:
@@ -127,17 +119,15 @@ LoadSpritePatternTable:
                 LDY #$0                ; fist sprite
 @Next:          LDA (P1)
                 JSR WriteVRAM
-		LDA P1		; check whether we've reached the end of the table
-		CMP #<SpritePatternTableEnd
+		INC P1		; Increment read pointer
 		BNE @Continue
+		INC P1 + 1
+@Continue:	LDA P1		; check whether we've reached the end of the table
+		CMP #<SpritePatternTableEnd
+		BNE @Next
                 LDA P1 + 1
 		CMP #>SpritePatternTableEnd
-		BNE @Continue
-		JMP @Done
-@Continue:	INC P1		; Increment read pointer
 		BNE @Next
-		INC P1 + 1
-		JMP @Next
 @Done:		RTS
 
 LoadColorTable: LDA #<ColorTable	; set up color table pointer
@@ -150,17 +140,15 @@ LoadColorTable: LDA #<ColorTable	; set up color table pointer
 		LDY #$0
 @Next:          LDA (P1)
                 JSR WriteVRAM
-		LDA P1		; check whether we've reached the end of the table
-		CMP #<ColorTableEnd
+		INC P1		; Increment read pointer
 		BNE @Continue
+		INC P1 + 1
+@Continue:	LDA P1		; check whether we've reached the end of the table
+		CMP #<ColorTableEnd
+		BNE @Next
                 LDA P1 + 1
 		CMP #>ColorTableEnd
-		BNE @Continue
-		JMP @Done
-@Continue:	INC P1		; Increment read pointer
 		BNE @Next
-		INC P1 + 1
-		JMP @Next
 @Done:		RTS
 
 ; Writes A to VRAM and delays for the next write (assumes 2mhz system)
