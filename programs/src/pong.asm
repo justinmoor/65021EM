@@ -8,8 +8,15 @@ VDPReg = $A801 ; MODE = HIGH
 T1 = $00
 P1 = $09
 
+; Constants
+BallVelocity = $FB
+YMiddle = $4F
+XMiddle = $77
+
+;
 ISR = $600
 ReadChar  = $C003
+WriteChar = $C000
 
 BallY = $1000
 BallX = $1001
@@ -20,11 +27,20 @@ BallYVRAM = $1000
 BallXVRAM = $1001
 
 Paddle1YVRAM = $1004
-
 Paddle2YVRAM = $1008
 
 PVelocity = $0F
 
+; Velocity is either +5 ($05) or -5 ($FB) - using two's complements
+BallXVelocity = $1100
+BallYVelocity = $1101
+
+; The range of an 8-bit signed number is -128 to 127. 
+; The values -128 through -1 are, in hex, $80 through $FF, respectively. 
+; The values 0 through 127 are, in hex, $00 through $7F, respectively. 
+
+; Spite X = $00 - $FF
+; Sprite Y = $00 - $AF
 
 Start:          JSR InitVDPRegs
 		JSR ZapVRAM
@@ -35,14 +51,16 @@ Start:          JSR InitVDPRegs
                 RTS
 
 SetupGame:	
-		LDA #$77
+		LDA #XMiddle
 		STA BallX
-		LDA #$4F
+		LDA #YMiddle
 		STA BallY
-		LDA #$4F
+		LDA #YMiddle
 		STA Paddle1Y
-		LDA #$4F
+		LDA #YMiddle
 		STA Paddle2Y
+		LDA #BallVelocity	; 5
+		STA BallXVelocity
 		RTS
 
 GameLoop:	LDA VDPReg
@@ -50,6 +68,8 @@ GameLoop:	LDA VDPReg
 		BEQ GameLoop
 		JSR UpdateScreen
 		JSR GetUserInput
+		JSR CheckCollisions
+		JSR MoveBall
 		JMP GameLoop
 
 UpdateScreen:	
@@ -105,6 +125,26 @@ GetUserInput:	JSR ReadChar
 		ADC #PVelocity
 		STA Paddle2Y
 		JMP @Done
+@Done:		RTS
+
+MoveBall:	LDA BallXVelocity
+		CLC
+		ADC BallX
+		STA BallX
+@Done:		RTS
+
+CheckCollisions:
+@RightWall:	LDA BallX
+		CMP #$F9	
+		BCC @LeftWall
+		LDA #$FB  ; -5
+		STA BallXVelocity
+		JMP @Done
+@LeftWall:	LDA BallX
+		CMP #$5		
+		BCS @Done
+		LDA #$05
+		STA BallXVelocity
 @Done:		RTS
 
 InitVDPRegs:	LDY #$80

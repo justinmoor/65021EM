@@ -172,7 +172,7 @@ Interrupt:
                 PHA
                 AND #%00010000      ; is it a software or hardware interrupt?
                 BNE @Break          ; software interrupt
-                JSR @ExecISR         ; hardware interrup
+                JSR @ExecISR        ; hardware interrup
                 JMP @EndIRQ
 @ExecISR:       JMP (ISR)           ; execute ISR
 
