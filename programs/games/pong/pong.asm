@@ -9,7 +9,9 @@ T1 = $00
 P1 = $09
 
 ; Constants
-BallVelocity = $FB
+BallVelocityM = $FD ; -3
+BallVelocityP = $03 ; 3
+
 YMiddle = $4F
 XMiddle = $77
 
@@ -31,7 +33,7 @@ Paddle2YVRAM = $1008
 
 PVelocity = $0F
 
-; Velocity is either +5 ($05) or -5 ($FB) - using two's complements
+; Velocity is either +3 ($03) or -3 ($FE) - using two's complements
 BallXVelocity = $1100
 BallYVelocity = $1101
 
@@ -54,7 +56,7 @@ Start:          JSR InitVDPRegs
                 RTS
 
 SetupGame:	
-		LDA #XMiddle
+		LDA #XMiddle-1
 		STA BallX
 		LDA #YMiddle
 		STA BallY
@@ -62,8 +64,9 @@ SetupGame:
 		STA Paddle1Y
 		LDA #YMiddle
 		STA Paddle2Y
-		LDA #BallVelocity	; 5
+		LDA #BallVelocityP
 		STA BallXVelocity
+		STA BallYVelocity
 		RTS
 
 GameLoop:	LDA VDPReg
@@ -71,9 +74,12 @@ GameLoop:	LDA VDPReg
 		BEQ GameLoop
 		JSR UpdateScreen
 		JSR GetUserInput
-		JSR CheckCollisions
+		BEQ Stop
+		JSR CheckPaddleCollisions
+		JSR CheckWallCollisions
 		JSR MoveBall
 		JMP GameLoop
+Stop:		RTS
 
 UpdateScreen:	
 		LDX #<BallYVRAM
@@ -97,7 +103,8 @@ UpdateScreen:
 		JSR WriteVRAM
 		RTS
 
-GetUserInput:	JSR ReadChar
+GetUserInput:	CLC
+		JSR ReadChar
 		BCC @Done
 		CMP #'w'
 		BEQ @Paddle1Up
@@ -107,6 +114,8 @@ GetUserInput:	JSR ReadChar
 		BEQ @Paddle2Up
 		CMP #'k'
 		BEQ @Paddle2Down
+		CMP #$1B 		;esc
+		BEQ @Escape
 		RTS
 @Paddle1Up:	SEC
 		LDA Paddle1Y
@@ -128,26 +137,53 @@ GetUserInput:	JSR ReadChar
 		ADC #PVelocity
 		STA Paddle2Y
 		JMP @Done
+@Escape:	LDA #0
 @Done:		RTS
 
-MoveBall:	LDA BallXVelocity
+MoveBall:	LDA BallYVelocity
+		CLC
+		ADC BallY
+		STA BallY
+		LDA BallXVelocity
 		CLC
 		ADC BallX
 		STA BallX
-@Done:		RTS
+		RTS
 
-CheckCollisions:
+CheckPaddleCollisions:
+		
+
+CheckWallCollisions:
+@TopWall:	LDA BallY
+		CMP #$FE
+		BCC @BottomWall
+		LDA #BallVelocityP
+		STA BallYVelocity
+		JMP @Done
+@BottomWall:	LDA BallY
+		CMP #$AA
+		BCC @RightWall
+		LDA #BallVelocityM
+		STA BallYVelocity
+		JMP @Done
 @RightWall:	LDA BallX
-		CMP #$F9	
+		CMP #$FE	
 		BCC @LeftWall
-		LDA #$FB  ; -5
-		STA BallXVelocity
+		LDA #YMiddle
+		STA BallY
+		LDA #XMiddle
+		STA BallX
 		JMP @Done
 @LeftWall:	LDA BallX
 		CMP #$5		
 		BCS @Done
-		LDA #$05
-		STA BallXVelocity
+		LDA #YMiddle
+		STA BallY
+		LDA #XMiddle
+		STA BallX
 @Done:		RTS
+
+
+
 
 .INCLUDE "setup.asm"

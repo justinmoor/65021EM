@@ -233,11 +233,9 @@ PatternTable:
 .BYTE $FF, $FF, $FF, $00, $00, $00, $00, $00
 .BYTE $00, $00, $00, $00, $00, $FF, $FF, $FF
 .BYTE $E0, $E0, $E0, $E0, $E0, $E0, $E0, $E0
-; .BYTE $C0, $C0, $C0, $C0, $C0, $C0, $C0, $C0
 PatternTableEnd:
 
 ColorTable:
-.BYTE $10       ; 0 - color of pattern 0 to 7
 .BYTE $10       ; 0 - color of pattern 0 to 7
 ColorTableEnd:
 
