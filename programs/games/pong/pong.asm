@@ -5,12 +5,17 @@
 VRAM = $A800 ; MODE = LOW
 VDPReg = $A801 ; MODE = HIGH
 
-T1 = $00
 P1 = $09
 
 ; Constants
-BallVelocityM = $FD ; -3
-BallVelocityP = $03 ; 3
+; BallVelocityM = $FD ; -3
+; BallVelocityP = $03 ; 3
+
+BallVelocityM = $FE ; -3
+BallVelocityP = $02 ; 3
+
+Paddle1X = $05
+Paddle2X = $F9
 
 YMiddle = $4F
 XMiddle = $77
@@ -37,6 +42,8 @@ PVelocity = $0F
 BallXVelocity = $1100
 BallYVelocity = $1101
 
+KeyState = $00
+
 ; The range of an 8-bit signed number is -128 to 127. 
 ; The values -128 through -1 are, in hex, $80 through $FF, respectively. 
 ; The values 0 through 127 are, in hex, $00 through $7F, respectively. 
@@ -55,8 +62,7 @@ Start:          JSR InitVDPRegs
 		JSR GameLoop
                 RTS
 
-SetupGame:	
-		LDA #XMiddle-1
+SetupGame:	LDA #XMiddle-1
 		STA BallX
 		LDA #YMiddle
 		STA BallY
@@ -64,22 +70,25 @@ SetupGame:
 		STA Paddle1Y
 		LDA #YMiddle
 		STA Paddle2Y
-		LDA #BallVelocityP
+		LDA #BallVelocityM
 		STA BallXVelocity
 		STA BallYVelocity
+		STZ KeyState
+		CLC
 		RTS
 
-GameLoop:	LDA VDPReg
+GameLoop:	JSR GetUserInput
+		LDA VDPReg
 		AND #%10000000
 		BEQ GameLoop
 		JSR UpdateScreen
-		JSR GetUserInput
-		BEQ Stop
+		JSR ProcessUserInput
+		BCS Quit
 		JSR CheckPaddleCollisions
 		JSR CheckWallCollisions
 		JSR MoveBall
 		JMP GameLoop
-Stop:		RTS
+Quit:		RTS
 
 UpdateScreen:	
 		LDX #<BallYVRAM
@@ -103,8 +112,9 @@ UpdateScreen:
 		JSR WriteVRAM
 		RTS
 
-GetUserInput:	CLC
-		JSR ReadChar
+; bit		7 6 5 4 3 x x x
+; button	w s i k esc
+GetUserInput:	JSR ReadChar
 		BCC @Done
 		CMP #'w'
 		BEQ @Paddle1Up
@@ -117,28 +127,51 @@ GetUserInput:	CLC
 		CMP #$1B 		;esc
 		BEQ @Escape
 		RTS
-@Paddle1Up:	SEC
-		LDA Paddle1Y
-		SBC #PVelocity
-		STA Paddle1Y
-		JMP @Done
-@Paddle1Down:	CLC
-		LDA Paddle1Y
-		ADC #PVelocity
-		STA Paddle1Y
-		JMP @Done
-@Paddle2Up:	SEC
-		LDA Paddle2Y
-		SBC #PVelocity
-		STA Paddle2Y
-		JMP @Done
-@Paddle2Down:	CLC
-		LDA Paddle2Y
-		ADC #PVelocity
-		STA Paddle2Y
-		JMP @Done
-@Escape:	LDA #0
+@Paddle1Up:	LDA #%10000000
+		ORA KeyState
+		JMP @D1
+@Paddle1Down:	LDA #%01000000
+		ORA KeyState
+		JMP @D1
+@Paddle2Up:	LDA #%00100000
+		ORA KeyState
+		JMP @D1
+@Paddle2Down:	LDA #%00010000
+		ORA KeyState
+		JMP @D1
+@Escape:	LDA #%00001000
+		ORA KeyState
+@D1:		STA KeyState
 @Done:		RTS
+
+ProcessUserInput:	
+@Paddle1Up:	ROL KeyState
+		BCC @Paddle1Down
+		SEC
+		LDA Paddle1Y
+		SBC #PVelocity
+		STA Paddle1Y
+@Paddle1Down:	ROL KeyState
+		BCC @Paddle2Up
+		CLC
+		LDA Paddle1Y
+		ADC #PVelocity
+		STA Paddle1Y
+@Paddle2Up:	ROL KeyState
+		BCC @Paddle2Down
+		SEC
+		LDA Paddle2Y
+		SBC #PVelocity
+		STA Paddle2Y
+@Paddle2Down:	ROL KeyState
+		BCC @Escape
+		CLC
+		LDA Paddle2Y
+		ADC #PVelocity
+		STA Paddle2Y
+@Escape:	ROL KeyState
+@Done:		STZ KeyState
+		RTS
 
 MoveBall:	LDA BallYVelocity
 		CLC
@@ -151,7 +184,42 @@ MoveBall:	LDA BallYVelocity
 		RTS
 
 CheckPaddleCollisions:
-		
+		JSR CheckPaddle1
+		JSR CheckPaddle2
+		RTS
+
+CheckPaddle1:
+		LDA BallX
+		CMP #Paddle1X + 8
+		BCS @Done ; exit early if not on same X
+		LDA Paddle1Y
+		CMP BallY
+		BCS @Done
+		CLC
+		ADC #$0F	; paddle1 y + 16
+		CMP BallY
+		BCS @Collide
+		JMP @Done
+@Collide:	LDA #BallVelocityP
+		STA BallXVelocity
+@Done:		RTS
+
+CheckPaddle2:
+		LDA BallX
+		CMP #Paddle2X - 8
+		BCC @Done ; exit early if not on same X
+		LDA Paddle2Y
+		CMP BallY
+		BCS @Done
+		CLC
+		ADC #$0F	; paddle2 y + 16
+		CMP BallY
+		BCS @Collide
+		JMP @Done
+@Collide:	LDA #BallVelocityM
+		STA BallXVelocity
+@Done:		RTS
+
 
 CheckWallCollisions:
 @TopWall:	LDA BallY
@@ -183,7 +251,16 @@ CheckWallCollisions:
 		STA BallX
 @Done:		RTS
 
+PosToNeg:
+	EOR #$FF
+	CLC
+	ADC #01
+	RTS
 
-
+NegToPos:
+	SEC
+	SBC #$01
+	EOR #$FF
+	RTS
 
 .INCLUDE "setup.asm"
