@@ -53,11 +53,12 @@ KeyState = $00
 
 Start:          JSR InitVDPRegs
 		JSR ZapVRAM
-		JSR LoadNameTable
                 JSR LoadPatternTable
 		JSR LoadColorTable
+		JSR ShowTitleScreen
 		JSR LoadSpriteAttributeTable
 		JSR LoadSpritePatternTable
+		JSR LoadNameTable
 		JSR SetupGame
 		JSR GameLoop
                 RTS
@@ -87,6 +88,7 @@ GameLoop:	JSR GetUserInput
 		JSR CheckPaddleCollisions
 		JSR CheckWallCollisions
 		JSR MoveBall
+		JSR MoveAIs
 		JMP GameLoop
 Quit:		RTS
 
@@ -111,6 +113,52 @@ UpdateScreen:
 		LDA Paddle2Y
 		JSR WriteVRAM
 		RTS
+
+MoveAIs:
+		JSR MovePaddle1
+		JSR MovePaddle2
+		RTS
+
+MovePaddle1:
+		LDA BallX
+		CMP #XMiddle
+		BCS @Done
+		LDA BallY
+		SEC 
+		SBC #08
+		CMP Paddle1Y
+		BCS @MoveDown
+@MoveUp:	SEC
+		LDA Paddle1Y
+		SBC #02
+		STA Paddle1Y
+		JMP @Done
+@MoveDown:	CLC
+		LDA Paddle1Y
+		ADC #02
+		STA Paddle1Y
+@Done:		RTS
+
+MovePaddle2:
+		LDA BallX
+		CMP #XMiddle
+		BCC @Done
+		LDA BallY
+		SEC 
+		SBC #08
+		CMP Paddle2Y
+		BCS @MoveDown
+@MoveUp:	SEC
+		LDA Paddle2Y
+		SBC #02
+		STA Paddle2Y
+		JMP @Done
+@MoveDown:	CLC
+		LDA Paddle2Y
+		ADC #02
+		STA Paddle2Y
+@Done:		RTS
+
 
 ; bit		7 6 5 4 3 x x x
 ; button	w s i k esc
@@ -251,16 +299,27 @@ CheckWallCollisions:
 		STA BallX
 @Done:		RTS
 
-PosToNeg:
-	EOR #$FF
-	CLC
-	ADC #01
-	RTS
-
-NegToPos:
-	SEC
-	SBC #$01
-	EOR #$FF
-	RTS
+ShowTitleScreen:
+		LDA #<TitleScreen 
+		STA P1
+		LDA #>TitleScreen
+		STA P1+1
+		LDA #$14	
+    		LDX #$00
+    		JSR SetupVRAMWriteAddress
+@Next:          LDA (P1)
+                JSR WriteVRAM
+		INC P1		; Increment read pointer
+		BNE @Continue
+		INC P1+1
+@Continue:	LDA P1		; check whether we've reached the end of the table
+		CMP #<TitleScreenEnd
+		BNE @Next
+                LDA P1+1
+		CMP #>TitleScreenEnd
+		BNE @Next
+@Loop:		JSR ReadChar
+		BCC @Loop
+@Done:		RTS
 
 .INCLUDE "setup.asm"

@@ -212,12 +212,12 @@ Interrupt:
                 RTI         ; return from interrupt
 
 Welcome:
-    .BYTE CR, NEWL, CR, NEWL
+    .BYTE CR, NEWL, NEWL
     .BYTE "65021EM", CR, NEWL
     .BYTE "CPU: 65C02 @ 2 Mhz", CR, NEWL
     .BYTE "RAM: 32KB - LOC.: 0000-7FFF", CR, NEWL
-    .BYTE "ROM: 16KB - LOC.: C000-FFFF", CR, NEWL, CR, NEWL
-    .BYTE "MP/OS Ready", CR, NEWL, CR, NEWL, 0
+    .BYTE "ROM: 16KB - LOC.: C000-FFFF", CR, NEWL, NEWL
+    .BYTE "MP/OS Ready", CR, NEWL, NEWL, 0
 
 .INCLUDE "command_table.asm"
 .INCLUDE "monitor.asm"
@@ -225,4 +225,4 @@ Welcome:
 .INCLUDE "disassembler.asm"
 .INCLUDE "assembler.asm"
 .INCLUDE "xmodem.asm"
-.INCLUDE "basic.asm"
+.INCLUDE "help.asm"

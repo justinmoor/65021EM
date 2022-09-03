@@ -125,13 +125,12 @@ PrintImmediate:
                 PHA
                 RTS
 
-Print:			
-                PHY
-                LDY #$00
-@Loop:          LDA (P1), Y
+Print:          LDA (P1)
                 BEQ @Done
                 JSR WriteChar
-                INY
-                BNE @Loop ; up to 255 chars
-@Done:          PLY 
-                RTS
+                INC P1
+                BNE @Continue
+                INC P1 + 1
+@Continue:      JMP Print
+@Done:          RTS
+

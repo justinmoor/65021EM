@@ -421,8 +421,8 @@ LAB_SKFE		= LAB_STAK+$FE
 LAB_SKFF		= LAB_STAK+$FF
 					; flushed stack address
 
-WriteChar  = $C079
-ReadChar   = $C067
+WriteChar  = $C000
+ReadChar   = $C003
 
 ccflag		= $0200	; BASIC CTRL-C flag, 00 = enabled, 01 = dis
 ccbyte		= ccflag+1	; BASIC CTRL-C byte

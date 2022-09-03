@@ -20,7 +20,7 @@ This repository holds all the necessary resources for the project, which include
 ## Memory Map
 
 - **RAM**:      \$0000 - \$7FFF (binary 0xxxxxxxxxxxxxxx)
-- **TMS9918**:  \$A800 - \$A80F (binary 10101xxxxxxx1111) (TODO)
+- **TMS9918**:  \$A800 - \$A80F (binary 10101xxxxxxx1111)
 - **SERIAL**:   \$B000 - \$B00F (binary 10110xxxxxxx1111)
 - **ROM**:      \$C000 - \$FFFF (binary 11xxxxxxxxxxxxxx)
 
