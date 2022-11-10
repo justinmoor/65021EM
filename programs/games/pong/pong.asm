@@ -36,7 +36,7 @@ BallXVRAM = $1001
 Paddle1YVRAM = $1004
 Paddle2YVRAM = $1008
 
-PVelocity = $0F
+PVelocity = $08
 
 ; Velocity is either +3 ($03) or -3 ($FE) - using two's complements
 BallXVelocity = $1100
@@ -80,13 +80,10 @@ SetupGame:	LDA #XMiddle-1
 
 GameLoop:	JSR GetUserInput
 		BCS Quit
-		; JSR ProcessUserInput
 		LDA VDPReg
 		AND #%10000000
 		BEQ GameLoop
 		JSR UpdateScreen
-		; JSR ProcessUserInput
-		; BCS Quit
 		JSR CheckPaddleCollisions
 		JSR CheckWallCollisions
 		JSR MoveBall
