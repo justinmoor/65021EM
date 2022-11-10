@@ -79,16 +79,18 @@ SetupGame:	LDA #XMiddle-1
 		RTS
 
 GameLoop:	JSR GetUserInput
+		BCS Quit
+		; JSR ProcessUserInput
 		LDA VDPReg
 		AND #%10000000
 		BEQ GameLoop
 		JSR UpdateScreen
-		JSR ProcessUserInput
-		BCS Quit
+		; JSR ProcessUserInput
+		; BCS Quit
 		JSR CheckPaddleCollisions
 		JSR CheckWallCollisions
 		JSR MoveBall
-		JSR MoveAIs
+		JSR MoveAI
 		JMP GameLoop
 Quit:		RTS
 
@@ -114,8 +116,8 @@ UpdateScreen:
 		JSR WriteVRAM
 		RTS
 
-MoveAIs:
-		JSR MovePaddle1
+MoveAI:
+		; JSR MovePaddle1
 		JSR MovePaddle2
 		RTS
 
@@ -159,7 +161,6 @@ MovePaddle2:
 		STA Paddle2Y
 @Done:		RTS
 
-
 ; bit		7 6 5 4 3 x x x
 ; button	w s i k esc
 GetUserInput:	JSR ReadChar
@@ -174,51 +175,30 @@ GetUserInput:	JSR ReadChar
 		BEQ @Paddle2Down
 		CMP #$1B 		;esc
 		BEQ @Escape
+		RTS			; no input
+@Paddle1Up:	LDA Paddle1Y
+		SEC
+		SBC #PVelocity
+		STA Paddle1Y
+		JMP @Done
+@Paddle1Down:	LDA Paddle1Y
+		CLC
+		ADC #PVelocity
+		STA Paddle1Y
+		JMP @Done
+@Paddle2Up:	LDA Paddle2Y
+		SEC
+		SBC #PVelocity
+		STA Paddle2Y
+		JMP @Done
+@Paddle2Down:	LDA Paddle2Y
+		CLC
+		ADC #PVelocity
+		STA Paddle2Y
+		JMP @Done
+@Escape:	SEC
 		RTS
-@Paddle1Up:	LDA #%10000000
-		ORA KeyState
-		JMP @D1
-@Paddle1Down:	LDA #%01000000
-		ORA KeyState
-		JMP @D1
-@Paddle2Up:	LDA #%00100000
-		ORA KeyState
-		JMP @D1
-@Paddle2Down:	LDA #%00010000
-		ORA KeyState
-		JMP @D1
-@Escape:	LDA #%00001000
-		ORA KeyState
-@D1:		STA KeyState
-@Done:		RTS
-
-ProcessUserInput:	
-@Paddle1Up:	ROL KeyState
-		BCC @Paddle1Down
-		SEC
-		LDA Paddle1Y
-		SBC #PVelocity
-		STA Paddle1Y
-@Paddle1Down:	ROL KeyState
-		BCC @Paddle2Up
-		CLC
-		LDA Paddle1Y
-		ADC #PVelocity
-		STA Paddle1Y
-@Paddle2Up:	ROL KeyState
-		BCC @Paddle2Down
-		SEC
-		LDA Paddle2Y
-		SBC #PVelocity
-		STA Paddle2Y
-@Paddle2Down:	ROL KeyState
-		BCC @Escape
-		CLC
-		LDA Paddle2Y
-		ADC #PVelocity
-		STA Paddle2Y
-@Escape:	ROL KeyState
-@Done:		STZ KeyState
+@Done:		CLC
 		RTS
 
 MoveBall:	LDA BallYVelocity
