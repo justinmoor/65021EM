@@ -7,10 +7,6 @@ VDPReg = $A801 ; MODE = HIGH
 
 P1 = $09
 
-; Constants
-; BallVelocityM = $FD ; -3
-; BallVelocityP = $03 ; 3
-
 BallVelocityM = $FE ; -3
 BallVelocityP = $02 ; 3
 
@@ -20,7 +16,6 @@ Paddle2X = $F9
 YMiddle = $4F
 XMiddle = $77
 
-;
 ISR = $600
 ReadChar  = $C003
 WriteChar = $C000
@@ -209,6 +204,10 @@ MoveBall:	LDA BallYVelocity
 		RTS
 
 CheckPaddleCollisions:
+		LDA BallY
+		CLC
+		ADC #$05 ; 5 pixel offset
+		STA P1
 		JSR CheckPaddle1
 		JSR CheckPaddle2
 		RTS
@@ -218,10 +217,10 @@ CheckPaddle1:
 		CMP #Paddle1X + 8
 		BCS @Done ; exit early if not on same X
 		LDA Paddle1Y
-		CMP BallY
+		CMP P1
 		BCS @Done
 		CLC
-		ADC #$0F	; paddle1 y + 16
+		ADC #$20	; paddle1 y + 16
 		CMP BallY
 		BCS @Collide
 		JMP @Done
@@ -234,10 +233,10 @@ CheckPaddle2:
 		CMP #Paddle2X - 8
 		BCC @Done ; exit early if not on same X
 		LDA Paddle2Y
-		CMP BallY
+		CMP P1
 		BCS @Done
 		CLC
-		ADC #$0F	; paddle2 y + 16
+		ADC #$20	; paddle2 y + 16
 		CMP BallY
 		BCS @Collide
 		JMP @Done
