@@ -13,9 +13,9 @@ This repository holds all the necessary resources for the project, which include
 ## Features
 
 - 6 expansion slots
-  * Slot 1: serial interface
+  * Slot 1: UART module
+  * Slot 1: Video Display Processor (VDP) module
   * Slot x: SPI interface(s) (TODO)
-  * Slot x: OLED display (TODO)
 
 ## Memory Map
 
