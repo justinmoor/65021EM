@@ -1,5 +1,5 @@
 ; Will read an address in any byte format; C000, C00, C0, C, 000C
-; result will be put in T6. Digits read will be in Y
+; result will be put in T6. Amount of digits read will be in Y
 Read2Bytes:     PHX
                 STZ T6
                 STZ T6 + 1

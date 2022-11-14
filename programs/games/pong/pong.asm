@@ -7,8 +7,8 @@ VDPReg = $A801 ; MODE = HIGH
 
 P1 = $09
 
-BallVelocityM = $FE ; -3
-BallVelocityP = $02 ; 3
+BallVelocityM = $FE ; -2
+BallVelocityP = $03 ; 2
 
 Paddle1X = $05
 Paddle2X = $F9
@@ -33,11 +33,12 @@ Paddle2YVRAM = $1008
 
 PVelocity = $08
 
-; Velocity is either +3 ($03) or -3 ($FE) - using two's complements
 BallXVelocity = $1100
 BallYVelocity = $1101
 
 KeyState = $00
+
+Seed = $01
 
 ; The range of an 8-bit signed number is -128 to 127. 
 ; The values -128 through -1 are, in hex, $80 through $FF, respectively. 
@@ -144,12 +145,12 @@ MovePaddle2:
 		BCS @MoveDown
 @MoveUp:	SEC
 		LDA Paddle2Y
-		SBC #02
+		SBC #03
 		STA Paddle2Y
 		JMP @Done
 @MoveDown:	CLC
 		LDA Paddle2Y
-		ADC #02
+		ADC #03
 		STA Paddle2Y
 @Done:		RTS
 
@@ -247,17 +248,29 @@ CheckPaddle2:
 
 CheckWallCollisions:
 @TopWall:	LDA BallY
-		CMP #$FE
+		CMP #$FD
 		BCC @BottomWall
+		JSR GenPRN	; make bounce direction a bit more random
+		BMI @Bounce1
 		LDA #BallVelocityP
 		STA BallYVelocity
 		JMP @Done
+@Bounce1:	LDA #BallVelocityP+1
+		STA BallYVelocity
+		JMP @Done
+
 @BottomWall:	LDA BallY
 		CMP #$AA
 		BCC @RightWall
+		JSR GenPRN	; make bounce direction a bit more random
+		BMI @Bounce2
 		LDA #BallVelocityM
 		STA BallYVelocity
 		JMP @Done
+@Bounce2:	LDA #BallVelocityM-1
+		STA BallYVelocity
+		JMP @Done
+
 @RightWall:	LDA BallX
 		CMP #$FE	
 		BCC @LeftWall
@@ -266,6 +279,7 @@ CheckWallCollisions:
 		LDA #XMiddle
 		STA BallX
 		JMP @Done
+
 @LeftWall:	LDA BallX
 		CMP #$5		
 		BCS @Done
@@ -297,5 +311,14 @@ ShowTitleScreen:
 @Loop:		JSR ReadChar
 		BCC @Loop
 @Done:		RTS
+
+GenPRN:		LDA Seed
+		BEQ DoEor
+		ASL
+		BEQ NoEor
+		BCC NoEor
+DoEor:		EOR #$1D
+NoEor:		STA Seed
+		RTS
 
 .INCLUDE "setup.asm"
